@@ -1,0 +1,11 @@
+# Module Acceptance Criteria
+- **Auth:** registration, verification, login, logout and reset pass positive/negative tests; sessions revoke; cookie flags and CSRF verified.
+- **Permissions:** all protected routes have allowed/denied actor-resource tests; ownership changes take effect immediately.
+- **Tournament:** draft/publish lifecycle and registration windows work; group and no-group structures supported.
+- **Registration:** duplicate and capacity protection pass concurrent MySQL tests; roster snapshot immutable.
+- **Results:** approved scoring template versioned; pending result excluded; correction appends revision.
+- **Standings/qualification:** deterministic rebuild; top-N/tie policy matches signed-off config; corrections reconcile downstream.
+- **Trust:** verified records reference source event/result; self-reports visibly labelled.
+- **Organizer portfolio:** EVOQ completed event appears as source-linked record.
+- **Security:** IDOR, privilege escalation, CSRF, upload abuse and rate-limit tests pass.
+- **UX:** core flows usable on mobile/desktop; loading, empty, error and forbidden states implemented.
