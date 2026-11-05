@@ -1,30 +1,133 @@
-# EVOQ Engineering Documentation
-**Version:** 0.1.0-draft · **Status:** architecture baseline; owner approval required before implementation.
+# EVOQ
 
-## Authority and change control
-The uploaded EVOQ Product Strategy & Platform Blueprint is authoritative for product vision, feature inventory and V1/V2 scope. This package is its engineering translation. Items marked proposed/open are not product approvals. Approved decision-log entries supersede earlier proposals. If sources conflict, stop and raise a decision. Update requirement, API, DB, UI, tests and roadmap together; never silently change business behavior.
+**The Professional Network & Operating System for Esports.**
 
-## Index
-- `01-product/`: overview, PRD, success metrics.
-- `02-requirements/`: SRS and functional/non-functional requirements.
-- `03-users-and-permissions/`: role model and user journeys.
-- `04-architecture/`: system, backend, frontend and ADRs.
-- `05-database/`: database design, ER diagram and data dictionary.
-- `06-tournament-engine/`: engine, scoring and qualification.
-- `07-api/`: API overview and auth/tournament/gamer/organizer contracts.
-- `08-frontend-and-design/`: UX, page inventory and design system.
-- `09-security/`: security specification and threat model.
-- `10-integrations/`: media and notifications.
-- `11-testing/`: QA strategy, test cases and acceptance criteria.
-- `12-development/`: roadmap, coding standards and repository structure.
-- `13-deployment/`: deployment guide.
-- `14-project-governance/`: traceability, open questions, risks and decision log.
+*Play. Compete. Achieve. Get Recognized.*
 
-## Terminology
-User = authentication identity; GamerProfile = competitive identity; Team = persistent roster identity; Registration = tournament-specific entry; Tournament = event definition; Round/Group/Match = competition structure; ResultRevision = immutable submitted/approved version; Achievement = provenance-backed career record.
+---
 
-## Requirement IDs
-`FR-*` functional, `NFR-*` non-functional, `UC-*` journey, `TC-*` test, `ADR-*` architecture decision, `Q-*` open question. P0 release blocker, P1 V1, P2 optional V1, P3 V2.
+## Technology Stack
 
-## Readiness
-Do not start production implementation until P0 decisions are approved: launch games/scoring templates, supported formats, tie policy, result approval/dispute policy, entrant model and profile visibility. This package contains documentation only, not implemented software.
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + Vite |
+| Language | JavaScript (ES Modules) |
+| Styling | Plain CSS |
+| Backend | Node.js + Express |
+| Database | MySQL 8.4 |
+| ORM | Prisma |
+| API | REST — `/api/v1` |
+| Authentication | Server-side sessions (HttpOnly cookies) |
+| Validation | Zod |
+| HTTP Client | Axios |
+| Password Hashing | Argon2id |
+| Testing | Vitest · Supertest · React Testing Library · Playwright |
+
+## Repository Structure
+
+```
+EVOQ/
+├── backend/              # Express API server
+│   ├── prisma/           # Prisma schema & migrations
+│   ├── src/
+│   │   ├── config/       # Environment validation
+│   │   ├── middleware/    # Express middleware
+│   │   ├── modules/      # Domain modules (auth, users, …)
+│   │   ├── routes/       # Route definitions
+│   │   └── utils/        # Shared utilities
+│   └── tests/            # Backend tests
+│
+├── frontend/             # React + Vite SPA
+│   ├── src/
+│   │   ├── app/          # Root App component & router
+│   │   ├── components/   # Shared UI components
+│   │   ├── hooks/        # Custom React hooks
+│   │   ├── pages/        # Route-level pages
+│   │   ├── services/     # API client
+│   │   └── styles/       # Global & page CSS
+│   └── index.html
+│
+├── docs/                 # Engineering documentation
+├── .env.example          # Environment variable template
+└── package.json          # Workspace root
+```
+
+## Prerequisites
+
+- **Node.js** ≥ 18
+- **npm** ≥ 9
+- **MySQL** 8.4
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd EVOQ
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env with your local MySQL credentials and settings
+```
+
+### 4. Database setup
+
+Create a MySQL database for local development:
+
+```sql
+CREATE DATABASE evoq_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Run Prisma migrations (once models are defined):
+
+```bash
+npm run --workspace backend prisma:migrate
+npm run --workspace backend prisma:generate
+```
+
+### 5. Start development servers
+
+```bash
+# Start both frontend and backend concurrently
+npm run dev
+
+# Or start individually
+npm run dev:backend    # Express on http://localhost:4000
+npm run dev:frontend   # Vite on http://localhost:5173
+```
+
+### 6. Verify
+
+- Frontend: http://localhost:5173
+- Backend health: http://localhost:4000/api/v1/health
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start frontend and backend concurrently |
+| `npm run dev:frontend` | Start Vite dev server |
+| `npm run dev:backend` | Start Express with nodemon |
+| `npm run build` | Build frontend and backend |
+| `npm run test` | Run all tests |
+| `npm run test:frontend` | Run frontend tests |
+| `npm run test:backend` | Run backend tests |
+| `npm run lint` | Lint frontend and backend |
+
+## Documentation
+
+Detailed engineering documentation is available under [`docs/`](docs/00-README.md).
+
+## License
+
+Proprietary — All rights reserved.

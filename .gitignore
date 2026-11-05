@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+# Environment files
+.env
+# Build output
+frontend/dist/
+backend/dist/
+# Prisma
+prisma/*.db
+# Logs
+logs/
+# VS Code settings
+.vscode/
+# OS files
+Thumbs.db
+.DS_Store
+

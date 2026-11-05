@@ -1,0 +1,13 @@
+// Prisma schema for EVOQ — Phase 1 Foundation
+// Full models (User, Session, EmailToken) will be added in Step 4/5.
+// UUID v4 stored as CHAR(36) — see ADR in docs/04-architecture/architecture-decisions.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+

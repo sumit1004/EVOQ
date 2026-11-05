@@ -1,0 +1,28 @@
+{
+  "name": "evoq",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:frontend": "npm run --workspace frontend dev",
+    "dev:backend": "npm run --workspace backend dev",
+    "build": "npm-run-all build:frontend build:backend",
+    "build:frontend": "npm run --workspace frontend build",
+    "build:backend": "npm run --workspace backend build",
+    "test": "npm-run-all test:frontend test:backend",
+    "test:frontend": "npm run --workspace frontend test",
+    "test:backend": "npm run --workspace backend test",
+    "lint": "npm-run-all lint:frontend lint:backend",
+    "lint:frontend": "npm run --workspace frontend lint",
+    "lint:backend": "npm run --workspace backend lint"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}
+
