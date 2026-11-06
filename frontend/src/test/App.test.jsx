@@ -1,12 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../features/auth/AuthContext.jsx';
 import Home from '../pages/Home.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 describe('Home page', () => {
   it('renders EVOQ branding', () => {
-    render(<Home />);
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Home />
+        </AuthProvider>
+      </MemoryRouter>
+    );
     expect(screen.getByText('EVOQ')).toBeInTheDocument();
     expect(
       screen.getByText('Play. Compete. Achieve. Get Recognized.')

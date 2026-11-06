@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import env from './config/env.js';
 import healthRouter from './routes/health.routes.js';
+import authRouter from './modules/auth/auth.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -19,6 +20,7 @@ app.use(
   cors({
     origin: env.FRONTEND_URL,
     credentials: true,
+    exposedHeaders: ['X-CSRF-Token'],
   })
 );
 
@@ -38,10 +40,10 @@ app.use(requestLogger);
 
 // ── API routes ───────────────────────────────────
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
 
 // ── 404 / error handling ─────────────────────────
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
-

@@ -5,6 +5,9 @@ node_modules/
 # Build output
 frontend/dist/
 backend/dist/
+# Test reports
+test-results/
+playwright-report/
 # Prisma
 prisma/*.db
 # Logs
@@ -14,4 +17,3 @@ logs/
 # OS files
 Thumbs.db
 .DS_Store
-

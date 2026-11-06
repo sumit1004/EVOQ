@@ -1,20 +1,30 @@
 import { Router } from 'express';
+import prisma from '../database/prisma.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
-  res.status(200).json({
+router.get('/', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    await prisma.$queryRawUnsafe('SELECT 1');
+    dbStatus = 'connected';
+  } catch (error) {
+    dbStatus = 'error';
+  }
+
+  const isHealthy = dbStatus === 'connected';
+
+  res.status(isHealthy ? 200 : 503).json({
     data: {
-      status: 'ok',
+      status: isHealthy ? 'ok' : 'degraded',
       environment: process.env.NODE_ENV || 'development',
       timestamp: new Date().toISOString(),
-      db: 'pending', // database integration will be added in Step 4
+      db: dbStatus,
     },
     meta: {
-      requestId: _req.requestId,
+      requestId: req.requestId,
     },
   });
 });
 
 export default router;
-
