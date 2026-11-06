@@ -19,7 +19,8 @@ export default function NotificationsPage() {
     setError('');
     try {
       const data = await evoqService.getNotifications();
-      setNotifications(data || []);
+      const list = Array.isArray(data) ? data : data?.notifications || [];
+      setNotifications(list);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to load notifications.');
     } finally {
@@ -31,7 +32,9 @@ export default function NotificationsPage() {
     try {
       await evoqService.markNotificationRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        (Array.isArray(prev) ? prev : []).map((n) =>
+          n.id === id ? { ...n, isRead: true, readAt: n.readAt || new Date().toISOString() } : n
+        )
       );
     } catch (err) {
       console.error('Error marking notification read:', err);
@@ -41,18 +44,26 @@ export default function NotificationsPage() {
   async function handleMarkAllRead() {
     try {
       await evoqService.markAllNotificationsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) =>
+        (Array.isArray(prev) ? prev : []).map((n) => ({
+          ...n,
+          isRead: true,
+          readAt: n.readAt || new Date().toISOString(),
+        }))
+      );
       setSuccess('All notifications marked as read.');
     } catch (err) {
       setError('Failed to mark all as read.');
     }
   }
 
+  const isNotificationRead = (n) => Boolean(n.readAt || n.isRead);
+  const safeList = Array.isArray(notifications) ? notifications : [];
   const displayedNotifications = filterUnread
-    ? notifications.filter((n) => !n.isRead)
-    : notifications;
+    ? safeList.filter((n) => !isNotificationRead(n))
+    : safeList;
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = safeList.filter((n) => !isNotificationRead(n)).length;
 
   return (
     <>
@@ -99,46 +110,49 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-            {displayedNotifications.map((n) => (
-              <div
-                key={n.id}
-                className="evoq-card"
-                style={{
-                  padding: 'var(--space-md)',
-                  backgroundColor: n.isRead ? 'var(--surface)' : 'var(--surface-raised)',
-                  borderLeft: n.isRead ? '1px solid var(--border)' : '4px solid var(--primary)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: 'var(--space-md)',
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginBottom: '4px' }}>
-                    <span className="evoq-badge badge-primary">{n.type}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                      {new Date(n.createdAt).toLocaleString()}
-                    </span>
+            {displayedNotifications.map((n) => {
+              const isRead = isNotificationRead(n);
+              return (
+                <div
+                  key={n.id}
+                  className="evoq-card"
+                  style={{
+                    padding: 'var(--space-md)',
+                    backgroundColor: isRead ? 'var(--surface)' : 'var(--surface-raised)',
+                    borderLeft: isRead ? '1px solid var(--border)' : '4px solid var(--primary)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: 'var(--space-md)',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginBottom: '4px' }}>
+                      <span className="evoq-badge badge-primary">{n.type}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                        {new Date(n.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: isRead ? '600' : '700', marginBottom: '4px' }}>
+                      {n.title}
+                    </h3>
+                    <p style={{ color: 'var(--text)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                      {n.message}
+                    </p>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: n.isRead ? '600' : '700', marginBottom: '4px' }}>
-                    {n.title}
-                  </h3>
-                  <p style={{ color: 'var(--text)', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                    {n.message}
-                  </p>
-                </div>
 
-                {!n.isRead && (
-                  <button
-                    className="evoq-btn evoq-btn-secondary"
-                    style={{ padding: '4px 8px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-                    onClick={() => handleMarkRead(n.id)}
-                  >
-                    Mark Read
-                  </button>
-                )}
-              </div>
-            ))}
+                  {!isRead && (
+                    <button
+                      className="evoq-btn evoq-btn-secondary"
+                      style={{ padding: '4px 8px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                      onClick={() => handleMarkRead(n.id)}
+                    >
+                      Mark Read
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

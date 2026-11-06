@@ -18,7 +18,8 @@ export default function OrganizerNotifications() {
     setError('');
     try {
       const data = await evoqService.getNotifications();
-      setNotifications(data || []);
+      const list = Array.isArray(data) ? data : data?.notifications || [];
+      setNotifications(list);
     } catch (err) {
       setError('Failed to load operational alerts.');
     } finally {
@@ -30,7 +31,9 @@ export default function OrganizerNotifications() {
     try {
       await evoqService.markNotificationRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        (Array.isArray(prev) ? prev : []).map((n) =>
+          n.id === id ? { ...n, isRead: true, readAt: n.readAt || new Date().toISOString() } : n
+        )
       );
     } catch (err) {
       console.error(err);
@@ -40,14 +43,22 @@ export default function OrganizerNotifications() {
   const handleMarkAllRead = async () => {
     try {
       await evoqService.markAllNotificationsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) =>
+        (Array.isArray(prev) ? prev : []).map((n) => ({
+          ...n,
+          isRead: true,
+          readAt: n.readAt || new Date().toISOString(),
+        }))
+      );
     } catch (err) {
       console.error(err);
     }
   };
 
-  const displayed = filterUnread ? notifications.filter((n) => !n.isRead) : notifications;
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const isNotificationRead = (n) => Boolean(n.readAt || n.isRead);
+  const safeList = Array.isArray(notifications) ? notifications : [];
+  const displayed = filterUnread ? safeList.filter((n) => !isNotificationRead(n)) : safeList;
+  const unreadCount = safeList.filter((n) => !isNotificationRead(n)).length;
 
   return (
     <div className="nebula-shell">
@@ -96,46 +107,49 @@ export default function OrganizerNotifications() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {displayed.map((n) => (
-              <div
-                key={n.id}
-                className="nebula-card"
-                style={{
-                  padding: '1.25rem',
-                  borderLeft: n.isRead ? '1px solid var(--nebula-border)' : '4px solid var(--nebula-cyan)',
-                  backgroundColor: n.isRead ? 'var(--nebula-surface-primary)' : 'var(--nebula-surface-elevated)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                    <span className="nebula-badge nebula-badge-cyan">{n.type}</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>
-                      {new Date(n.createdAt).toLocaleString()}
-                    </span>
+            {displayed.map((n) => {
+              const isRead = isNotificationRead(n);
+              return (
+                <div
+                  key={n.id}
+                  className="nebula-card"
+                  style={{
+                    padding: '1.25rem',
+                    borderLeft: isRead ? '1px solid var(--nebula-border)' : '4px solid var(--nebula-cyan)',
+                    backgroundColor: isRead ? 'var(--nebula-surface-primary)' : 'var(--nebula-surface-elevated)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: '1rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                      <span className="nebula-badge nebula-badge-cyan">{n.type}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>
+                        {new Date(n.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: isRead ? 600 : 800, margin: '0 0 0.25rem 0' }}>
+                      {n.title}
+                    </h3>
+                    <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                      {n.message}
+                    </p>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: n.isRead ? 600 : 800, margin: '0 0 0.25rem 0' }}>
-                    {n.title}
-                  </h3>
-                  <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                    {n.message}
-                  </p>
-                </div>
 
-                {!n.isRead && (
-                  <button
-                    onClick={() => handleMarkRead(n.id)}
-                    className="nebula-btn nebula-btn-ghost nebula-btn-sm"
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    Mark Read
-                  </button>
-                )}
-              </div>
-            ))}
+                  {!isRead && (
+                    <button
+                      onClick={() => handleMarkRead(n.id)}
+                      className="nebula-btn nebula-btn-ghost nebula-btn-sm"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      Mark Read
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </main>

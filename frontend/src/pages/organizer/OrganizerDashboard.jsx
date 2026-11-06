@@ -4,7 +4,7 @@ import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
 import { evoqService } from '../../services/evoq.service.js';
 import '../../styles/nebula.css';
 
-export default function OrganizerDashboard() {
+export function OrganizerDashboard() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -249,4 +249,6 @@ export default function OrganizerDashboard() {
     </div>
   );
 }
+
+export default OrganizerDashboard;
 

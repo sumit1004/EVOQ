@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { evoqService } from '../../services/evoq.service.js';
 import '../../styles/nebula.css';
 
-export default function GamerDashboard() {
+export function GamerDashboard() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [teams, setTeams] = useState([]);
@@ -358,4 +358,6 @@ export default function GamerDashboard() {
     </div>
   );
 }
+
+export default GamerDashboard;
 
