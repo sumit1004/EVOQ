@@ -6,6 +6,8 @@ import { requireCsrf } from '../../middleware/csrf.js';
 import { authRateLimiter, passwordResetRateLimiter } from '../../middleware/rateLimiter.js';
 import {
   registerSchema,
+  registerGamerSchema,
+  registerOrganizerSchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -15,7 +17,7 @@ import {
 
 const router = Router();
 
-// Registration
+// General Registration
 router.post(
   '/register',
   authRateLimiter,
@@ -23,12 +25,44 @@ router.post(
   authController.register
 );
 
-// Login
+// Dedicated Gamer Registration
+router.post(
+  '/register/gamer',
+  authRateLimiter,
+  validate(registerGamerSchema),
+  authController.registerGamer
+);
+
+// Dedicated Organizer Registration
+router.post(
+  '/register/organizer',
+  authRateLimiter,
+  validate(registerOrganizerSchema),
+  authController.registerOrganizer
+);
+
+// General Login
 router.post(
   '/login',
   authRateLimiter,
   validate(loginSchema),
   authController.login
+);
+
+// Dedicated Gamer Login
+router.post(
+  '/login/gamer',
+  authRateLimiter,
+  validate(loginSchema),
+  authController.loginGamer
+);
+
+// Dedicated Organizer Login
+router.post(
+  '/login/organizer',
+  authRateLimiter,
+  validate(loginSchema),
+  authController.loginOrganizer
 );
 
 // Current User (Session check)

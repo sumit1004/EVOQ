@@ -19,6 +19,7 @@ model User {
   email           String       @unique @db.VarChar(255)
   username        String       @unique @db.VarChar(64)
   passwordHash    String       @db.VarChar(255)
+  accountType     String       @default("GAMER") @db.VarChar(32)
   status          String       @default("ACTIVE") @db.VarChar(32)
   emailVerifiedAt DateTime?
   createdAt       DateTime     @default(now())
@@ -51,6 +52,7 @@ model User {
   mediaAssets     MediaAsset[]
   releasedCredentials MatchCredential[]    @relation("CredentialReleaser")
 
+  @@index([accountType])
   @@map("users")
 }
 

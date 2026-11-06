@@ -5,13 +5,15 @@ import PublicNavbar from '../../components/PublicNavbar.jsx';
 import '../../styles/nebula.css';
 
 export default function GamerRegister() {
-  const { register } = useAuth();
+  const { registerGamer } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +57,12 @@ export default function GamerRegister() {
       newErrors.password = 'Must contain a special character';
     }
 
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
     return newErrors;
   };
 
@@ -70,14 +78,15 @@ export default function GamerRegister() {
 
     try {
       setSubmitting(true);
-      const res = await register(
-        formData.email,
-        formData.username,
-        formData.password
-      );
+      const res = await registerGamer({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+      });
       setSuccessData(res);
     } catch (err) {
-      setServerError(err.message || 'Registration failed');
+      const msg = err.response?.data?.error?.message || err.message || 'Registration failed';
+      setServerError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -167,11 +176,50 @@ export default function GamerRegister() {
 
             <div className="nebula-form-group">
               <label className="nebula-label" htmlFor="password">Password (min. 12 chars, Aa1!) *</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••••••"
+                  autoComplete="new-password"
+                  required
+                  disabled={submitting}
+                  className="nebula-input"
+                  style={{ paddingRight: '2.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--nebula-text-muted)',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}
+            </div>
+
+            <div className="nebula-form-group">
+              <label className="nebula-label" htmlFor="confirmPassword">Confirm Password *</label>
               <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••••••"
                 autoComplete="new-password"
@@ -179,7 +227,7 @@ export default function GamerRegister() {
                 disabled={submitting}
                 className="nebula-input"
               />
-              {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}
+              {errors.confirmPassword && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.confirmPassword}</span>}
             </div>
 
             <button

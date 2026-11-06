@@ -11,6 +11,47 @@ export class AuthController {
       res.status(201).json({
         data: {
           userId: result.userId,
+          accountType: result.accountType,
+          verificationRequired: result.verificationRequired,
+          ...(result.debugVerificationToken ? { debugToken: result.debugVerificationToken } : {}),
+        },
+        meta: {
+          requestId: req.requestId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async registerGamer(req, res, next) {
+    try {
+      const result = await authService.registerGamer(req.body);
+
+      res.status(201).json({
+        data: {
+          userId: result.userId,
+          accountType: 'GAMER',
+          verificationRequired: result.verificationRequired,
+          ...(result.debugVerificationToken ? { debugToken: result.debugVerificationToken } : {}),
+        },
+        meta: {
+          requestId: req.requestId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async registerOrganizer(req, res, next) {
+    try {
+      const result = await authService.registerOrganizer(req.body);
+
+      res.status(201).json({
+        data: {
+          userId: result.userId,
+          accountType: 'ORGANIZER',
           verificationRequired: result.verificationRequired,
           ...(result.debugVerificationToken ? { debugToken: result.debugVerificationToken } : {}),
         },
@@ -49,6 +90,64 @@ export class AuthController {
     }
   }
 
+  async loginGamer(req, res, next) {
+    try {
+      const { user, session, rawSessionToken } = await authService.login({
+        ...req.body,
+        portal: 'GAMER',
+      });
+
+      res.cookie(env.SESSION_COOKIE_NAME, rawSessionToken, getSessionCookieOptions());
+
+      const csrfToken = generateCsrfToken(session.tokenHash);
+      if (csrfToken) {
+        res.setHeader('X-CSRF-Token', csrfToken);
+      }
+
+      res.status(200).json({
+        data: {
+          summary: 'Gamer login successful',
+          user,
+          csrfToken,
+        },
+        meta: {
+          requestId: req.requestId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async loginOrganizer(req, res, next) {
+    try {
+      const { user, session, rawSessionToken } = await authService.login({
+        ...req.body,
+        portal: 'ORGANIZER',
+      });
+
+      res.cookie(env.SESSION_COOKIE_NAME, rawSessionToken, getSessionCookieOptions());
+
+      const csrfToken = generateCsrfToken(session.tokenHash);
+      if (csrfToken) {
+        res.setHeader('X-CSRF-Token', csrfToken);
+      }
+
+      res.status(200).json({
+        data: {
+          summary: 'Organizer login successful',
+          user,
+          csrfToken,
+        },
+        meta: {
+          requestId: req.requestId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async me(req, res, next) {
     try {
       const user = req.user;
@@ -63,11 +162,12 @@ export class AuthController {
           userId: user.id,
           email: user.email,
           username: user.username,
+          accountType: user.accountType || 'GAMER',
           status: user.status,
           emailVerified: !!user.emailVerifiedAt,
           capabilities: {
-            canCreateTournament: true,
-            canJoinTeam: true,
+            canCreateTournament: user.accountType === 'ORGANIZER',
+            canJoinTeam: user.accountType === 'GAMER',
           },
           csrfToken,
         },

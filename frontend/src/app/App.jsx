@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '../features/auth/AuthContext.jsx';
+import { AuthProvider, useAuth } from '../features/auth/AuthContext.jsx';
 import { ThemeProvider } from '../features/theme/ThemeContext.jsx';
-import ProtectedRoute from '../components/ProtectedRoute.jsx';
+import { GamerProtectedRoute, OrganizerProtectedRoute } from '../components/ProtectedRoute.jsx';
 
 // Core Public & Auth Pages
 import Home from '../pages/Home.jsx';
@@ -48,6 +48,18 @@ import OrganizerSettings from '../pages/organizer/OrganizerSettings.jsx';
 
 import '../styles/nebula.css';
 
+function LegacyDashboardRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div className="nebula-shell" style={{ minHeight: '100vh' }} />;
+  }
+  if (!user) {
+    return <Navigate to="/gamer/login" replace />;
+  }
+  const target = user.accountType === 'ORGANIZER' ? '/organizer/dashboard' : '/gamer/dashboard';
+  return <Navigate to={target} replace />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -78,89 +90,89 @@ export default function App() {
             <Route
               path="/gamer/dashboard"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerDashboard />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/profile"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerProfileView />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/profile/edit"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerProfileEdit />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/teams"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerTeams />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/tournaments"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerTournaments />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/tournaments/:slug"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerTournamentDetail />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/matches"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerMatches />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/achievements"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerAchievements />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/statistics"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerStatistics />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/notifications"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerNotifications />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
             <Route
               path="/gamer/settings"
               element={
-                <ProtectedRoute>
+                <GamerProtectedRoute>
                   <GamerSettings />
-                </ProtectedRoute>
+                </GamerProtectedRoute>
               }
             />
 
@@ -170,125 +182,127 @@ export default function App() {
             <Route
               path="/organizer/dashboard"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerDashboard />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentsList />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/create"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWizard />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id/registrations"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id/competition"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id/schedule"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id/results"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/tournaments/:id/standings"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerTournamentWorkspace />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/organization"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerOrganization />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/organization/members"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerStaff />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/events"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerPortfolio />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/notifications"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerNotifications />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
             <Route
               path="/organizer/settings"
               element={
-                <ProtectedRoute>
+                <OrganizerProtectedRoute>
                   <OrganizerSettings />
-                </ProtectedRoute>
+                </OrganizerProtectedRoute>
               }
             />
 
-            {/* ── Backward Compatibility Redirects ── */}
-            <Route path="/dashboard" element={<Navigate to="/gamer/dashboard" replace />} />
-            <Route path="/dashboard/profile" element={<Navigate to="/gamer/profile/edit" replace />} />
-            <Route path="/dashboard/teams" element={<Navigate to="/gamer/teams" replace />} />
-            <Route path="/dashboard/organizations" element={<Navigate to="/organizer/organization" replace />} />
-            <Route path="/dashboard/organizer" element={<Navigate to="/organizer/dashboard" replace />} />
-            <Route path="/dashboard/tournaments/new" element={<Navigate to="/organizer/tournaments/create" replace />} />
-            <Route path="/dashboard/tournaments/:id/manage" element={<Navigate to="/organizer/tournaments/:id" replace />} />
-            <Route path="/dashboard/notifications" element={<Navigate to="/gamer/notifications" replace />} />
+            {/* ── Backward Compatibility Redirects (Account-Type Aware) ── */}
+            <Route path="/login" element={<Navigate to="/gamer/login" replace />} />
+            <Route path="/register" element={<Navigate to="/gamer/register" replace />} />
+            <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
+            <Route path="/dashboard/profile" element={<GamerProtectedRoute><Navigate to="/gamer/profile/edit" replace /></GamerProtectedRoute>} />
+            <Route path="/dashboard/teams" element={<GamerProtectedRoute><Navigate to="/gamer/teams" replace /></GamerProtectedRoute>} />
+            <Route path="/dashboard/organizations" element={<OrganizerProtectedRoute><Navigate to="/organizer/organization" replace /></OrganizerProtectedRoute>} />
+            <Route path="/dashboard/organizer" element={<OrganizerProtectedRoute><Navigate to="/organizer/dashboard" replace /></OrganizerProtectedRoute>} />
+            <Route path="/dashboard/tournaments/new" element={<OrganizerProtectedRoute><Navigate to="/organizer/tournaments/create" replace /></OrganizerProtectedRoute>} />
+            <Route path="/dashboard/tournaments/:id/manage" element={<OrganizerProtectedRoute><Navigate to="/organizer/tournaments/:id" replace /></OrganizerProtectedRoute>} />
+            <Route path="/dashboard/notifications" element={<LegacyDashboardRedirect />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

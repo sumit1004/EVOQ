@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { teamsController } from './teams.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
+import { requireGamer } from '../../middleware/authorize.js';
 import { validate } from '../../middleware/validate.js';
 import {
   createTeamSchema,
@@ -14,23 +15,23 @@ const router = Router();
 // Public discovery
 router.get('/', teamsController.list);
 
-// Authenticated current user team routes
-router.get('/my/list', authenticate, teamsController.getMyTeams);
-router.get('/my/invitations', authenticate, teamsController.getMyInvitations);
+// Authenticated current user team routes (GAMER ONLY)
+router.get('/my/list', authenticate, requireGamer, teamsController.getMyTeams);
+router.get('/my/invitations', authenticate, requireGamer, teamsController.getMyInvitations);
 
-// Create team
-router.post('/', authenticate, validate(createTeamSchema), teamsController.create);
+// Create team (GAMER ONLY)
+router.post('/', authenticate, requireGamer, validate(createTeamSchema), teamsController.create);
 
-// Team details by slug
+// Team details by slug (PUBLIC)
 router.get('/:slug', teamsController.getBySlug);
 
-// Team management by ID
-router.patch('/:id', authenticate, validate(updateTeamSchema), teamsController.update);
-router.post('/:id/invitations', authenticate, validate(inviteTeamMemberSchema), teamsController.invite);
-router.delete('/:id/members/:userId', authenticate, teamsController.removeMember);
+// Team management by ID (GAMER ONLY)
+router.patch('/:id', authenticate, requireGamer, validate(updateTeamSchema), teamsController.update);
+router.post('/:id/invitations', authenticate, requireGamer, validate(inviteTeamMemberSchema), teamsController.invite);
+router.delete('/:id/members/:userId', authenticate, requireGamer, teamsController.removeMember);
 
-// Invitation response
-router.post('/invitations/:id/respond', authenticate, validate(respondInvitationSchema), teamsController.respondInvitation);
+// Invitation response (GAMER ONLY)
+router.post('/invitations/:id/respond', authenticate, requireGamer, validate(respondInvitationSchema), teamsController.respondInvitation);
 
 export default router;
 

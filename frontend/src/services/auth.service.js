@@ -6,8 +6,40 @@ export const authService = {
     return res.data.data;
   },
 
+  async registerGamer({ email, username, password }) {
+    const res = await api.post('/auth/register/gamer', { email, username, password });
+    return res.data.data;
+  },
+
+  async registerOrganizer({ email, username, password, organizationName, displayName }) {
+    const res = await api.post('/auth/register/organizer', {
+      email,
+      username,
+      password,
+      organizationName,
+      displayName,
+    });
+    return res.data.data;
+  },
+
   async login(email, password) {
     const res = await api.post('/auth/login', { email, password });
+    if (res.data.data.csrfToken) {
+      setCsrfToken(res.data.data.csrfToken);
+    }
+    return res.data.data;
+  },
+
+  async loginGamer(email, password) {
+    const res = await api.post('/auth/login/gamer', { email, password });
+    if (res.data.data.csrfToken) {
+      setCsrfToken(res.data.data.csrfToken);
+    }
+    return res.data.data;
+  },
+
+  async loginOrganizer(email, password) {
+    const res = await api.post('/auth/login/organizer', { email, password });
     if (res.data.data.csrfToken) {
       setCsrfToken(res.data.data.csrfToken);
     }

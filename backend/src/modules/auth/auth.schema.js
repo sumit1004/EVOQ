@@ -28,9 +28,43 @@ export const registerSchema = z.object({
   password: passwordPolicy,
 });
 
+export const registerGamerSchema = registerSchema;
+
+export const registerOrganizerSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email cannot exceed 255 characters')
+    .toLowerCase(),
+  username: z
+    .string()
+    .trim()
+    .min(3, 'Organizer identifier must be between 3 and 30 characters')
+    .max(30, 'Organizer identifier must be between 3 and 30 characters')
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      'Identifier may only contain letters, numbers, underscores, and hyphens'
+    ),
+  organizationName: z
+    .string()
+    .trim()
+    .min(2, 'Organization name must be at least 2 characters')
+    .max(128, 'Organization name cannot exceed 128 characters'),
+  displayName: z
+    .string()
+    .trim()
+    .min(2, 'Display name must be at least 2 characters')
+    .max(128)
+    .optional(),
+  password: passwordPolicy,
+});
+
 export const loginSchema = z.object({
   email: z.string().trim().email('Invalid email address').toLowerCase(),
   password: z.string().min(1, 'Password is required'),
+  portal: z.enum(['GAMER', 'ORGANIZER']).optional(),
+  accountType: z.enum(['GAMER', 'ORGANIZER']).optional(),
 });
 
 export const forgotPasswordSchema = z.object({

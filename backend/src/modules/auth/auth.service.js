@@ -7,15 +7,16 @@ import { emailService } from '../../services/email.service.js';
 import {
   ConflictError,
   UnauthenticatedError,
+  ForbiddenError,
   ValidationError,
   AppError,
 } from '../../utils/errors.js';
 
 export class AuthService {
   /**
-   * Register a new user
+   * Register a new gamer user (default)
    */
-  async register({ email, username, password }) {
+  async registerGamer({ email, username, password }) {
     const existing = await prisma.user.findFirst({
       where: {
         OR: [{ email }, { username }],
@@ -35,6 +36,9 @@ export class AuthService {
     const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const userId = generateUuid();
+    const baseSlug = username.toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 50) || 'gamer';
+    const existingProfile = await prisma.gamerProfile.findUnique({ where: { slug: baseSlug } });
+    const profileSlug = existingProfile ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
 
     const [user] = await prisma.$transaction([
       prisma.user.create({
@@ -43,6 +47,130 @@ export class AuthService {
           email,
           username,
           passwordHash,
+          accountType: 'GAMER',
+          status: 'ACTIVE',
+        },
+      }),
+      prisma.gamerProfile.create({
+        data: {
+          id: generateUuid(),
+          userId,
+          slug: profileSlug,
+          displayName: username,
+        },
+      }),
+      prisma.emailToken.create({
+        data: {
+          id: generateUuid(),
+          userId,
+          tokenHash: verificationTokenHash,
+          purpose: 'EMAIL_VERIFICATION',
+          expiresAt: verificationExpiresAt,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          id: generateUuid(),
+          actorId: userId,
+          action: 'GAMER_REGISTERED',
+          resourceType: 'User',
+          resourceId: userId,
+          details: { email, username, accountType: 'GAMER' },
+        },
+      }),
+    ]);
+
+    await emailService.sendVerificationEmail(email, rawVerificationToken);
+
+    return {
+      userId: user.id,
+      accountType: 'GAMER',
+      verificationRequired: true,
+      debugVerificationToken:
+        env.NODE_ENV === 'test' ? rawVerificationToken : undefined,
+    };
+  }
+
+  /**
+   * Register a new organizer user
+   */
+  async registerOrganizer({ email, username, password, organizationName, displayName }) {
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
+    if (existing) {
+      if (existing.email.toLowerCase() === email.toLowerCase()) {
+        throw new ConflictError('An account with this email already exists');
+      }
+      throw new ConflictError('This username is already taken');
+    }
+
+    const passwordHash = await hashPassword(password);
+    const rawVerificationToken = generateSecureToken(32);
+    const verificationTokenHash = hashToken(rawVerificationToken);
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const userId = generateUuid();
+    const orgId = generateUuid();
+
+    // Unique slug for organization
+    const baseOrgSlug = (organizationName || 'org')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-')
+      .slice(0, 50) || 'org';
+
+    const existingOrg = await prisma.organization.findUnique({
+      where: { slug: baseOrgSlug },
+    });
+    const orgSlug = existingOrg ? `${baseOrgSlug}-${Date.now().toString(36).slice(-4)}` : baseOrgSlug;
+
+    // Unique slug for organizer profile
+    const baseUserSlug = username.toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 50) || 'organizer';
+    const existingOrgProfile = await prisma.organizerProfile.findUnique({
+      where: { slug: baseUserSlug },
+    });
+    const organizerProfileSlug = existingOrgProfile ? `${baseUserSlug}-${Date.now().toString(36).slice(-4)}` : baseUserSlug;
+
+    const [user] = await prisma.$transaction([
+      prisma.user.create({
+        data: {
+          id: userId,
+          email,
+          username,
+          passwordHash,
+          accountType: 'ORGANIZER',
+          status: 'ACTIVE',
+        },
+      }),
+      prisma.organizerProfile.create({
+        data: {
+          id: generateUuid(),
+          userId,
+          slug: organizerProfileSlug,
+          displayName: displayName || username,
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          id: orgId,
+          name: organizationName,
+          slug: orgSlug,
+          ownerId: userId,
+          orgType: 'ORGANIZER',
+        },
+      }),
+      prisma.organizationMembership.create({
+        data: {
+          id: generateUuid(),
+          organizationId: orgId,
+          userId,
+          role: 'OWNER',
           status: 'ACTIVE',
         },
       }),
@@ -59,10 +187,10 @@ export class AuthService {
         data: {
           id: generateUuid(),
           actorId: userId,
-          action: 'USER_REGISTERED',
+          action: 'ORGANIZER_REGISTERED',
           resourceType: 'User',
           resourceId: userId,
-          details: { email, username },
+          details: { email, username, organizationName, accountType: 'ORGANIZER' },
         },
       }),
     ]);
@@ -71,6 +199,7 @@ export class AuthService {
 
     return {
       userId: user.id,
+      accountType: 'ORGANIZER',
       verificationRequired: true,
       debugVerificationToken:
         env.NODE_ENV === 'test' ? rawVerificationToken : undefined,
@@ -78,9 +207,21 @@ export class AuthService {
   }
 
   /**
-   * Log in user and create server-side session
+   * General register (delegates to Gamer or Organizer)
    */
-  async login({ email, password }) {
+  async register(data) {
+    if (data.accountType === 'ORGANIZER' || data.organizationName) {
+      return this.registerOrganizer(data);
+    }
+    return this.registerGamer(data);
+  }
+
+  /**
+   * Log in user and create server-side session with account-type verification
+   */
+  async login({ email, password, portal, accountType }) {
+    const expectedAccountType = portal || accountType;
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -97,6 +238,21 @@ export class AuthService {
     const isMatch = await verifyPassword(user.passwordHash, password);
     if (!isMatch) {
       throw new UnauthenticatedError('Invalid email or password');
+    }
+
+    // Strict Account Type enforcement:
+    const actualType = user.accountType || 'GAMER';
+    if (expectedAccountType && expectedAccountType !== actualType) {
+      if (expectedAccountType === 'GAMER' && actualType === 'ORGANIZER') {
+        throw new ForbiddenError(
+          'This account is registered as an Organizer. Please use Organizer Login.'
+        );
+      }
+      if (expectedAccountType === 'ORGANIZER' && actualType === 'GAMER') {
+        throw new ForbiddenError(
+          'This account is registered as a Gamer. Please use Gamer Login.'
+        );
+      }
     }
 
     // Generate session token and store hash
@@ -124,6 +280,7 @@ export class AuthService {
           action: 'USER_LOGGED_IN',
           resourceType: 'Session',
           resourceId: sessionId,
+          details: { accountType: actualType },
         },
       }),
     ]);
@@ -133,6 +290,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         username: user.username,
+        accountType: actualType,
         status: user.status,
         emailVerified: !!user.emailVerifiedAt,
       },

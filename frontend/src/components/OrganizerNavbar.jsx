@@ -87,15 +87,6 @@ export default function OrganizerNavbar() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          {/* Deliberate Portal Switcher to Gamer Portal */}
-          <Link
-            to="/gamer/dashboard"
-            className="nebula-portal-switcher switcher-to-gamer"
-            title="Switch context to Gamer Esports Profile & Teams"
-          >
-            🎮 Gamer Portal
-          </Link>
-
           {/* Notifications */}
           <Link
             to="/organizer/notifications"
@@ -183,10 +174,6 @@ export default function OrganizerNavbar() {
             </Link>
             <Link to="/organizer/events" className="nebula-nav-item" onClick={() => setMobileMenuOpen(false)}>
               Verified Portfolio
-            </Link>
-            <div style={{ borderTop: '1px solid var(--nebula-border)', margin: '0.5rem 0' }}></div>
-            <Link to="/gamer/dashboard" className="nebula-portal-switcher switcher-to-gamer" onClick={() => setMobileMenuOpen(false)}>
-              🎮 Switch to Gamer Portal
             </Link>
           </div>
         </div>

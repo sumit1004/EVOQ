@@ -81,15 +81,6 @@ export default function GamerNavbar() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          {/* Deliberate Portal Switcher to Organizer Operations */}
-          <Link
-            to="/organizer/dashboard"
-            className="nebula-portal-switcher switcher-to-ops"
-            title="Switch context to Tournament Operations Command Center"
-          >
-            ⚡ Organizer Portal
-          </Link>
-
           {/* Notifications */}
           <Link
             to="/gamer/notifications"
@@ -179,10 +170,6 @@ export default function GamerNavbar() {
             </Link>
             <Link to="/gamer/profile" className="nebula-nav-item" onClick={() => setMobileMenuOpen(false)}>
               My Profile
-            </Link>
-            <div style={{ borderTop: '1px solid var(--nebula-border)', margin: '0.5rem 0' }}></div>
-            <Link to="/organizer/dashboard" className="nebula-portal-switcher switcher-to-ops" onClick={() => setMobileMenuOpen(false)}>
-              ⚡ Switch to Organizer Portal
             </Link>
           </div>
         </div>

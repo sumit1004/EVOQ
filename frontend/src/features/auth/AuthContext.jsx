@@ -51,9 +51,35 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const loginGamer = async (email, password) => {
+    setError(null);
+    const data = await authService.loginGamer(email, password);
+    localStorage.setItem(SESSION_HINT_KEY, 'true');
+    setUser(data.user);
+    return data;
+  };
+
+  const loginOrganizer = async (email, password) => {
+    setError(null);
+    const data = await authService.loginOrganizer(email, password);
+    localStorage.setItem(SESSION_HINT_KEY, 'true');
+    setUser(data.user);
+    return data;
+  };
+
   const register = async (email, username, password) => {
     setError(null);
     return await authService.register(email, username, password);
+  };
+
+  const registerGamer = async (data) => {
+    setError(null);
+    return await authService.registerGamer(data);
+  };
+
+  const registerOrganizer = async (data) => {
+    setError(null);
+    return await authService.registerOrganizer(data);
   };
 
   const logout = async () => {
@@ -76,11 +102,16 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    accountType: user?.accountType || 'GAMER',
     loading,
     error,
     isAuthenticated: !!user,
     login,
+    loginGamer,
+    loginOrganizer,
     register,
+    registerGamer,
+    registerOrganizer,
     logout,
     logoutAll,
     refreshUser: (force = true) => checkAuth(force),

@@ -5,11 +5,12 @@ import PublicNavbar from '../../components/PublicNavbar.jsx';
 import '../../styles/nebula.css';
 
 export default function GamerLogin() {
-  const { login } = useAuth();
+  const { loginGamer } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -49,10 +50,11 @@ export default function GamerLogin() {
 
     try {
       setSubmitting(true);
-      await login(formData.email, formData.password);
+      await loginGamer(formData.email, formData.password);
       navigate(from, { replace: true });
     } catch (err) {
-      setServerError(err.message || 'Login failed. Please verify your credentials.');
+      const msg = err.response?.data?.error?.message || err.message || 'Login failed. Please verify your credentials.';
+      setServerError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -106,18 +108,40 @@ export default function GamerLogin() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••••••"
-                autoComplete="current-password"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••••••"
+                  autoComplete="current-password"
+                  required
+                  disabled={submitting}
+                  className="nebula-input"
+                  style={{ paddingRight: '2.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--nebula-text-muted)',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
               {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}
             </div>
 
@@ -127,20 +151,21 @@ export default function GamerLogin() {
               style={{ width: '100%', marginTop: '0.5rem' }}
               disabled={submitting}
             >
-              {submitting ? 'Entering Arena...' : 'Sign In to Arena →'}
+              {submitting ? 'Entering Arena...' : 'Sign In to Gamer Arena →'}
             </button>
           </form>
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--nebula-border)' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--nebula-text-secondary)' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--nebula-text-secondary)', margin: '0 0 0.5rem 0' }}>
               New to competitive play?{' '}
               <Link to="/gamer/register" style={{ color: 'var(--nebula-violet)', fontWeight: 700 }}>
                 Create Gamer Account
               </Link>
             </p>
-            <div style={{ marginTop: '0.75rem' }}>
-              <Link to="/organizer/login" style={{ fontSize: '0.82rem', color: 'var(--nebula-cyan)' }}>
-                Are you a Tournament Organizer? Access Operations Portal ↗
+            <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', color: 'var(--nebula-text-muted)' }}>
+              Tournament Organizer?{' '}
+              <Link to="/organizer/login" style={{ color: 'var(--nebula-cyan)', fontWeight: 600 }}>
+                Organizer Login ↗
               </Link>
             </div>
           </div>

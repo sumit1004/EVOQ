@@ -31,12 +31,15 @@ export default function PublicNavbar() {
 
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Link to="/gamer/dashboard" className="nebula-btn nebula-btn-primary nebula-btn-sm">
-                🎮 Gamer Dashboard
-              </Link>
-              <Link to="/organizer/dashboard" className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                ⚡ Organizer Hub
-              </Link>
+              {user.accountType === 'ORGANIZER' ? (
+                <Link to="/organizer/dashboard" className="nebula-btn nebula-btn-cyan nebula-btn-sm">
+                  ⚡ Operations Hub ({user.username})
+                </Link>
+              ) : (
+                <Link to="/gamer/dashboard" className="nebula-btn nebula-btn-primary nebula-btn-sm">
+                  🎮 Gamer Dashboard ({user.username})
+                </Link>
+              )}
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
