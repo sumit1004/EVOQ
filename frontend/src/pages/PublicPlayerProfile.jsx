@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
+import PublicNavbar from '../components/PublicNavbar.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/platform.css';
+import '../styles/nebula.css';
 
 export default function PublicPlayerProfile() {
   const { slug } = useParams();
@@ -21,21 +21,25 @@ export default function PublicPlayerProfile() {
 
   if (loading) {
     return (
-      <div>
-        <Navbar />
-        <div className="platform-page">Loading player portfolio...</div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⏳</div>
+          <p>Loading player portfolio...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <div>
-        <Navbar />
-        <div className="platform-page" style={{ textAlign: 'center', padding: '4rem 0' }}>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⚠️</div>
           <h2>Player Profile Not Found</h2>
-          <p style={{ color: 'var(--muted)', marginTop: '0.5rem' }}>{error}</p>
-          <Link to="/tournaments" className="btn-primary" style={{ display: 'inline-block', marginTop: '1.5rem', width: 'auto' }}>
+          <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
+          <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
             Browse Tournaments
           </Link>
         </div>
@@ -45,259 +49,277 @@ export default function PublicPlayerProfile() {
 
   const stats = profile.statistics?.[0] || {
     tournamentsPlayed: profile.careerRecords?.length || 0,
-    tournamentsWon: profile.achievements?.filter((a) => a.type === 'WINNER').length || 0,
-    podiumFinishes: profile.achievements?.filter((a) => ['WINNER', 'RUNNER_UP', 'TOP_4'].includes(a.type)).length || 0,
-    matchesPlayed: profile.careerRecords?.reduce((acc, c) => acc + (c.matchesPlayed || 0), 0) || 0,
-    matchesWon: profile.careerRecords?.reduce((acc, c) => acc + (c.matchesWon || 0), 0) || 0,
+    tournamentsWon: profile.achievements?.filter((a) => a.type === 'CHAMPION' || a.type === 'WINNER').length || 0,
+    matchesPlayed: profile.careerRecords?.length || 0,
+    matchesWon: profile.careerRecords?.filter((c) => c.placement === 1).length || 0,
   };
 
-  const winRate = stats.matchesPlayed > 0 ? Math.round((stats.matchesWon / stats.matchesPlayed) * 100) : 0;
+  const achievements = profile.achievements || [];
+  const careerRecords = profile.careerRecords || [];
+  const identities = profile.gameIdentities || [];
 
   return (
-    <div>
-      <Navbar />
-      <div className="platform-page">
-        {/* Profile Hero */}
-        <div className="profile-hero">
+    <div className="nebula-shell">
+      <PublicNavbar />
+      <main className="nebula-container">
+        {/* Player Banner & Hero Card */}
+        <div
+          className="nebula-card"
+          style={{
+            padding: 0,
+            overflow: 'hidden',
+            marginBottom: '2rem',
+            border: '1px solid var(--nebula-border)',
+          }}
+        >
+          {profile.bannerUrl ? (
+            <img
+              src={profile.bannerUrl}
+              alt={profile.displayName || profile.inGameName}
+              style={{ width: '100%', height: '240px', objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '180px',
+                background: 'linear-gradient(135deg, #1b143d 0%, #0d1222 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                padding: '1.5rem',
+              }}
+            >
+              <span className="nebula-badge nebula-badge-violet">VERIFIED PLAYER</span>
+            </div>
+          )}
+
           <div
-            className="hero-cover"
             style={{
-              backgroundImage: profile.coverUrl ? `url(${profile.coverUrl})` : undefined,
+              padding: '1.5rem 2rem 2rem 2rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1.5rem',
             }}
-          ></div>
-          <div className="hero-body">
-            <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <img
-                src={
-                  profile.avatarUrl ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName)}&background=1A2030&color=7C5CFC&size=200`
-                }
-                alt={profile.displayName}
-                className="hero-avatar"
-              />
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>{profile.displayName}</h1>
-                  <span className="badge badge-verified">VERIFIED PRO</span>
+          >
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.inGameName}
+                  style={{
+                    width: '96px',
+                    height: '96px',
+                    borderRadius: 'var(--nebula-radius-lg)',
+                    border: '3px solid var(--nebula-surface-primary)',
+                    marginTop: '-48px',
+                    backgroundColor: 'var(--nebula-surface-elevated)',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '96px',
+                    height: '96px',
+                    borderRadius: 'var(--nebula-radius-lg)',
+                    border: '3px solid var(--nebula-surface-primary)',
+                    marginTop: '-48px',
+                    backgroundColor: 'var(--nebula-violet)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2.5rem',
+                    fontWeight: 900,
+                    color: '#fff',
+                  }}
+                >
+                  {profile.inGameName ? profile.inGameName.slice(0, 2).toUpperCase() : 'P'}
                 </div>
-                <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '1.1rem' }}>
-                  @{profile.inGameName || profile.user?.username}
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', color: 'var(--muted)', fontSize: '0.85rem', marginTop: '4px' }}>
-                  {profile.country && <span>📍 {profile.country}</span>}
-                  <span>🎮 {profile.gamerType}</span>
-                  <span>🏆 {profile.achievements?.length || 0} Verified Achievements</span>
+              )}
+
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                  <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>
+                    {profile.displayName || profile.inGameName}
+                  </h1>
+                  <span className="nebula-badge nebula-badge-lime">✔ VERIFIED ESPORTS ID</span>
+                </div>
+                <div style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
+                  <strong>@{profile.user?.username || profile.inGameName}</strong> {profile.country ? `• 🌍 ${profile.country}` : ''}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Social Links */}
-            {profile.socialLinks && (
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                {profile.socialLinks.twitter && (
-                  <span className="pill-btn">𝕏 {profile.socialLinks.twitter}</span>
-                )}
-                {profile.socialLinks.discord && (
-                  <span className="pill-btn">💬 {profile.socialLinks.discord}</span>
-                )}
-                {profile.socialLinks.twitch && (
-                  <span className="pill-btn">📺 {profile.socialLinks.twitch}</span>
-                )}
-              </div>
-            )}
+          {profile.bio && (
+            <div style={{ padding: '0 2rem 1.5rem 2rem', color: 'var(--nebula-text-secondary)', lineHeight: '1.6' }}>
+              {profile.bio}
+            </div>
+          )}
+        </div>
+
+        {/* Metrics Row */}
+        <div className="nebula-grid-metrics">
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Tournaments Played</span>
+            <span className="nebula-metric-value">{stats.tournamentsPlayed}</span>
+          </div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Trophies / First Place</span>
+            <span className="nebula-metric-value" style={{ color: 'var(--nebula-lime)' }}>
+              {stats.tournamentsWon}
+            </span>
+          </div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Verified Badges</span>
+            <span className="nebula-metric-value" style={{ color: 'var(--nebula-cyan)' }}>
+              {achievements.length}
+            </span>
+          </div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Connected Titles</span>
+            <span className="nebula-metric-value">{identities.length}</span>
           </div>
         </div>
 
-        {/* Profile Tabs */}
-        <div className="evoq-tabs">
+        {/* Tabs */}
+        <div className="nebula-tabs">
           <button
-            className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+            className={`nebula-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
-            Overview &amp; Stats
+            Overview &amp; Game IDs
           </button>
           <button
-            className={`tab-btn ${activeTab === 'achievements' ? 'active' : ''}`}
+            className={`nebula-tab-btn ${activeTab === 'achievements' ? 'active' : ''}`}
             onClick={() => setActiveTab('achievements')}
           >
-            Verified Achievements ({profile.achievements?.length || 0})
+            Verified Achievements ({achievements.length})
           </button>
           <button
-            className={`tab-btn ${activeTab === 'career' ? 'active' : ''}`}
-            onClick={() => setActiveTab('career')}
+            className={`nebula-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timeline')}
           >
-            Career History ({profile.careerRecords?.length || 0})
+            Career Timeline ({careerRecords.length})
           </button>
         </div>
 
-        {/* Tab 1: Overview */}
         {activeTab === 'overview' && (
-          <div>
-            {/* Stat Cards */}
-            <div className="grid-cards" style={{ marginBottom: 'var(--space-xl)' }}>
-              <div className="stat-card">
-                <span className="stat-label">Tournaments Played</span>
-                <p className="stat-value">{stats.tournamentsPlayed}</p>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Championships Won</span>
-                <p className="stat-value" style={{ color: 'var(--primary)' }}>
-                  {stats.tournamentsWon}
-                </p>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Podium Finishes</span>
-                <p className="stat-value" style={{ color: 'var(--success)' }}>
-                  {stats.podiumFinishes}
-                </p>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Match Win Rate</span>
-                <p className="stat-value">{winRate}%</p>
-              </div>
-            </div>
-
-            <div className="grid-cols-2">
-              {/* Bio & Details */}
-              <div className="evoq-card">
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Biography</h3>
-                <p style={{ color: 'var(--muted)', lineHeight: '1.7' }}>
-                  {profile.bio || 'This competitive gamer has not provided a biography yet.'}
-                </p>
-              </div>
-
-              {/* Game Identities */}
-              <div className="evoq-card">
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Active Competitive Titles</h3>
+          <div className="nebula-grid-2col">
+            <div className="nebula-card">
+              <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
+                <span>🎮</span> Connected Publisher Handles
+              </h2>
+              {identities.length === 0 ? (
+                <p style={{ color: 'var(--nebula-text-secondary)' }}>No public game identities connected.</p>
+              ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {profile.gameIdentities?.map((gi) => (
+                  {identities.map((id) => (
                     <div
-                      key={gi.id}
+                      key={id.id}
                       style={{
-                        backgroundColor: 'var(--surface-raised)',
-                        border: '1px solid var(--border)',
-                        padding: '0.75rem 1rem',
-                        borderRadius: 'var(--radius-md)',
+                        padding: '1rem',
+                        backgroundColor: 'var(--nebula-surface-elevated)',
+                        borderRadius: 'var(--nebula-radius-md)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                       }}
                     >
                       <div>
-                        <div style={{ fontWeight: 700 }}>{gi.game?.name}</div>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-                          IGN: <strong style={{ color: 'var(--text)' }}>{gi.inGameName}</strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--nebula-cyan)', fontWeight: 700 }}>
+                          {id.game?.name || 'Title'}
                         </span>
+                        <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{id.inGameIdentifier || id.inGameName}</div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        {gi.serverRegion && <span className="pill-btn">{gi.serverRegion}</span>}
-                        {gi.competitiveRole && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '4px' }}>
-                            {gi.competitiveRole}
-                          </div>
-                        )}
-                      </div>
+                      <span className="nebula-badge nebula-badge-lime">VERIFIED</span>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            <div className="nebula-card">
+              <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>Player Details</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--nebula-text-muted)' }}>Player Slug:</span>
+                  <code>/players/{profile.slug}</code>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--nebula-text-muted)' }}>Location:</span>
+                  <strong>{profile.country || 'Global'}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--nebula-text-muted)' }}>Member Since:</span>
+                  <strong>{new Date(profile.createdAt).toLocaleDateString()}</strong>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 2: Verified Achievements */}
         {activeTab === 'achievements' && (
-          <div>
-            {profile.achievements?.length === 0 ? (
-              <div className="evoq-card" style={{ textAlign: 'center', padding: '3rem' }}>
-                <p style={{ color: 'var(--muted)' }}>No verified achievements awarded yet.</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
-                  Achievements are automatically awarded upon approved tournament completions.
-                </p>
+          <div className="nebula-grid-cards">
+            {achievements.length === 0 ? (
+              <div className="nebula-card nebula-empty-state" style={{ gridColumn: '1 / -1' }}>
+                <p>No verified achievements recorded.</p>
               </div>
             ) : (
-              <div className="grid-cols-2">
-                {profile.achievements?.map((ach) => (
-                  <div key={ach.id} className="achievement-badge">
-                    <div
-                      className={`achievement-icon ${
-                        ach.type === 'WINNER' ? 'winner' : ach.type === 'RUNNER_UP' ? 'runner_up' : ''
-                      }`}
-                    >
-                      {ach.type === 'WINNER' ? '🥇' : ach.type === 'RUNNER_UP' ? '🥈' : '🏆'}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{ach.title}</h4>
-                        <span className="badge badge-verified">EVOQ VERIFIED</span>
+              achievements.map((ach) => (
+                <div key={ach.id} className="nebula-card" style={{ borderLeft: '4px solid var(--nebula-lime)' }}>
+                  <span className="nebula-badge nebula-badge-lime" style={{ marginBottom: '0.5rem' }}>
+                    {ach.type}
+                  </span>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.25rem 0' }}>{ach.title}</h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
+                    Game: {ach.game?.name || 'Title'} • {new Date(ach.awardedAt || ach.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'timeline' && (
+          <div className="nebula-card">
+            {careerRecords.length === 0 ? (
+              <div className="nebula-empty-state">
+                <p>No career events recorded.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {careerRecords.map((cr) => (
+                  <div
+                    key={cr.id}
+                    style={{
+                      padding: '1rem',
+                      backgroundColor: 'var(--nebula-surface-elevated)',
+                      borderRadius: 'var(--nebula-radius-md)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <strong>{cr.tournament?.name || cr.tournament?.title || 'Tournament Event'}</strong>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
+                        Game: {cr.game?.name || 'Title'} • {new Date(cr.createdAt).toLocaleDateString()}
                       </div>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '2px' }}>
-                        {ach.game?.name} • Awarded on {new Date(ach.awardedAt).toLocaleDateString()}
-                      </p>
-                      {ach.tournament && (
-                        <Link
-                          to={`/tournaments/${ach.tournament.slug}`}
-                          style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '4px', display: 'inline-block' }}
-                        >
-                          View Tournament Record →
-                        </Link>
-                      )}
                     </div>
+                    <span className="nebula-badge nebula-badge-violet">
+                      {cr.placement ? `#${cr.placement}` : 'COMPETITOR'}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
-
-        {/* Tab 3: Career History */}
-        {activeTab === 'career' && (
-          <div className="evoq-card">
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Tournament Career History</h3>
-            {profile.careerRecords?.length === 0 ? (
-              <p style={{ color: 'var(--muted)', padding: '1rem 0' }}>No historical tournament records.</p>
-            ) : (
-              <table className="evoq-table">
-                <thead>
-                  <tr>
-                    <th>Tournament</th>
-                    <th>Game</th>
-                    <th>Team Represented</th>
-                    <th>Placement</th>
-                    <th>Match Record</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profile.careerRecords?.map((cr) => (
-                    <tr key={cr.id}>
-                      <td>
-                        <Link to={`/tournaments/${cr.tournament.slug}`} style={{ fontWeight: 600 }}>
-                          {cr.tournament.name}
-                        </Link>
-                      </td>
-                      <td>{cr.game?.name}</td>
-                      <td>{cr.teamName || 'Solo Competitor'}</td>
-                      <td>
-                        <span style={{ fontWeight: 700, color: cr.finalPlacement === 1 ? 'var(--primary)' : 'inherit' }}>
-                          {cr.finalPlacement ? `#${cr.finalPlacement}` : 'Competed'}
-                        </span>
-                      </td>
-                      <td>
-                        {cr.matchesWon}W - {cr.matchesPlayed - cr.matchesWon}L
-                      </td>
-                      <td>
-                        <span className="badge badge-verified">VERIFIED</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 }
-

@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../../services/auth.service.js';
 
+const SESSION_HINT_KEY = 'evoq_has_session';
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -8,15 +10,27 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const checkAuth = useCallback(async () => {
+  const checkAuth = useCallback(async (force = false) => {
+    // Check if the browser holds a session hint.
+    // If not, the visitor is a guest; skip the eager network call to prevent unwanted 401 console errors.
+    const hasSessionHint = typeof window !== 'undefined' && localStorage.getItem(SESSION_HINT_KEY) === 'true';
+
+    if (!hasSessionHint && !force) {
+      setLoading(false);
+      setUser(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const data = await authService.me();
       setUser(data);
+      localStorage.setItem(SESSION_HINT_KEY, 'true');
     } catch (err) {
       setUser(null);
-      // 401 is normal when visitor is not logged in
+      localStorage.removeItem(SESSION_HINT_KEY);
+      // 401 is normal when visitor is unauthenticated or session has expired
       if (err.status !== 401) {
         setError(err.message);
       }
@@ -32,7 +46,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setError(null);
     const data = await authService.login(email, password);
-    // After login, refresh or set user
+    localStorage.setItem(SESSION_HINT_KEY, 'true');
     setUser(data.user);
     return data;
   };
@@ -46,6 +60,7 @@ export function AuthProvider({ children }) {
     try {
       await authService.logout();
     } finally {
+      localStorage.removeItem(SESSION_HINT_KEY);
       setUser(null);
     }
   };
@@ -54,6 +69,7 @@ export function AuthProvider({ children }) {
     try {
       await authService.logoutAll();
     } finally {
+      localStorage.removeItem(SESSION_HINT_KEY);
       setUser(null);
     }
   };
@@ -67,7 +83,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     logoutAll,
-    refreshUser: checkAuth,
+    refreshUser: (force = true) => checkAuth(force),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -80,4 +96,3 @@ export function useAuth() {
   }
   return context;
 }
-

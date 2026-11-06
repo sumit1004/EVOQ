@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
+import PublicNavbar from '../components/PublicNavbar.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/platform.css';
+import '../styles/nebula.css';
 
 export default function PublicOrganizationProfile() {
   const { slug } = useParams();
@@ -28,44 +28,44 @@ export default function PublicOrganizationProfile() {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="platform-page">
-          <div className="empty-state">Loading organization profile...</div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⏳</div>
+          <p>Loading organization profile...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error || !org) {
     return (
-      <>
-        <Navbar />
-        <div className="platform-page">
-          <div className="empty-state">
-            <h2>Organization Not Found</h2>
-            <p>{error || 'The requested organization could not be located.'}</p>
-            <Link to="/organizations" className="evoq-btn evoq-btn-primary" style={{ marginTop: 'var(--space-md)' }}>
-              Browse Organizations
-            </Link>
-          </div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⚠️</div>
+          <h2>Organization Not Found</h2>
+          <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
+          <Link to="/tournaments" className="nebula-btn nebula-btn-cyan" style={{ marginTop: '1.5rem' }}>
+            Browse Tournaments
+          </Link>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <Navbar />
-      <div className="platform-page">
+    <div className="nebula-shell">
+      <PublicNavbar />
+      <main className="nebula-container">
         {/* Org Hero Header */}
         <div
-          className="evoq-card"
+          className="nebula-card"
           style={{
             padding: 0,
             overflow: 'hidden',
-            marginBottom: 'var(--space-xl)',
-            border: '1px solid var(--border)',
+            marginBottom: '2rem',
+            border: '1px solid var(--nebula-border)',
           }}
         >
           {org.bannerUrl ? (
@@ -79,16 +79,16 @@ export default function PublicOrganizationProfile() {
               style={{
                 width: '100%',
                 height: '160px',
-                background: 'linear-gradient(135deg, #1f1b3a 0%, #0d0f17 100%)',
+                background: 'linear-gradient(135deg, #0d2235 0%, #0d1222 100%)',
               }}
             />
           )}
 
           <div
             style={{
-              padding: 'var(--space-xl)',
+              padding: '1.5rem 2rem 2rem 2rem',
               display: 'flex',
-              gap: 'var(--space-lg)',
+              gap: '1.5rem',
               alignItems: 'flex-start',
               flexWrap: 'wrap',
             }}
@@ -100,10 +100,10 @@ export default function PublicOrganizationProfile() {
                 style={{
                   width: '96px',
                   height: '96px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '3px solid var(--surface)',
+                  borderRadius: 'var(--nebula-radius-lg)',
+                  border: '3px solid var(--nebula-surface-primary)',
                   marginTop: '-48px',
-                  backgroundColor: 'var(--surface-raised)',
+                  backgroundColor: 'var(--nebula-surface-elevated)',
                   objectFit: 'cover',
                 }}
               />
@@ -112,16 +112,16 @@ export default function PublicOrganizationProfile() {
                 style={{
                   width: '96px',
                   height: '96px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '3px solid var(--surface)',
+                  borderRadius: 'var(--nebula-radius-lg)',
+                  border: '3px solid var(--nebula-surface-primary)',
                   marginTop: '-48px',
-                  backgroundColor: 'var(--primary)',
+                  backgroundColor: 'var(--nebula-cyan)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: '#fff',
+                  fontWeight: 900,
+                  color: '#0B1020',
                 }}
               >
                 {org.name.slice(0, 2).toUpperCase()}
@@ -129,14 +129,12 @@ export default function PublicOrganizationProfile() {
             )}
 
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: '800' }}>{org.name}</h1>
-                {org.isVerified && (
-                  <span className="evoq-badge badge-primary">✔ Verified Organization</span>
-                )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>{org.name}</h1>
+                <span className="nebula-badge nebula-badge-cyan">✔ VERIFIED CLUB</span>
               </div>
               {org.tagline && (
-                <p style={{ color: 'var(--muted)', fontSize: '1.1rem', marginTop: 'var(--space-xs)' }}>
+                <p style={{ color: 'var(--nebula-cyan)', fontSize: '1rem', margin: '0.25rem 0 0 0', fontWeight: 600 }}>
                   {org.tagline}
                 </p>
               )}
@@ -146,10 +144,10 @@ export default function PublicOrganizationProfile() {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    color: 'var(--primary)',
-                    fontSize: '0.9rem',
+                    color: 'var(--nebula-text-secondary)',
+                    fontSize: '0.85rem',
                     display: 'inline-block',
-                    marginTop: 'var(--space-xs)',
+                    marginTop: '0.35rem',
                   }}
                 >
                   🔗 {org.websiteUrl}
@@ -160,19 +158,19 @@ export default function PublicOrganizationProfile() {
         </div>
 
         {/* Content Columns */}
-        <div className="grid-cols-2" style={{ alignItems: 'start' }}>
-          {/* Left Column: About & Staff */}
+        <div className="nebula-grid-2col">
+          {/* About & Staff */}
           <div>
-            <div className="evoq-card" style={{ marginBottom: 'var(--space-lg)' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: 'var(--space-md)' }}>About Organization</h2>
-              <p style={{ color: 'var(--text)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                {org.description || 'No description provided by the organization.'}
+            <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
+              <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>About Organization</h2>
+              <p style={{ color: 'var(--nebula-text-secondary)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {org.description || 'No public description provided.'}
               </p>
             </div>
 
-            <div className="evoq-card">
-              <h2 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: 'var(--space-md)' }}>Staff & Leadership</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            <div className="nebula-card">
+              <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>Leadership &amp; Staff</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {org.memberships && org.memberships.length > 0 ? (
                   org.memberships.map((m) => (
                     <div
@@ -181,57 +179,61 @@ export default function PublicOrganizationProfile() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        padding: 'var(--space-sm) 0',
-                        borderBottom: '1px solid var(--border)',
+                        padding: '0.65rem 0',
+                        borderBottom: '1px solid var(--nebula-border)',
                       }}
                     >
                       <div>
-                        <div style={{ fontWeight: '600' }}>{m.user?.username || 'Staff Member'}</div>
-                        {m.title && <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{m.title}</div>}
+                        <div style={{ fontWeight: 700 }}>{m.user?.username || 'Staff Member'}</div>
+                        {m.title && <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>{m.title}</div>}
                       </div>
-                      <span className="evoq-badge badge-secondary">{m.role}</span>
+                      <span className="nebula-badge nebula-badge-cyan">{m.role}</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ color: 'var(--muted)' }}>No staff members listed.</p>
+                  <p style={{ color: 'var(--nebula-text-secondary)' }}>No staff members listed.</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Column: Tournaments & Events */}
+          {/* Tournaments by Org */}
           <div>
-            <div className="evoq-card">
-              <h2 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: 'var(--space-md)' }}>
-                Tournaments by {org.name}
+            <div className="nebula-card">
+              <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
+                <span>🏆</span> Official Tournaments
               </h2>
               {org.tournaments && org.tournaments.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {org.tournaments.map((t) => (
                     <Link
                       key={t.id}
                       to={`/tournaments/${t.slug}`}
-                      className="evoq-card clickable"
-                      style={{ padding: 'var(--space-md)', textDecoration: 'none', color: 'inherit' }}
+                      className="nebula-card-clickable"
+                      style={{
+                        padding: '1rem',
+                        backgroundColor: 'var(--nebula-surface-elevated)',
+                        borderRadius: 'var(--nebula-radius-md)',
+                        border: '1px solid var(--nebula-border)',
+                      }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>{t.title}</h3>
-                        <span className="evoq-badge badge-primary">{t.status}</span>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{t.name || t.title}</h3>
+                        <span className="nebula-badge nebula-badge-lime">{t.status}</span>
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: 'var(--space-xs)' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)', marginTop: '0.35rem' }}>
                         Game: {t.game?.name || 'Esports'} • Format: {t.format}
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <p style={{ color: 'var(--muted)' }}>No tournaments published yet.</p>
+                <p style={{ color: 'var(--nebula-text-secondary)' }}>No active tournaments published yet.</p>
               )}
             </div>
           </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
-

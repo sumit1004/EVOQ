@@ -1,24 +1,22 @@
-/* ─── EVOQ Design Foundation ──────────────────── */
+@import './nebula.css';
 
-/* Color tokens – dark-first esports theme */
+/* ─── EVOQ Design Foundation — Aligned to Approved NEBULA Palette ─── */
 :root {
-  --bg: #0B0D12;
-  --surface: #131722;
-  --surface-raised: #1A2030;
-  --border: #2A3242;
-  --text: #F4F6FA;
-  --muted: #9AA4B2;
-  --primary: #7C5CFC;
-  --primary-hover: #6B4FDB;
-  --success: #27AE78;
-  --warning: #D99A35;
-  --danger: #D6535B;
+  --bg: var(--nebula-bg);
+  --surface: var(--nebula-surface-primary);
+  --surface-raised: var(--nebula-surface-elevated);
+  --border: var(--nebula-border);
+  --text: var(--nebula-text-primary);
+  --muted: var(--nebula-text-muted);
+  --primary: var(--nebula-violet);
+  --primary-hover: var(--nebula-violet-hover);
+  --success: var(--nebula-lime);
+  --warning: #F59E0B;
+  --danger: var(--nebula-coral);
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas,
-    monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
   /* Spacing scale */
   --space-xs: 0.25rem;
@@ -29,9 +27,9 @@
   --space-2xl: 3rem;
 
   /* Border radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: var(--nebula-radius-sm);
+  --radius-md: var(--nebula-radius-md);
+  --radius-lg: var(--nebula-radius-lg);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -55,20 +53,20 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--nebula-bg);
+  color: var(--nebula-text-primary);
   line-height: 1.6;
   min-height: 100vh;
 }
 
 a {
-  color: var(--primary);
+  color: var(--nebula-violet);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--primary-hover);
+  color: var(--nebula-violet-hover);
 }
 
 button {
@@ -87,4 +85,3 @@ img {
   max-width: 100%;
   display: block;
 }
-

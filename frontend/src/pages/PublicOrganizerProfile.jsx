@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
+import PublicNavbar from '../components/PublicNavbar.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/platform.css';
+import '../styles/nebula.css';
 
 export default function PublicOrganizerProfile() {
   const { slug } = useParams();
@@ -28,146 +28,147 @@ export default function PublicOrganizerProfile() {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="platform-page">
-          <div className="empty-state">Loading organizer profile...</div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⏳</div>
+          <p>Loading organizer credibility profile...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error || !organizer) {
     return (
-      <>
-        <Navbar />
-        <div className="platform-page">
-          <div className="empty-state">
-            <h2>Organizer Not Found</h2>
-            <p>{error || 'The requested organizer could not be found.'}</p>
-            <Link to="/tournaments" className="evoq-btn evoq-btn-primary" style={{ marginTop: 'var(--space-md)' }}>
-              Browse Tournaments
-            </Link>
-          </div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⚠️</div>
+          <h2>Organizer Not Found</h2>
+          <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
+          <Link to="/tournaments" className="nebula-btn nebula-btn-cyan" style={{ marginTop: '1.5rem' }}>
+            Browse Tournaments
+          </Link>
         </div>
-      </>
+      </div>
     );
   }
 
-  const { metrics = {}, portfolio = [] } = organizer;
+  const { credibility = organizer.metrics || {}, portfolioRecords = organizer.portfolio || [] } = organizer;
 
   return (
-    <>
-      <Navbar />
-      <div className="platform-page">
-        {/* Organizer Hero Header */}
-        <div className="evoq-card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-lg)', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className="nebula-shell">
+      <PublicNavbar />
+      <main className="nebula-container">
+        {/* Organizer Hero */}
+        <div className="nebula-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--nebula-cyan)' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div
               style={{
                 width: '80px',
                 height: '80px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--primary)',
+                borderRadius: 'var(--nebula-radius-lg)',
+                backgroundColor: 'var(--nebula-cyan)',
+                color: '#0B1020',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '2rem',
-                fontWeight: 'bold',
-                color: '#fff',
+                fontWeight: 900,
               }}
             >
               {organizer.organizationName ? organizer.organizationName.slice(0, 2).toUpperCase() : 'OR'}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: '800' }}>
-                  {organizer.organizationName || organizer.user?.username || 'Esports Organizer'}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>
+                  {organizer.organizationName || organizer.user?.username || 'Verified Esports Organizer'}
                 </h1>
-                {organizer.isVerified && (
-                  <span className="evoq-badge badge-primary">✔ Verified Organizer</span>
-                )}
-                {organizer.tier && (
-                  <span className="evoq-badge badge-secondary">{organizer.tier} TIER</span>
-                )}
+                <span className="nebula-badge nebula-badge-cyan">✔ VERIFIED DIRECTOR</span>
               </div>
-              <p style={{ color: 'var(--muted)', marginTop: 'var(--space-xs)' }}>
-                Organizer Profile • {organizer.yearsOfExperience || 1}+ Years Operations Experience
+              <p style={{ color: 'var(--nebula-text-secondary)', margin: '0.25rem 0 0 0' }}>
+                Official Organizer Profile • Member since {new Date(organizer.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
 
           {organizer.bio && (
-            <p style={{ marginTop: 'var(--space-md)', color: 'var(--text)', lineHeight: '1.6' }}>
+            <p style={{ marginTop: '1.25rem', color: 'var(--nebula-text-secondary)', lineHeight: '1.6', margin: '1.25rem 0 0 0' }}>
               {organizer.bio}
             </p>
           )}
         </div>
 
-        {/* Credibility & Operations Metrics */}
-        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: 'var(--space-md)' }}>
-          Operations Credibility & History
+        {/* Operational Credibility Metrics */}
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '1rem' }}>
+          Operations Credibility &amp; History
         </h2>
-        <div className="grid-cols-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
-          <div className="evoq-card">
-            <div className="metric-number">{metrics.completedTournaments || 0}</div>
-            <div className="metric-label">Completed Tournaments</div>
+        <div className="nebula-grid-metrics">
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Completed Tournaments</span>
+            <span className="nebula-metric-value" style={{ color: 'var(--nebula-cyan)' }}>
+              {credibility.completedTournaments || 0}
+            </span>
           </div>
-          <div className="evoq-card">
-            <div className="metric-number">{metrics.completedMatches || 0}</div>
-            <div className="metric-label">Completed Matches</div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Completed Matches</span>
+            <span className="nebula-metric-value">
+              {credibility.completedMatches || 0}
+            </span>
           </div>
-          <div className="evoq-card">
-            <div className="metric-number">{metrics.totalParticipants || 0}</div>
-            <div className="metric-label">Players / Teams Hosted</div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Competitors Hosted</span>
+            <span className="nebula-metric-value" style={{ color: 'var(--nebula-violet)' }}>
+              {credibility.approvedParticipants || 0}
+            </span>
           </div>
-          <div className="evoq-card">
-            <div className="metric-number" style={{ color: 'var(--success)' }}>
-              {metrics.completionRate !== undefined ? `${metrics.completionRate}%` : '100%'}
-            </div>
-            <div className="metric-label">Event Completion Rate</div>
+          <div className="nebula-metric">
+            <span className="nebula-metric-label">Verification Tier</span>
+            <span className="nebula-metric-value" style={{ color: 'var(--nebula-lime)', fontSize: '1.4rem' }}>
+              {organizer.verificationStatus || 'VERIFIED'}
+            </span>
           </div>
         </div>
 
-        {/* Verified Portfolio Records */}
-        <div className="evoq-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+        {/* Verified Event Portfolio */}
+        <div className="nebula-card">
+          <div className="nebula-card-header">
             <div>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: '700' }}>Verified Event Portfolio</h2>
-              <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Cryptographically verifiable event completion history derived directly from competitive match results.
-              </p>
+              <h2 className="nebula-card-title">Verified Event Portfolio</h2>
+              <div style={{ fontSize: '0.85rem', color: 'var(--nebula-text-muted)' }}>
+                Immutable event completion history derived directly from verified match results.
+              </div>
             </div>
           </div>
 
-          {portfolio.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No completed tournament records in portfolio yet.</p>
+          {portfolioRecords.length === 0 ? (
+            <div className="nebula-empty-state">
+              <p>No concluded tournament records in portfolio yet.</p>
+            </div>
           ) : (
-            <div className="table-responsive">
-              <table className="evoq-table">
+            <div className="nebula-table-wrapper">
+              <table className="nebula-table">
                 <thead>
                   <tr>
-                    <th>Tournament</th>
-                    <th>Game</th>
-                    <th>Participants</th>
-                    <th>Matches Held</th>
+                    <th>Tournament Event</th>
+                    <th>Game Title</th>
+                    <th>Competitors</th>
+                    <th>Matches</th>
                     <th>Completed Date</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {portfolio.map((item) => (
+                  {portfolioRecords.map((item) => (
                     <tr key={item.id}>
                       <td>
-                        <strong>{item.tournament?.title || item.tournamentTitle || 'Tournament'}</strong>
+                        <strong>{item.tournament?.name || item.tournamentTitle || 'Tournament'}</strong>
                       </td>
-                      <td>{item.game?.name || item.gameName || '—'}</td>
+                      <td><span className="nebula-badge nebula-badge-violet">{item.gameName || 'Esports'}</span></td>
                       <td>{item.participantCount}</td>
                       <td>{item.matchCount}</td>
                       <td>{new Date(item.completedAt || item.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <span className="evoq-badge badge-primary">✔ VERIFIED</span>
-                      </td>
+                      <td><span className="nebula-badge nebula-badge-lime">✔ VERIFIED</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -175,8 +176,7 @@ export default function PublicOrganizerProfile() {
             </div>
           )}
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
-

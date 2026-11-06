@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
+import PublicNavbar from '../components/PublicNavbar.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/platform.css';
+import '../styles/nebula.css';
 
 export default function PublicTeamProfile() {
   const { slug } = useParams();
@@ -20,22 +20,26 @@ export default function PublicTeamProfile() {
 
   if (loading) {
     return (
-      <div>
-        <Navbar />
-        <div className="platform-page">Loading team profile...</div>
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⏳</div>
+          <p>Loading team profile...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !team) {
     return (
-      <div>
-        <Navbar />
-        <div className="platform-page" style={{ textAlign: 'center', padding: '4rem 0' }}>
-          <h2>Team Profile Not Found</h2>
-          <p style={{ color: 'var(--muted)', marginTop: '0.5rem' }}>{error}</p>
-          <Link to="/teams" className="btn-primary" style={{ display: 'inline-block', marginTop: '1.5rem', width: 'auto' }}>
-            Browse Teams
+      <div className="nebula-shell">
+        <PublicNavbar />
+        <div className="nebula-container nebula-empty-state">
+          <div className="nebula-empty-icon">⚠️</div>
+          <h2>Team Not Found</h2>
+          <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
+          <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
+            Browse Tournaments
           </Link>
         </div>
       </div>
@@ -43,122 +47,157 @@ export default function PublicTeamProfile() {
   }
 
   return (
-    <div>
-      <Navbar />
-      <div className="platform-page">
-        {/* Team Banner & Hero */}
-        <div className="profile-hero">
+    <div className="nebula-shell">
+      <PublicNavbar />
+      <main className="nebula-container">
+        {/* Team Hero */}
+        <div
+          className="nebula-card"
+          style={{
+            padding: 0,
+            overflow: 'hidden',
+            marginBottom: '2rem',
+            border: '1px solid var(--nebula-border)',
+          }}
+        >
           <div
-            className="hero-cover"
             style={{
-              backgroundImage: team.coverUrl ? `url(${team.coverUrl})` : undefined,
+              height: '180px',
+              background: 'linear-gradient(135deg, #1f143d 0%, #0d1222 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              padding: '1.5rem',
             }}
-          ></div>
-          <div className="hero-body">
-            <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <img
-                src={
-                  team.logoUrl ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(team.name)}&background=7C5CFC&color=fff&size=200`
-                }
-                alt={team.name}
-                className="hero-avatar"
-              />
+          >
+            <span className="nebula-badge nebula-badge-violet">COMPETITIVE SQUAD</span>
+          </div>
+
+          <div
+            style={{
+              padding: '1.5rem 2rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              <div
+                style={{
+                  width: '84px',
+                  height: '84px',
+                  borderRadius: 'var(--nebula-radius-lg)',
+                  border: '3px solid var(--nebula-surface-primary)',
+                  marginTop: '-42px',
+                  backgroundColor: 'var(--nebula-violet)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  fontWeight: 900,
+                  color: '#fff',
+                }}
+              >
+                {team.tag || team.name?.slice(0, 2).toUpperCase()}
+              </div>
+
               <div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{team.name}</h1>
-                <p style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                  {team.primaryGame?.name || 'Esports Team'} • {team.memberships?.length || 0} Members
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', color: 'var(--muted)', fontSize: '0.85rem', marginTop: '4px' }}>
-                  {team.country && <span>📍 {team.country}</span>}
-                  <span>Owner: @{team.owner?.username}</span>
-                  {team.captain && <span>Captain: @{team.captain.username}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>{team.name}</h1>
+                  <span className="nebula-badge nebula-badge-neutral">[{team.tag || 'TEAM'}]</span>
+                </div>
+                <div style={{ color: 'var(--nebula-cyan)', fontSize: '0.9rem', marginTop: '0.2rem', fontWeight: 700 }}>
+                  {team.game?.name || 'Esports'}
                 </div>
               </div>
             </div>
           </div>
+
+          {team.bio && (
+            <div style={{ padding: '0 2rem 1.5rem 2rem', color: 'var(--nebula-text-secondary)', lineHeight: '1.6' }}>
+              {team.bio}
+            </div>
+          )}
         </div>
 
-        <div className="grid-cols-2">
+        {/* Content Columns */}
+        <div className="nebula-grid-2col">
           {/* Active Roster */}
-          <div className="evoq-card">
-            <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-md)' }}>Active Roster</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {team.memberships?.map((m) => {
-                const profile = m.user?.gamerProfile;
-                return (
+          <div className="nebula-card">
+            <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
+              <span>👥</span> Active Roster Members
+            </h2>
+
+            <div className="nebula-table-wrapper">
+              <table className="nebula-table">
+                <thead>
+                  <tr>
+                    <th>Gamer</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {team.memberships?.map((m) => (
+                    <tr key={m.id}>
+                      <td>
+                        <strong>{m.gamerProfile?.displayName || m.user?.username || 'Player'}</strong>
+                        {m.gamerProfile?.inGameName && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--nebula-text-muted)' }}>
+                            IGN: {m.gamerProfile.inGameName}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`nebula-badge ${m.role === 'CAPTAIN' ? 'nebula-badge-violet' : 'nebula-badge-lime'}`}>
+                          {m.role}
+                        </span>
+                      </td>
+                      <td>{new Date(m.joinedAt || m.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tournament Participation */}
+          <div className="nebula-card">
+            <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
+              <span>🏆</span> Event Participation
+            </h2>
+            {team.registrations && team.registrations.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {team.registrations.map((r) => (
                   <div
-                    key={m.id}
+                    key={r.id}
                     style={{
-                      backgroundColor: 'var(--surface-raised)',
-                      border: '1px solid var(--border)',
-                      padding: '0.75rem 1rem',
-                      borderRadius: 'var(--radius-md)',
+                      padding: '0.85rem 1rem',
+                      backgroundColor: 'var(--nebula-surface-elevated)',
+                      borderRadius: 'var(--nebula-radius-md)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img
-                        src={
-                          profile?.avatarUrl ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(m.user.username)}&background=1A2030&color=7C5CFC`
-                        }
-                        alt={m.user.username}
-                        style={{ width: '38px', height: '38px', borderRadius: '50%' }}
-                      />
-                      <div>
-                        {profile?.slug ? (
-                          <Link to={`/players/${profile.slug}`} style={{ fontWeight: 700, color: 'var(--text)' }}>
-                            {profile.displayName || m.user.username}
-                          </Link>
-                        ) : (
-                          <span style={{ fontWeight: 700 }}>{m.user.username}</span>
-                        )}
-                        <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                          IGN: {profile?.inGameName || 'N/A'}
-                        </p>
+                    <div>
+                      <strong>{r.tournament?.name || r.tournament?.title || 'Tournament'}</strong>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>
+                        Status: {r.status}
                       </div>
                     </div>
-                    <span className="badge badge-verified">{m.role}</span>
+                    <span className="nebula-badge nebula-badge-lime">{r.status}</span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Team Info & Achievements */}
-          <div>
-            <div className="evoq-card" style={{ marginBottom: 'var(--space-lg)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>About Team</h2>
-              <p style={{ color: 'var(--muted)', lineHeight: '1.7' }}>
-                {team.description || 'No detailed description available for this team.'}
-              </p>
-            </div>
-
-            <div className="evoq-card">
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Team Achievements</h2>
-              {team.achievements?.length === 0 ? (
-                <p style={{ color: 'var(--muted)' }}>No tournament achievements recorded yet.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {team.achievements?.map((ach) => (
-                    <div key={ach.id} className="achievement-badge" style={{ padding: '0.75rem' }}>
-                      <span style={{ fontSize: '1.3rem' }}>🏆</span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{ach.title}</div>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{ach.game?.name}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--nebula-text-secondary)' }}>No tournament participation recorded yet.</p>
+            )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
-
