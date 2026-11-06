@@ -1,0 +1,221 @@
+/* ─── EVOQ Navbar Styles ───────────────────────── */
+
+.evoq-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.navbar-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.navbar-logo {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.nav-link {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--text);
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.auth-nav-cluster,
+.guest-nav-cluster {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.notif-btn {
+  position: relative;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.notif-btn:hover {
+  border-color: var(--primary);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
+.nav-profile-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color var(--transition-fast);
+}
+
+.nav-profile-pill:hover {
+  border-color: var(--primary);
+}
+
+.gamer-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--success);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.btn-host-nav {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color var(--transition-fast);
+}
+
+.btn-host-nav:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-signout {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-signout:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-login-nav {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+}
+
+.btn-register-nav {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+}
+
+.mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-md);
+  gap: var(--space-sm);
+}
+
+.mobile-drawer a {
+  color: var(--text);
+  font-size: 1rem;
+  padding: 0.5rem 0;
+}
+
+.drawer-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: var(--space-xs) 0;
+}
+
+.drawer-logout {
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  margin-top: var(--space-xs);
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .desktop-nav,
+  .btn-host-nav,
+  .btn-signout {
+    display: none;
+  }
+  .mobile-menu-toggle {
+    display: block;
+  }
+}
+

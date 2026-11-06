@@ -1,0 +1,398 @@
+/* ─── EVOQ Platform Comprehensive Styles (Phases 4-7) ─── */
+
+.platform-page {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  min-height: calc(100vh - 68px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-top: var(--space-xs);
+}
+
+/* ─── Grid layouts ─── */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+}
+
+.grid-cols-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-lg);
+}
+
+.grid-cols-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ─── Card styles ─── */
+.evoq-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.evoq-card.clickable:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.card-banner {
+  height: 140px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin: calc(-1 * var(--space-lg)) calc(-1 * var(--space-lg)) var(--space-md) calc(-1 * var(--space-lg));
+  width: calc(100% + 2 * var(--space-lg));
+  background-color: var(--surface-raised);
+}
+
+/* ─── Tabs ─── */
+.evoq-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-xl);
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-sm) var(--space-md);
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ─── Filter Pills ─── */
+.filter-bar {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pill-btn {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pill-btn:hover,
+.pill-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ─── Badges ─── */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-draft { background: rgba(154, 164, 178, 0.15); color: var(--muted); }
+.badge-published { background: rgba(124, 92, 252, 0.15); color: var(--primary); }
+.badge-registration_open { background: rgba(39, 174, 120, 0.2); color: var(--success); }
+.badge-registration_closed { background: rgba(217, 154, 53, 0.2); color: var(--warning); }
+.badge-ongoing { background: rgba(214, 83, 91, 0.2); color: var(--danger); animation: pulse 2s infinite; }
+.badge-completed { background: rgba(39, 174, 120, 0.15); color: var(--success); }
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ─── Hero Banners ─── */
+.profile-hero {
+  position: relative;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-xl);
+}
+
+.hero-cover {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #1A2030, #0B0D12);
+}
+
+.hero-body {
+  padding: var(--space-lg);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -60px;
+  position: relative;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.hero-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 4px solid var(--surface);
+  background-color: var(--surface-raised);
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* ─── Modals / Dialogs ─── */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: var(--space-md);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-xl);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* ─── Form Controls ─── */
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ─── Match Cards & Bracket ─── */
+.match-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.match-card:hover {
+  border-color: var(--primary);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: var(--space-xs);
+}
+
+.match-participant-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.match-participant-row:last-child {
+  border-bottom: none;
+}
+
+.match-participant-row.winner {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.score-badge {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* ─── Credentials Banner ─── */
+.credentials-banner {
+  background: linear-gradient(135deg, rgba(124, 92, 252, 0.15), rgba(39, 174, 120, 0.15));
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+/* ─── Verified Achievement Badges ─── */
+.achievement-badge {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.achievement-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary), #4834d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.achievement-icon.winner {
+  background: linear-gradient(135deg, #f1c40f, #d35400);
+}
+
+.achievement-icon.runner_up {
+  background: linear-gradient(135deg, #bdc3c7, #7f8c8d);
+}
+
+/* ─── Metric Stat Cards ─── */
+.stat-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: var(--space-xs) 0;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Tables ─── */
+.evoq-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-md);
+}
+
+.evoq-table th {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.evoq-table td {
+  padding: var(--space-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+}
+
+.evoq-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
