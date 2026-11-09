@@ -452,47 +452,91 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #080A08;
+
+  /* CSS Custom Properties for Interactive Dot Grid Cursor Tracking */
+  --mouse-x: -999px;
+  --mouse-y: -999px;
+  --mouse-active: 0;
+  --dot-radius: 145px;
 }
 
-/* Topographic Animated Canvas Background */
-.hero-topographic-canvas {
+/* ─── INTERACTIVE DOT GRID BACKGROUND (PRIMARY REQUIREMENT) ─── */
+/* LAYER 1: Base Uniform Dark Dot Grid */
+.hero-dot-grid-base {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.55;
+
+  /* Dark grey dots against near-black background */
+  background-image: radial-gradient(circle at center,
+      rgba(142, 147, 136, 0.16) 1.1px,
+      transparent 1.2px);
+  background-size: 24px 24px;
+  background-position: center center;
 }
 
-.hero-grid-overlay {
+/* LAYER 2: Subtle Ambient Light Glow beneath illuminated dots */
+.hero-ambient-glow {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    linear-gradient(rgba(37, 45, 34, 0.25) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 45, 34, 0.25) 1px, transparent 1px);
-  background-size: 48px 48px;
-  background-position: center center;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 40%, transparent 85%);
-  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 40%, transparent 85%);
+
+  background: radial-gradient(circle var(--dot-radius) at var(--mouse-x) var(--mouse-y),
+      rgba(201, 255, 82, 0.05) 0%,
+      rgba(201, 255, 82, 0.015) 45%,
+      transparent 100%);
+  opacity: var(--mouse-active);
+  transition: opacity 0.32s ease-out;
 }
 
-/* Giant Background Typography: EVOQ Outline */
+/* LAYER 3: Illuminated Dot Grid Layer (Revealed via CSS Radial Mask) */
+.hero-dot-grid-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+
+  /* Bright dots with subtle lime energy aura, exactly aligning with Base layer */
+  background-image: radial-gradient(circle at center,
+      #F4F5EF 1px,
+      rgba(201, 255, 82, 0.45) 1.5px,
+      transparent 1.6px);
+  background-size: 24px 24px;
+  background-position: center center;
+
+  /* Radial mask revealing brighter dots strictly within the cursor influence circle */
+  -webkit-mask-image: radial-gradient(circle var(--dot-radius) at var(--mouse-x) var(--mouse-y),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.8) 30%,
+      rgba(0, 0, 0, 0.35) 60%,
+      rgba(0, 0, 0, 0.08) 85%,
+      transparent 100%);
+  mask-image: radial-gradient(circle var(--dot-radius) at var(--mouse-x) var(--mouse-y),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.8) 30%,
+      rgba(0, 0, 0, 0.35) 60%,
+      rgba(0, 0, 0, 0.08) 85%,
+      transparent 100%);
+
+  opacity: var(--mouse-active);
+  transition: opacity 0.32s ease-out;
+}
+
+/* Giant Background Typography: EVOQ Outline - Top Left */
 .hero-bg-wordmark {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -56%);
+  top: 17%;
+  left: 4%;
+  transform: none;
   font-family: 'Anton', 'Bebas Neue', sans-serif;
-  font-size: clamp(9rem, 24vw, 24rem);
+  font-size: clamp(7rem, 20vw, 22rem);
   line-height: 0.85;
   letter-spacing: 0.04em;
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(244, 245, 239, 0.12);
+  -webkit-text-stroke: 1.5px rgb(244 245 239);
   user-select: none;
   pointer-events: none;
   z-index: 3;
@@ -500,23 +544,26 @@
   text-transform: uppercase;
 }
 
-/* Foreground Giant Headline: ESPORTS in Lime */
+/* Foreground Giant Headline: ESPORTS in Lime - Bottom Right */
 .hero-fg-wordmark {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 2%);
+  bottom: 8%;
+  right: 4%;
+  left: auto;
+  top: auto;
+  transform: none;
   font-family: 'Anton', 'Bebas Neue', sans-serif;
-  font-size: clamp(5.5rem, 17vw, 17rem);
+  font-size: clamp(5.5rem, 16vw, 17rem);
   line-height: 0.85;
   letter-spacing: 0.02em;
   color: #C9FF52;
-  text-shadow: 0 0 35px rgba(201, 255, 82, 0.35), 0 0 70px rgba(201, 255, 82, 0.15);
+  /* text-shadow: 0 0 35px rgba(201, 255, 82, 0.35), 0 0 70px rgba(201, 255, 82, 0.15); */
   user-select: none;
   pointer-events: none;
   z-index: 6;
   white-space: nowrap;
   text-transform: uppercase;
+  text-align: right;
 }
 
 /* Central Character Stage & Dual-Layer Hover Reveal */
@@ -524,7 +571,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -46%);
+  transform: translate(-50%, -39%);
   width: min(560px, 50vw);
   height: min(780px, 82vh);
   display: flex;
@@ -532,6 +579,7 @@
   justify-content: center;
   z-index: 5;
   cursor: crosshair;
+  --char-radius: 260px;
 }
 
 .hero-char-img {
@@ -558,31 +606,35 @@
   inset: 0;
   z-index: 2;
   opacity: var(--char-active, 0);
-  -webkit-mask-image: radial-gradient(circle var(--char-radius, 150px) at var(--char-x, -500px) var(--char-y, -500px),
+  -webkit-mask-image: radial-gradient(circle var(--char-radius, 260px) at var(--char-x, -500px) var(--char-y, -500px),
       rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.85) 45%,
-      rgba(0, 0, 0, 0.25) 75%,
+      rgba(0, 0, 0, 0.9) 50%,
+      rgba(0, 0, 0, 0.35) 80%,
       transparent 100%);
-  mask-image: radial-gradient(circle var(--char-radius, 150px) at var(--char-x, -500px) var(--char-y, -500px),
+  mask-image: radial-gradient(circle var(--char-radius, 260px) at var(--char-x, -500px) var(--char-y, -500px),
       rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.85) 45%,
-      rgba(0, 0, 0, 0.25) 75%,
+      rgba(0, 0, 0, 0.9) 50%,
+      rgba(0, 0, 0, 0.35) 80%,
       transparent 100%);
   transition: opacity 0.2s ease-out;
 }
 
+.hero-char-enhanced {
+  filter: drop-shadow(0 0 25px rgba(201, 255, 82, 0.6)) brightness(1.15) contrast(1.1);
+}
+
 .hero-char-radar-ring {
   position: absolute;
-  width: calc(var(--char-radius, 150px) * 2);
-  height: calc(var(--char-radius, 150px) * 2);
-  top: calc(var(--char-y, -500px) - var(--char-radius, 150px));
-  left: calc(var(--char-x, -500px) - var(--char-radius, 150px));
+  width: calc(var(--char-radius, 260px) * 2);
+  height: calc(var(--char-radius, 260px) * 2);
+  top: calc(var(--char-y, -500px) - var(--char-radius, 260px));
+  left: calc(var(--char-x, -500px) - var(--char-radius, 260px));
   border: 1px dashed rgba(201, 255, 82, 0.45);
   border-radius: 50%;
   pointer-events: none;
   opacity: var(--char-active, 0);
   transition: opacity 0.2s ease-out;
-  box-shadow: inset 0 0 15px rgba(201, 255, 82, 0.15);
+  box-shadow: inset 0 0 20px rgba(201, 255, 82, 0.2);
 }
 
 /* Character HUD Reticles */
@@ -1634,11 +1686,40 @@
 }
 
 
+/* ─── RESPONSIVE DOT GRID TUNING ─── */
+@media (max-width: 1024px) {
+
+  .hero-dot-grid-base,
+  .hero-dot-grid-glow {
+    background-size: 26px 26px;
+  }
+
+  .scene-hero {
+    --dot-radius: 135px;
+  }
+}
+
+@media (max-width: 680px) {
+
+  .hero-dot-grid-base,
+  .hero-dot-grid-glow {
+    background-size: 28px 28px;
+  }
+
+  .scene-hero {
+    --dot-radius: 125px;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    10. PREFERS-REDUCED-MOTION
    ═══════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
 
+  .hero-ambient-glow,
+  .hero-dot-grid-glow,
+  .hero-char-reveal-layer,
+  .hero-char-radar-ring,
   .evoq-scene,
   .tunnel-frame,
   .radar-sweep-beam,

@@ -381,79 +381,6 @@ const SPONSORS_LIST = [
 ];
 
 /**
- * Procedural Topographic Background Canvas Component
- * Renders living technical elevation contours matching Screenshot 1.
- */
-function TopographicCanvas() {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    let animationFrameId;
-    let t = 0;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const w = canvas.width;
-      const h = canvas.height;
-      t += 0.008;
-
-      // Draw 9 undulating contour elevation lines
-      const lineCount = 9;
-      for (let i = 0; i < lineCount; i++) {
-        const offsetRatio = (i + 1) / (lineCount + 1);
-        ctx.beginPath();
-        const baseAmp = 35 + i * 8;
-        const freq = 0.0018 + i * 0.0003;
-
-        for (let x = 0; x <= w; x += 12) {
-          const y1 = Math.sin(x * freq + t + i * 0.4) * baseAmp;
-          const y2 = Math.cos(x * freq * 1.5 - t * 0.7) * (baseAmp * 0.45);
-          const y = h * offsetRatio + y1 + y2;
-
-          if (x === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-
-        // Highlight every 3rd contour in lime
-        if (i % 3 === 0) {
-          ctx.strokeStyle = 'rgba(201, 255, 82, 0.16)';
-          ctx.lineWidth = 1.4;
-        } else {
-          ctx.strokeStyle = 'rgba(165, 170, 156, 0.06)';
-          ctx.lineWidth = 1;
-        }
-        ctx.stroke();
-      }
-
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="hero-topographic-canvas" aria-hidden="true" />;
-}
-
-/**
  * Main Cinematic Landing Page Component
  */
 export default function Landing() {
@@ -471,6 +398,45 @@ export default function Landing() {
   const contactSceneRef = useRef(null);
   const charStageRef = useRef(null);
   const charRafRef = useRef(null);
+  const heroRafRef = useRef(null);
+
+  // Hero Interactive Dot Grid Pointer Tracking (Zero React re-renders)
+  const updateHeroPointer = useCallback((clientX, clientY) => {
+    if (!heroSceneRef.current) return;
+    const rect = heroSceneRef.current.getBoundingClientRect();
+    const x = Math.round(clientX - rect.left);
+    const y = Math.round(clientY - rect.top);
+
+    if (heroRafRef.current) cancelAnimationFrame(heroRafRef.current);
+    heroRafRef.current = requestAnimationFrame(() => {
+      if (heroSceneRef.current) {
+        heroSceneRef.current.style.setProperty('--mouse-x', `${x}px`);
+        heroSceneRef.current.style.setProperty('--mouse-y', `${y}px`);
+        heroSceneRef.current.style.setProperty('--mouse-active', '1');
+      }
+    });
+  }, []);
+
+  const handleHeroPointerMove = (e) => {
+    updateHeroPointer(e.clientX, e.clientY);
+  };
+
+  const handleHeroPointerEnter = (e) => {
+    updateHeroPointer(e.clientX, e.clientY);
+  };
+
+  const handleHeroPointerLeave = () => {
+    if (heroRafRef.current) cancelAnimationFrame(heroRafRef.current);
+    if (heroSceneRef.current) {
+      heroSceneRef.current.style.setProperty('--mouse-active', '0');
+    }
+  };
+
+  const handleHeroTouchMove = (e) => {
+    if (e.touches && e.touches[0]) {
+      updateHeroPointer(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
 
   // Character Dual-Layer Pointer Tracking
   const updateCharacterPointer = useCallback((clientX, clientY) => {
@@ -505,6 +471,13 @@ export default function Landing() {
       updateCharacterPointer(e.touches[0].clientX, e.touches[0].clientY);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (heroRafRef.current) cancelAnimationFrame(heroRafRef.current);
+      if (charRafRef.current) cancelAnimationFrame(charRafRef.current);
+    };
+  }, []);
 
   // Master Scroll Architecture using GSAP ScrollTrigger
   useEffect(() => {
@@ -636,10 +609,16 @@ export default function Landing() {
               className={`evoq-scene scene-hero ${activeScene === 0 ? 'scene-active' : ''}`}
               ref={heroSceneRef}
               id="hero"
+              onPointerMove={handleHeroPointerMove}
+              onPointerEnter={handleHeroPointerEnter}
+              onPointerLeave={handleHeroPointerLeave}
+              onTouchMove={handleHeroTouchMove}
+              onTouchStart={handleHeroTouchMove}
             >
-              {/* Topographic Background & Technical Grid */}
-              <TopographicCanvas />
-              <div className="hero-grid-overlay" aria-hidden="true" />
+              {/* Interactive Dot Grid Background (Primary Requirement) */}
+              <div className="hero-dot-grid-base" aria-hidden="true" />
+              <div className="hero-ambient-glow" aria-hidden="true" />
+              <div className="hero-dot-grid-glow" aria-hidden="true" />
 
               {/* Massive Outlined Background Typography */}
               <div className="hero-bg-wordmark" aria-hidden="true">
@@ -668,7 +647,7 @@ export default function Landing() {
                 {/* Enhanced Visor Reveal Layer */}
                 <div className="hero-char-reveal-layer" aria-hidden="true">
                   <img
-                    src="/images/two.png"
+                    src="/images/two2.png"
                     alt="EVOQ Esports Competitor Visor Scan"
                     className="hero-char-img hero-char-enhanced"
                   />
@@ -692,6 +671,7 @@ export default function Landing() {
                     GAMERS / TEAMS / ORGANIZERS
                   </div> */}
                 </div>
+
 
                 <div className="hud-bottom-row">
                   <div className="hud-desc-box">
