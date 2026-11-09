@@ -4,7 +4,7 @@ import { ThemeProvider } from '../features/theme/ThemeContext.jsx';
 import { GamerProtectedRoute, OrganizerProtectedRoute } from '../components/ProtectedRoute.jsx';
 
 // Core Public & Auth Pages
-import Home from '../pages/Home.jsx';
+import Landing from '../pages/Landing.jsx';
 import ForgotPassword from '../pages/ForgotPassword.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
 import VerifyEmail from '../pages/VerifyEmail.jsx';
@@ -67,7 +67,7 @@ export default function App() {
         <AuthProvider>
           <Routes>
             {/* ── Public Landing & Discovery ── */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/tournaments" element={<TournamentsList />} />
             <Route path="/tournaments/:slug" element={<TournamentDetail />} />
             <Route path="/players/:slug" element={<PublicPlayerProfile />} />
