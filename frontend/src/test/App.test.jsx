@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -6,7 +7,7 @@ import Home from '../pages/Home.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 describe('Home page', () => {
-  it('renders EVOQ branding', () => {
+  it('renders EVOQ branding and navbar navigation links', () => {
     render(
       <MemoryRouter>
         <AuthProvider>
@@ -15,9 +16,12 @@ describe('Home page', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('EVOQ')).toBeInTheDocument();
-    expect(
-      screen.getByText('Play. Compete. Achieve. Get Recognized.')
-    ).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
+    expect(screen.getByText('Games')).toBeInTheDocument();
+    expect(screen.getByText('Tournaments')).toBeInTheDocument();
+    expect(screen.getByText('Sponsors')).toBeInTheDocument();
+    expect(screen.getByText('FAQ')).toBeInTheDocument();
+    expect(screen.getByText('Login')).toBeInTheDocument();
   });
 });
 
