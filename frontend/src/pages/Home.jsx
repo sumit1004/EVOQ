@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext.jsx';
 import { evoqService } from '../services/evoq.service.js';
+import ProductSimulation from '../components/hero-simulation/ProductSimulation.jsx';
 import gsap from 'gsap';
 import '../styles/landing.css';
 
@@ -111,11 +112,62 @@ export default function Home() {
   ];
 
   const supportedGames = [
-    { name: 'Valorant', genre: 'Tactical Shooter', emblem: '🎯' },
-    { name: 'Counter-Strike 2', genre: 'Tactical Shooter', emblem: '💣' },
-    { name: 'Apex Legends', genre: 'Battle Royale', emblem: '⚡' },
-    { name: 'League of Legends', genre: 'MOBA', emblem: '⚔️' },
-    { name: 'Rocket League', genre: 'Vehicular Sports', emblem: '🏎️' },
+    { name: 'Valorant', genre: 'Tactical Shooter', emblem: 'VAL' },
+    { name: 'Counter-Strike 2', genre: 'Tactical Shooter', emblem: 'CS2' },
+    { name: 'Apex Legends', genre: 'Battle Royale', emblem: 'APEX' },
+    { name: 'League of Legends', genre: 'MOBA', emblem: 'LOL' },
+    { name: 'Rocket League', genre: 'Vehicular Sports', emblem: 'RL' },
+  ];
+
+  const sponsors = [
+    {
+      name: 'VORTEX OPERATIONS',
+      role: 'Global Tournament Operator',
+      badge: 'OFFICIAL OPERATOR',
+      desc: 'Tier-1 tournament sanctioning, automated match bracket distribution, and broadcast control rooms.',
+      code: 'VTX',
+      color: '#C9FF52',
+    },
+    {
+      name: 'AURA ESPORTS',
+      role: 'Premier Competitive Club',
+      badge: 'ALLIANCE PARTNER',
+      desc: 'Multi-title competitive organisation fielding top-tier tactical FPS and MOBA squads.',
+      code: 'AURA',
+      color: '#60A5FA',
+    },
+    {
+      name: 'HYPERION HARDWARE',
+      role: 'Hardware & Infrastructure',
+      badge: 'TITLE SPONSOR',
+      desc: 'Official hardware and peripherals partner powering EVOQ championship tournament arenas.',
+      code: 'HPRN',
+      color: '#F472B6',
+    },
+    {
+      name: 'PULSE BROADCAST',
+      role: 'Esports Media Syndicate',
+      badge: 'MEDIA ALLIANCE',
+      desc: 'Global streaming syndicate delivering multi-language live coverage for sanctioned cups.',
+      code: 'PLSE',
+      color: '#34D399',
+    },
+    {
+      name: 'VALIANT ARENA',
+      role: 'Collegiate & Amateur Circuit',
+      badge: 'CIRCUIT PARTNER',
+      desc: 'Sanctioning 140+ university esports leagues and verified collegiate player passports.',
+      code: 'VLNT',
+      color: '#FBBF24',
+    },
+    {
+      name: 'NEXUS PROTOCOL',
+      role: 'Integrity & Verification',
+      badge: 'SECURITY PARTNER',
+      desc: 'Cryptographic result validation, roster identity proofing, and anti-fraud protocols.',
+      code: 'NXUS',
+      color: '#A78BFA',
+    },
   ];
 
   return (
@@ -134,21 +186,18 @@ export default function Home() {
               <button onClick={() => scrollToSection('about')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
                 About
               </button>
-              <button onClick={() => scrollToSection('features')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
-                Features
-              </button>
               <button onClick={() => scrollToSection('games')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
                 Games
-              </button>
-              <button onClick={() => scrollToSection('how-it-works')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
-                How It Works
-              </button>
-              <button onClick={() => scrollToSection('faq')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
-                FAQ
               </button>
               <Link to="/tournaments" className="evoq-nav-link">
                 Tournaments
               </Link>
+              <button onClick={() => scrollToSection('sponsors')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
+                Sponsors
+              </button>
+              <button onClick={() => scrollToSection('faq')} className="evoq-nav-link" style={{ background: 'none', border: 'none' }}>
+                FAQ
+              </button>
             </nav>
 
             <div className="evoq-nav-actions">
@@ -156,11 +205,11 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   {user.accountType === 'ORGANIZER' ? (
                     <Link to="/organizer/dashboard" className="evoq-btn evoq-btn-lime evoq-btn-sm">
-                      ⚡ Operations Command ({user.username})
+                      Operations Command ({user.username})
                     </Link>
                   ) : (
                     <Link to="/gamer/dashboard" className="evoq-btn evoq-btn-lime evoq-btn-sm">
-                      🎮 Gamer Arena ({user.username})
+                      Gamer Arena ({user.username})
                     </Link>
                   )}
                   <button onClick={logout} className="evoq-btn evoq-btn-outline evoq-btn-sm" title="Sign Out">
@@ -194,21 +243,18 @@ export default function Home() {
           <button onClick={() => scrollToSection('about')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
             About
           </button>
-          <button onClick={() => scrollToSection('features')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
-            Features
-          </button>
           <button onClick={() => scrollToSection('games')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
             Supported Games
-          </button>
-          <button onClick={() => scrollToSection('how-it-works')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
-            How It Works
-          </button>
-          <button onClick={() => scrollToSection('faq')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
-            FAQ
           </button>
           <Link to="/tournaments" className="evoq-nav-link" onClick={() => setMobileMenuOpen(false)}>
             Browse Tournaments
           </Link>
+          <button onClick={() => scrollToSection('sponsors')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
+            Sponsors &amp; Organisations
+          </button>
+          <button onClick={() => scrollToSection('faq')} className="evoq-nav-link" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem 0' }}>
+            FAQ
+          </button>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--evoq-border-card)' }}>
             <Link to="/gamer/login" className="evoq-btn evoq-btn-dark" onClick={() => setMobileMenuOpen(false)}>
               Gamer Sign In
@@ -221,169 +267,34 @@ export default function Home() {
       </header>
 
       {/* ====================================================================
-          SECTION 02: HERO SECTION
+          SECTION 02: HERO SECTION (INTERACTIVE PRODUCT SIMULATION)
           ==================================================================== */}
-      <section className="evoq-section" ref={heroRef} style={{ paddingTop: '5rem', paddingBottom: '4rem' }}>
+      <section className="evoq-section" ref={heroRef} style={{ paddingTop: '5rem', paddingBottom: '3.5rem' }}>
         <div className="evoq-container">
-          <div className="evoq-eyebrow">
-            <span className="evoq-eyebrow-dot" />
-            The Professional Network &amp; Operating System for Esports
-          </div>
+          <div className="evoq-hero-layout">
+            {/* Left Side: Brand Message & Editorial Headline */}
+            <div className="evoq-hero-brand-col" ref={headlineRef}>
+              <div className="evoq-eyebrow" style={{ marginBottom: '1.25rem' }}>
+                <span className="evoq-eyebrow-dot" />
+                THE PROFESSIONAL NETWORK &amp; OPERATING SYSTEM FOR ESPORTS
+              </div>
 
-          <div className="evoq-hero-grid" ref={headlineRef}>
-            <div>
               <h1 className="evoq-heading-hero">
                 YOUR GAME. <br />
                 <span style={{ color: 'var(--evoq-lime-primary)' }}>YOUR LEGACY.</span>
               </h1>
             </div>
 
-            <div>
-              <p className="evoq-heading-sub" style={{ marginBottom: '1.75rem' }}>
-                The infrastructure behind your ambition. Run competitions, build your verified identity, and bring your esports world together.
-              </p>
-              <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
-                <Link to="/gamer/register" className="evoq-btn evoq-btn-lime">
-                  Discover EVOQ ↗
-                </Link>
-                <Link to="/organizer/register" className="evoq-btn evoq-btn-dark">
-                  For Organizers ⚡
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Authentic EVOQ Product UI Preview Frame */}
-          <div className="evoq-hero-preview-frame" ref={previewRef}>
-            <div className="evoq-preview-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ color: '#fff', fontWeight: 800 }}>EVOQ</span>
-                <span style={{ color: 'var(--evoq-text-muted)' }}>/</span>
-                <span style={{ color: 'var(--evoq-lime-secondary)' }}>ORGANIZER WORKSPACE</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <span className="evoq-preview-tag">ILLUSTRATIVE PRODUCT UI</span>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--evoq-lime-primary)' }}></span>
-              </div>
-            </div>
-
-            <div className="evoq-bracket-container">
-              {/* Workspace Sidebar */}
-              <div className="evoq-bracket-sidebar">
-                <span style={{ fontSize: '0.6875rem', color: 'var(--evoq-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  MANAGE
-                </span>
-                <div style={{ padding: '0.5rem 0.75rem', borderRadius: '4px', color: 'var(--evoq-text-secondary)', fontSize: '0.8125rem' }}>
-                  Overview
-                </div>
-                <div
-                  style={{
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '4px',
-                    backgroundColor: 'rgba(201, 255, 82, 0.1)',
-                    borderLeft: '2px solid var(--evoq-lime-primary)',
-                    color: 'var(--evoq-lime-primary)',
-                    fontWeight: 700,
-                    fontSize: '0.8125rem',
-                  }}
-                >
-                  🏆 Tournaments
-                </div>
-                <div style={{ padding: '0.5rem 0.75rem', borderRadius: '4px', color: 'var(--evoq-text-secondary)', fontSize: '0.8125rem' }}>
-                  👥 Participants
-                </div>
-                <div style={{ padding: '0.5rem 0.75rem', borderRadius: '4px', color: 'var(--evoq-text-secondary)', fontSize: '0.8125rem' }}>
-                  🛡️ Teams
-                </div>
-                <div style={{ padding: '0.5rem 0.75rem', borderRadius: '4px', color: 'var(--evoq-text-secondary)', fontSize: '0.8125rem' }}>
-                  ⚙️ Settings
-                </div>
-                <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--evoq-border-subtle)', fontSize: '0.75rem', color: 'var(--evoq-text-muted)' }}>
-                  Your competition. One control room.
-                </div>
-              </div>
-
-              {/* Bracket Arena */}
-              <div className="evoq-bracket-arena">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--evoq-text-muted)' }}>Tournaments / Sample Competition</span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0.2rem 0 0 0' }}>Championship Bracket</h3>
-                  </div>
-                  <span style={{ fontSize: '0.7rem', padding: '0.25rem 0.6rem', backgroundColor: 'rgba(163, 230, 53, 0.15)', color: 'var(--evoq-lime-primary)', borderRadius: '999px', fontWeight: 700 }}>
-                    • LIVE BRACKET
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1.5rem', alignItems: 'center' }}>
-                  {/* Semi Finals */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div className="evoq-match-node active-lime">
-                      <div className="evoq-match-row">
-                        <span style={{ fontWeight: 600 }}>NORTH / Sample</span>
-                        <span className="evoq-score-pill">2</span>
-                      </div>
-                      <div className="evoq-match-row">
-                        <span style={{ color: 'var(--evoq-text-muted)' }}>VECTOR / Sample</span>
-                        <span style={{ color: 'var(--evoq-text-muted)' }}>0</span>
-                      </div>
-                    </div>
-
-                    <div className="evoq-match-node">
-                      <div className="evoq-match-row">
-                        <span style={{ fontWeight: 600 }}>ORBIT / Sample</span>
-                        <span className="evoq-score-pill">2</span>
-                      </div>
-                      <div className="evoq-match-row">
-                        <span style={{ color: 'var(--evoq-text-muted)' }}>APEX / Sample</span>
-                        <span style={{ color: 'var(--evoq-text-muted)' }}>1</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <span style={{ color: 'var(--evoq-lime-primary)', fontSize: '1.25rem' }}>→</span>
-
-                  {/* Grand Final */}
-                  <div>
-                    <span style={{ fontSize: '0.6875rem', color: 'var(--evoq-lime-primary)', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '0.4rem' }}>
-                      GRAND FINAL
-                    </span>
-                    <div className="evoq-match-node active-lime" style={{ borderLeft: '3px solid var(--evoq-lime-primary)' }}>
-                      <div className="evoq-match-row" style={{ marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 700, color: '#fff' }}>NORTH / Sample</span>
-                        <span className="evoq-score-pill">—</span>
-                      </div>
-                      <div className="evoq-match-row">
-                        <span style={{ fontWeight: 700, color: '#fff' }}>ORBIT / Sample</span>
-                        <span className="evoq-score-pill">—</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Match Details Panel */}
-              <div className="evoq-bracket-details">
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--evoq-text-primary)' }}>Match Details</span>
-                <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--evoq-surface-card)', borderRadius: '4px', border: '1px solid var(--evoq-border-card)' }}>
-                  <span style={{ fontSize: '0.6875rem', color: 'var(--evoq-lime-primary)', fontWeight: 700 }}>SAMPLE MATCH</span>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: '0.25rem' }}>Grand Final</div>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--evoq-text-secondary)' }}>
-                    <span>Best of 3</span> • <span>5v5 Squads</span>
-                  </div>
-                </div>
-                <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--evoq-text-muted)' }}>
-                  Schedule: Today • 19:00 UTC<br />
-                  Result: Awaiting official score submission
-                </div>
-              </div>
+            {/* Right Side: Interactive Product Simulation */}
+            <div className="evoq-hero-simulation-col" ref={previewRef}>
+              <ProductSimulation />
             </div>
           </div>
 
           {/* Bottom baseline strip */}
           <div className="evoq-baseline-strip">
             <span>Play. Compete. Achieve. Get Recognized.</span>
-            <span>PRODUCT CONCEPT / ALL WORKSPACE DATA IS ILLUSTRATIVE ↓</span>
+            <span>LIVE INTERACTIVE PRODUCT SIMULATION / ORGANIZER &amp; GAMER WORKSPACES ↓</span>
           </div>
         </div>
       </section>
@@ -438,97 +349,12 @@ export default function Home() {
       </section>
 
       {/* ====================================================================
-          SECTION 05: PLATFORM FEATURES (4-CARD MATRIX)
-          ==================================================================== */}
-      <section className="evoq-section" id="features">
-        <div className="evoq-container">
-          <div className="evoq-eyebrow">
-            02 / PLATFORM CAPABILITIES
-          </div>
-
-          <h2 className="evoq-heading-section" style={{ maxWidth: '780px' }}>
-            Built for competitive rigor. Powered by shared data.
-          </h2>
-
-          <div className="evoq-cards-matrix">
-            {/* Card 1: Competition OS */}
-            <div className="evoq-ecosystem-card">
-              <div>
-                <div className="evoq-card-top">
-                  <span className="evoq-card-icon">🏆</span>
-                  <span className="evoq-card-index">01</span>
-                </div>
-                <h3 className="evoq-card-title">Competition OS</h3>
-                <p className="evoq-card-text">
-                  From registration to the final result. Bring every stage of your tournament into focus with automated brackets and match workflows.
-                </p>
-              </div>
-              <Link to="/tournaments" className="evoq-card-link">
-                Browse tournaments ↗
-              </Link>
-            </div>
-
-            {/* Card 2: Player Profiles */}
-            <div className="evoq-ecosystem-card">
-              <div>
-                <div className="evoq-card-top">
-                  <span className="evoq-card-icon">🎯</span>
-                  <span className="evoq-card-index">02</span>
-                </div>
-                <h3 className="evoq-card-title">Player Profiles</h3>
-                <p className="evoq-card-text">
-                  A professional identity built around your in-game roles, team history, and permanent achievements that move with you across seasons.
-                </p>
-              </div>
-              <Link to="/gamer/register" className="evoq-card-link">
-                Build your profile ↗
-              </Link>
-            </div>
-
-            {/* Card 3: Team Identities */}
-            <div className="evoq-ecosystem-card">
-              <div>
-                <div className="evoq-card-top">
-                  <span className="evoq-card-icon">🛡️</span>
-                  <span className="evoq-card-index">03</span>
-                </div>
-                <h3 className="evoq-card-title">Team Identities</h3>
-                <p className="evoq-card-text">
-                  Give your squad a shared home. Connect active rosters, substitute benches, match histories, and team achievements under one banner.
-                </p>
-              </div>
-              <Link to="/teams" className="evoq-card-link">
-                Represent your team ↗
-              </Link>
-            </div>
-
-            {/* Card 4: Organizer Portfolios */}
-            <div className="evoq-ecosystem-card">
-              <div>
-                <div className="evoq-card-top">
-                  <span className="evoq-card-icon">⚡</span>
-                  <span className="evoq-card-index">04</span>
-                </div>
-                <h3 className="evoq-card-title">Organizer Portfolios</h3>
-                <p className="evoq-card-text">
-                  Put a professional face to the team behind the event. Showcase past competitions, verified prize distribution, and institutional credibility.
-                </p>
-              </div>
-              <Link to="/organizer/register" className="evoq-card-link">
-                Showcase your work ↗
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          SECTION 06: SUPPORTED GAMES
+          SECTION 05: SUPPORTED GAMES
           ==================================================================== */}
       <section className="evoq-section" id="games">
         <div className="evoq-container">
           <div className="evoq-eyebrow">
-            03 / CONFIGURED TITLES
+            02 / SUPPORTED TITLES
           </div>
 
           <div className="evoq-split-editorial" style={{ marginBottom: '1.5rem' }}>
@@ -566,7 +392,7 @@ export default function Home() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
             <div>
               <div className="evoq-eyebrow">
-                04 / LIVE COMPETITIONS
+                03 / LIVE COMPETITIONS
               </div>
               <h2 className="evoq-heading-section">Featured Tournaments</h2>
             </div>
@@ -603,14 +429,13 @@ export default function Home() {
             </div>
           ) : (
             <div className="evoq-empty-tournaments">
-              <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.75rem' }}>🎮</span>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Ready to Host Your Tournament?</h3>
               <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
                 No public tournaments are scheduled at this exact moment. Onboard your organization to launch the next major competitive event on EVOQ.
               </p>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/organizer/register" className="evoq-btn evoq-btn-lime evoq-btn-sm">
-                  Launch a Tournament ⚡
+                  Launch a Tournament ↗
                 </Link>
                 <Link to="/gamer/register" className="evoq-btn evoq-btn-dark evoq-btn-sm">
                   Create Gamer Squad
@@ -622,214 +447,116 @@ export default function Home() {
       </section>
 
       {/* ====================================================================
-          SECTION 08: HOW EVOQ WORKS (THE COMPETITIVE JOURNEY)
+          SECTION 08: SPONSORS & PARTNER ORGANISATIONS
           ==================================================================== */}
-      <section className="evoq-section" id="how-it-works">
+      <section className="evoq-section" id="sponsors">
         <div className="evoq-container">
           <div className="evoq-eyebrow">
-            05 / YOUR NEXT MOVE
+            04 / SPONSORS &amp; ORGANISATIONS
           </div>
 
-          <div className="evoq-split-editorial">
+          <div className="evoq-split-editorial" style={{ marginBottom: '1.5rem' }}>
             <div>
               <h2 className="evoq-heading-section">
-                Ambition needs a path.
+                Backed by industry leaders. <br />
+                <span style={{ color: 'var(--evoq-lime-primary)' }}>Powered by premier organisations.</span>
               </h2>
             </div>
             <div>
               <p className="evoq-heading-sub">
-                Not disconnected moments. A competitive journey with somewhere to go next.
+                EVOQ collaborates with tier-1 tournament operators, hardware innovators, and esports clubs to establish verifiable competitive standards.
               </p>
             </div>
           </div>
 
-          <div className="evoq-journey-timeline">
-            {/* Step 01 */}
-            <div className="evoq-journey-step">
-              <div className="evoq-journey-tracker">
-                <span className="evoq-step-number">01</span>
-                <div className="evoq-tracker-line" />
-              </div>
-              <div className="evoq-journey-icon">🎯</div>
-              <h3 className="evoq-journey-title">Play.</h3>
-              <span className="evoq-journey-sub">Define your identity</span>
-              <p className="evoq-journey-text">
-                Start with a professional profile that reflects your game handles, competitive role, experience, and ambition.
-              </p>
-            </div>
-
-            {/* Step 02 */}
-            <div className="evoq-journey-step">
-              <div className="evoq-journey-tracker">
-                <span className="evoq-step-number">02</span>
-                <div className="evoq-tracker-line" />
-              </div>
-              <div className="evoq-journey-icon">⚔️</div>
-              <h3 className="evoq-journey-title">Compete.</h3>
-              <span className="evoq-journey-sub">Find your place</span>
-              <p className="evoq-journey-text">
-                Form team rosters with your squad and participate in organized, structured tournaments with live brackets.
-              </p>
-            </div>
-
-            {/* Step 03 */}
-            <div className="evoq-journey-step">
-              <div className="evoq-journey-tracker">
-                <span className="evoq-step-number">03</span>
-                <div className="evoq-tracker-line" />
-              </div>
-              <div className="evoq-journey-icon">🏆</div>
-              <h3 className="evoq-journey-title">Achieve.</h3>
-              <span className="evoq-journey-sub">Build your record</span>
-              <p className="evoq-journey-text">
-                When matches conclude, organizers verify the results, turning match outcomes into permanent records.
-              </p>
-            </div>
-
-            {/* Step 04 */}
-            <div className="evoq-journey-step">
-              <div className="evoq-journey-tracker">
-                <span className="evoq-step-number">04</span>
-                <div className="evoq-tracker-line" />
-              </div>
-              <div className="evoq-journey-icon">🎖️</div>
-              <h3 className="evoq-journey-title">Get Recognized.</h3>
-              <span className="evoq-journey-sub">Let your work speak</span>
-              <p className="evoq-journey-text">
-                Make your esports story easier to understand, share with scouts, and build upon for seasons to come.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          SECTION 09 & 10: PROFESSIONAL FOUNDATIONS & TRUST LAYER
-          ==================================================================== */}
-      <section className="evoq-section" id="foundations">
-        <div className="evoq-container">
-          <div className="evoq-eyebrow">
-            06 / THE EVOQ APPROACH
-          </div>
-
-          <div className="evoq-split-editorial" style={{ marginBottom: '3.5rem' }}>
-            <div>
-              <h2 className="evoq-heading-section">
-                Serious play. <br />
-                <span style={{ color: 'var(--evoq-lime-primary)' }}>Professional foundations.</span>
-              </h2>
-            </div>
-            <div>
-              <p className="evoq-heading-sub">
-                An ecosystem should make the work clearer. Every part of EVOQ has a job to do.
-              </p>
-              <div style={{ marginTop: '1.25rem', fontFamily: 'var(--evoq-font-heading)', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--evoq-lime-primary)', letterSpacing: '0.08em' }}>
-                [ · ] LESS NOISE. MORE INTENT.
-              </div>
-            </div>
-          </div>
-
-          {/* 3 Pillars List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', paddingBottom: '2rem', borderBottom: '1px solid var(--evoq-border-card)', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.75rem', color: 'var(--evoq-lime-primary)' }}>💠</span>
-              <div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.4rem 0' }}>Purpose-built identities</h3>
-                <p style={{ color: 'var(--evoq-text-secondary)', margin: '0 0 0.5rem 0', lineHeight: 1.6 }}>
-                  Players, teams, and organizers have different needs. Each gets a dedicated presence, with the relationships between them kept in view.
-                </p>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--evoq-font-heading)', color: 'var(--evoq-text-muted)', letterSpacing: '0.08em' }}>
-                  PLAYER / TEAM / ORGANIZER
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', paddingBottom: '2rem', borderBottom: '1px solid var(--evoq-border-card)', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.75rem', color: 'var(--evoq-lime-primary)' }}>📊</span>
-              <div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.4rem 0' }}>Structure over scattered information</h3>
-                <p style={{ color: 'var(--evoq-text-secondary)', margin: '0 0 0.5rem 0', lineHeight: 1.6 }}>
-                  Competition formats, participants, brackets, and results belong in a coherent workflow—not across disconnected messages and spreadsheets.
-                </p>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--evoq-font-heading)', color: 'var(--evoq-text-muted)', letterSpacing: '0.08em' }}>
-                  CONFIGURE / COORDINATE / RECORD
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.75rem', color: 'var(--evoq-lime-primary)' }}>🔗</span>
-              <div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.4rem 0' }}>Context that stays connected</h3>
-                <p style={{ color: 'var(--evoq-text-secondary)', margin: '0 0 0.5rem 0', lineHeight: 1.6 }}>
-                  A team is more than a name on a bracket. Connect the competition to the people and organizations behind it.
-                </p>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--evoq-font-heading)', color: 'var(--evoq-text-muted)', letterSpacing: '0.08em' }}>
-                  COMPETITION ↔ IDENTITY
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          SECTION 11: CONTACT & INQUIRIES
-          ==================================================================== */}
-      <section className="evoq-section" id="contact">
-        <div className="evoq-container">
-          <div className="evoq-eyebrow">
-            PARTNERSHIPS &amp; INQUIRIES
-          </div>
-
-          <div className="evoq-contact-grid">
-            <div>
-              <h2 className="evoq-heading-section" style={{ marginBottom: '1rem' }}>
-                Connect with the EVOQ ecosystem.
-              </h2>
-              <p className="evoq-heading-sub">
-                Are you an esports federation, tournament operator, university league, or collegiate club? Talk with our operations team.
-              </p>
-            </div>
-
-            <div className="evoq-contact-card">
-              <div className="evoq-contact-option">
-                <span style={{ fontSize: '1.5rem', color: 'var(--evoq-lime-primary)' }}>⚡</span>
+          <div className="evoq-sponsors-grid">
+            {sponsors.map((sp) => (
+              <div key={sp.name} className="evoq-sponsor-card">
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.05rem', fontWeight: 700 }}>Tournament Operators</h4>
-                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--evoq-text-secondary)' }}>
-                    Host sanctioned tournaments with automated bracket generation and result approvals.
-                  </p>
-                  <Link to="/organizer/register" style={{ fontSize: '0.8125rem', color: 'var(--evoq-lime-primary)', fontWeight: 700, textDecoration: 'none' }}>
-                    Register as Organizer →
-                  </Link>
+                  <div className="evoq-sponsor-card-top">
+                    <div className="evoq-sponsor-emblem" style={{ borderColor: `${sp.color}40` }}>
+                      {sp.code === 'VTX' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                        </svg>
+                      )}
+                      {sp.code === 'AURA' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M12 2L2 12l10 10 10-10L12 2z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                      {sp.code === 'HPRN' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polygon points="12 2 2 7 2 17 12 22 22 17 22 7 12 2" />
+                          <line x1="12" y1="22" x2="12" y2="12" />
+                          <line x1="12" y1="12" x2="22" y2="7" />
+                          <line x1="12" y1="12" x2="2" y2="7" />
+                        </svg>
+                      )}
+                      {sp.code === 'PLSE' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M2 12h4l3-9 4 18 3-9h6" />
+                        </svg>
+                      )}
+                      {sp.code === 'VLNT' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                      )}
+                      {sp.code === 'NXUS' && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="evoq-sponsor-badge" style={{ color: sp.color, borderColor: `${sp.color}40`, backgroundColor: `${sp.color}14` }}>
+                      {sp.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="evoq-sponsor-title">{sp.name}</h3>
+                  <span className="evoq-sponsor-category">{sp.role}</span>
+                  <p className="evoq-sponsor-desc">{sp.desc}</p>
                 </div>
               </div>
+            ))}
+          </div>
 
-              <div className="evoq-contact-option">
-                <span style={{ fontSize: '1.5rem', color: 'var(--evoq-lime-primary)' }}>🎮</span>
-                <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.05rem', fontWeight: 700 }}>Competitors &amp; Teams</h4>
-                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--evoq-text-secondary)' }}>
-                    Need help setting up your squad roster or linking game IDs? Join the gamer community.
-                  </p>
-                  <Link to="/gamer/register" style={{ fontSize: '0.8125rem', color: 'var(--evoq-lime-primary)', fontWeight: 700, textDecoration: 'none' }}>
-                    Join Gamer Arena →
-                  </Link>
-                </div>
+          {/* Important Organisation Information & Alliance Tiers */}
+          <div className="evoq-sponsors-banner">
+            <div>
+              <h4 className="evoq-sponsors-banner-title">
+                Sponsor &amp; Alliance Integration Protocol
+              </h4>
+              <p className="evoq-sponsors-banner-desc">
+                Organisations and brand partners integrate directly with EVOQ’s tournament verification layer—powering branded tournament titles, certified arena hardware, talent scouting, and official prize pool escrows.
+              </p>
+              <div className="evoq-sponsor-pill-group">
+                <span className="evoq-sponsor-pill">Title Sponsorship</span>
+                <span className="evoq-sponsor-pill">Broadcast Overlays</span>
+                <span className="evoq-sponsor-pill">Club Talent Portfolios</span>
+                <span className="evoq-sponsor-pill">Hardware Certification</span>
               </div>
+            </div>
+
+            <div>
+              <Link to="/organizer/register" className="evoq-btn evoq-btn-lime">
+                Partner with EVOQ ↗
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          SECTION 12: FAQ ACCORDION
+          SECTION 09: FAQ ACCORDION
           ==================================================================== */}
       <section className="evoq-section" id="faq">
         <div className="evoq-container">
           <div className="evoq-eyebrow">
-            07 / A LITTLE CLARITY
+            05 / FREQUENTLY ASKED QUESTIONS
           </div>
 
           <div className="evoq-split-editorial" style={{ marginBottom: '2.5rem' }}>
@@ -870,13 +597,13 @@ export default function Home() {
       </section>
 
       {/* ====================================================================
-          SECTION 13: FINAL CTA (ACID-LIME HERO BANNER)
+          SECTION 10: FINAL CTA (ACID-LIME HERO BANNER)
           ==================================================================== */}
       <section className="evoq-section" style={{ borderBottom: 'none' }}>
         <div className="evoq-container">
           <div className="evoq-closing-banner">
             <div style={{ fontSize: '0.8125rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '1rem' }}>
-              08 / BUILT FOR WHAT COMES NEXT
+              06 / BUILT FOR WHAT COMES NEXT
             </div>
 
             <div className="evoq-closing-grid">
@@ -909,7 +636,7 @@ export default function Home() {
       </section>
 
       {/* ====================================================================
-          SECTION 14: FOOTER
+          SECTION 11: FOOTER
           ==================================================================== */}
       <footer className="evoq-footer">
         <div className="evoq-container">
@@ -941,8 +668,8 @@ export default function Home() {
               <div className="evoq-footer-col-title">Explore</div>
               <ul className="evoq-footer-links">
                 <li><button onClick={() => scrollToSection('about')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>The Ecosystem</button></li>
-                <li><button onClick={() => scrollToSection('how-it-works')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>How It Works</button></li>
-                <li><button onClick={() => scrollToSection('foundations')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>The EVOQ Approach</button></li>
+                <li><button onClick={() => scrollToSection('games')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Supported Games</button></li>
+                <li><button onClick={() => scrollToSection('sponsors')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Sponsors &amp; Partners</button></li>
                 <li><button onClick={() => scrollToSection('faq')} className="evoq-footer-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>FAQs</button></li>
               </ul>
             </div>
@@ -951,7 +678,7 @@ export default function Home() {
               <div className="evoq-footer-col-title">Get Started</div>
               <ul className="evoq-footer-links">
                 <li><Link to="/gamer/login" className="evoq-footer-link" style={{ color: 'var(--evoq-lime-primary)', fontWeight: 600 }}>Gamer Portal ↗</Link></li>
-                <li><Link to="/organizer/login" className="evoq-footer-link" style={{ color: 'var(--evoq-lime-secondary)', fontWeight: 600 }}>Organizer Portal ⚡</Link></li>
+                <li><Link to="/organizer/login" className="evoq-footer-link" style={{ color: 'var(--evoq-lime-secondary)', fontWeight: 600 }}>Organizer Portal ↗</Link></li>
                 <li>
                   <button
                     onClick={scrollToTop}

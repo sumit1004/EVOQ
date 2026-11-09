@@ -43,7 +43,7 @@ export default function GamerProfileView() {
       <main className="nebula-container">
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading player card...</p>
           </div>
         ) : error ? (
@@ -137,11 +137,11 @@ export default function GamerProfileView() {
                       </h1>
                       <span className="nebula-badge nebula-badge-violet">PLAYER</span>
                       {user?.emailVerified && (
-                        <span className="nebula-badge nebula-badge-lime">✔ VERIFIED ID</span>
+                        <span className="nebula-badge nebula-badge-lime">VERIFIED ID</span>
                       )}
                     </div>
                     <div style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
-                      <strong>@{user?.username}</strong> {profile?.country ? `• 🌍 ${profile.country}` : ''}
+                      <strong>@{user?.username}</strong> {profile?.country ? `• ${profile.country}` : ''}
                     </div>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export default function GamerProfileView() {
                 <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
                   <div className="nebula-card-header">
                     <h2 className="nebula-card-title">
-                      <span>🎖️</span> Verified Achievements &amp; Trophies
+                       Verified Achievements &amp; Trophies
                     </h2>
                     <span className="nebula-badge nebula-badge-lime">{achievements.length} Verified</span>
                   </div>
@@ -210,7 +210,7 @@ export default function GamerProfileView() {
                               Game: {a.game?.name || 'Esports'} • Awarded: {new Date(a.awardedAt || a.createdAt).toLocaleDateString()}
                             </div>
                           </div>
-                          <span className="nebula-badge nebula-badge-neutral">✔ CRYPTO PROOF</span>
+                          <span className="nebula-badge nebula-badge-neutral">CRYPTO PROOF</span>
                         </div>
                       ))}
                     </div>
@@ -221,7 +221,7 @@ export default function GamerProfileView() {
                 <div className="nebula-card">
                   <div className="nebula-card-header">
                     <h2 className="nebula-card-title">
-                      <span>📜</span> Career Timeline &amp; Events
+                       Career Timeline &amp; Events
                     </h2>
                   </div>
 
@@ -261,7 +261,7 @@ export default function GamerProfileView() {
                 <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
                   <div className="nebula-card-header">
                     <h2 className="nebula-card-title">
-                      <span>🎮</span> Connected Game IDs
+                       Connected Game IDs
                     </h2>
                     <Link to="/gamer/profile/edit" style={{ fontSize: '0.85rem', color: 'var(--nebula-cyan)', fontWeight: 700 }}>
                       Manage
@@ -308,7 +308,7 @@ export default function GamerProfileView() {
                 <div className="nebula-card">
                   <div className="nebula-card-header">
                     <h2 className="nebula-card-title">
-                      <span>🛡️</span> Active Team Rosters
+                       Active Team Rosters
                     </h2>
                     <Link to="/gamer/teams" style={{ fontSize: '0.85rem', color: 'var(--nebula-violet)', fontWeight: 700 }}>
                       All Teams →

@@ -45,12 +45,12 @@ export default function GamerMatches() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading matches...</p>
           </div>
         ) : careerRecords.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">⚔️</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Competitive Matches Recorded</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
               Register for an open tournament to play competitive fixtures. Match outcomes appear here automatically.
@@ -77,7 +77,7 @@ export default function GamerMatches() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <span className="nebula-badge nebula-badge-lime">✔ RECORDED</span>
+                  <span className="nebula-badge nebula-badge-lime">RECORDED</span>
                   {item.tournament?.slug && (
                     <Link to={`/gamer/tournaments/${item.tournament.slug}`} className="nebula-btn nebula-btn-secondary nebula-btn-sm">
                       Tournament View

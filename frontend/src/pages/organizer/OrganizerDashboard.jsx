@@ -117,7 +117,7 @@ export function OrganizerDashboard() {
             <div className="nebula-card">
               <div className="nebula-card-header">
                 <h2 className="nebula-card-title">
-                  <span>🏆</span> Managed Tournaments &amp; Control Rooms
+                   Managed Tournaments &amp; Control Rooms
                 </h2>
                 <Link to="/organizer/tournaments" style={{ fontSize: '0.85rem', color: 'var(--nebula-cyan)', fontWeight: 700 }}>
                   View All ({tournaments.length}) →
@@ -130,7 +130,7 @@ export function OrganizerDashboard() {
                 </div>
               ) : tournaments.length === 0 ? (
                 <div className="nebula-empty-state" style={{ padding: '2rem' }}>
-                  <div className="nebula-empty-icon">🎮</div>
+                  <div className="nebula-empty-icon">—</div>
                   <h3>No Tournaments Created</h3>
                   <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1rem' }}>
                     Launch your first competitive event with automated bracket generation and encrypted lobbies.
@@ -185,7 +185,7 @@ export function OrganizerDashboard() {
                           to={`/organizer/tournaments/${t.id}`}
                           className="nebula-btn nebula-btn-cyan nebula-btn-sm"
                         >
-                          Control Room ⚙
+                          Control Room 
                         </Link>
                         <Link
                           to={`/tournaments/${t.slug}`}
@@ -207,17 +207,17 @@ export function OrganizerDashboard() {
             {/* Quick Actions */}
             <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
               <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
-                <span>⚡</span> Quick Operations
+                 Quick Operations
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 <Link to="/organizer/tournaments/create" className="nebula-btn nebula-btn-cyan" style={{ justifyContent: 'flex-start' }}>
-                  <span>➕</span> Create New Tournament
+                   Create New Tournament
                 </Link>
                 <Link to="/organizer/organization/members" className="nebula-btn nebula-btn-secondary" style={{ justifyContent: 'flex-start' }}>
-                  <span>👥</span> Manage Staff &amp; Referee Roles
+                   Manage Staff &amp; Referee Roles
                 </Link>
                 <Link to="/organizer/events" className="nebula-btn nebula-btn-secondary" style={{ justifyContent: 'flex-start' }}>
-                  <span>🏅</span> View Verified Event Portfolio
+                   View Verified Event Portfolio
                 </Link>
               </div>
             </div>

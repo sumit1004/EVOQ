@@ -23,7 +23,7 @@ export default function PublicTeamProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading team profile...</p>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function PublicTeamProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Team Not Found</h2>
           <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
           <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
@@ -127,7 +127,7 @@ export default function PublicTeamProfile() {
           {/* Active Roster */}
           <div className="nebula-card">
             <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-              <span>👥</span> Active Roster Members
+               Active Roster Members
             </h2>
 
             <div className="nebula-table-wrapper">
@@ -166,7 +166,7 @@ export default function PublicTeamProfile() {
           {/* Tournament Participation */}
           <div className="nebula-card">
             <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
-              <span>🏆</span> Event Participation
+               Event Participation
             </h2>
             {team.registrations && team.registrations.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

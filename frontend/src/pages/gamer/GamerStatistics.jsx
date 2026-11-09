@@ -44,12 +44,12 @@ export default function GamerStatistics() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading performance statistics...</p>
           </div>
         ) : stats.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">📊</div>
+            <div className="nebula-empty-icon"></div>
             <h3>No Official Match Statistics Yet</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
               Statistics are generated as matches conclude in tournaments. Play your first competitive match to begin compiling your stats.
@@ -65,7 +65,7 @@ export default function GamerStatistics() {
                 <div key={st.id} className="nebula-card">
                   <div className="nebula-card-header">
                     <h2 className="nebula-card-title">
-                      <span>🎮</span> {st.game?.name || 'Competitive Title'}
+                       {st.game?.name || 'Competitive Title'}
                     </h2>
                     <span className="nebula-badge nebula-badge-cyan">{winRate}% WIN RATE</span>
                   </div>

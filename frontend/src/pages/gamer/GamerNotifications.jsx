@@ -97,12 +97,12 @@ export default function GamerNotifications() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading alerts...</p>
           </div>
         ) : displayed.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🔔</div>
+            <div className="nebula-empty-icon">—</div>
             <p>{filterUnread ? 'No unread notifications.' : 'Your inbox is clear.'}</p>
           </div>
         ) : (

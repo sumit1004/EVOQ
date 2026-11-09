@@ -39,7 +39,7 @@ export default function OrganizerSettings() {
 
         <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
           <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-            <span>⚡</span> Operational Access Identity
+             Operational Access Identity
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
@@ -68,7 +68,7 @@ export default function OrganizerSettings() {
 
         <div className="nebula-card">
           <h2 className="nebula-card-title" style={{ color: 'var(--nebula-coral)', marginBottom: '0.75rem' }}>
-            <span>🛡️</span> Session Security &amp; Access Revocation
+             Session Security &amp; Access Revocation
           </h2>
           <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: '1.25rem' }}>
             Revoking all sessions forces re-authentication across all tournament management interfaces and referee stations.

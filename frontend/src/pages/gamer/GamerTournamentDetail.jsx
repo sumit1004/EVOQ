@@ -135,7 +135,7 @@ export default function GamerTournamentDetail() {
       <div className="nebula-shell">
         <GamerNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading tournament...</p>
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function GamerTournamentDetail() {
       <div className="nebula-shell">
         <GamerNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Tournament Not Found</h2>
           <p>{error || 'The requested tournament could not be found.'}</p>
           <Link to="/gamer/tournaments" className="nebula-btn nebula-btn-primary">
@@ -230,7 +230,7 @@ export default function GamerTournamentDetail() {
                 </div>
               ) : tournament.status === 'REGISTRATION_OPEN' ? (
                 <button onClick={handleOpenRegister} className="nebula-btn nebula-btn-primary">
-                  ⚡ Register Competitor
+                  Register Competitor
                 </button>
               ) : (
                 <span className="nebula-badge nebula-badge-neutral">Registration Closed</span>
@@ -250,7 +250,7 @@ export default function GamerTournamentDetail() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <span className="nebula-badge nebula-badge-lime">🔒 SECURE MATCH LOBBY RELEASED</span>
+              <span className="nebula-badge nebula-badge-lime">SECURE MATCH LOBBY RELEASED</span>
             </div>
             <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
               Encrypted room credentials have been authorized for your upcoming fixture.
@@ -435,7 +435,7 @@ export default function GamerTournamentDetail() {
           <div>
             {matches.length === 0 ? (
               <div className="nebula-card nebula-empty-state">
-                <div className="nebula-empty-icon">⚔️</div>
+                <div className="nebula-empty-icon">—</div>
                 <h3>Bracket Fixtures Pending</h3>
                 <p>Matches will populate once the organizer generates the tournament bracket.</p>
               </div>

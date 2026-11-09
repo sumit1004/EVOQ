@@ -45,12 +45,12 @@ export default function OrganizerPortfolio() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading verified event records...</p>
           </div>
         ) : portfolio.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🏆</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Concluded Tournaments in Portfolio Yet</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
               When you conclude a live tournament and finalize bracket results, the event is permanently verified into your organizer credentials.
@@ -83,7 +83,7 @@ export default function OrganizerPortfolio() {
                     <td>{item.matchCount}</td>
                     <td>{new Date(item.completedAt || item.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <span className="nebula-badge nebula-badge-lime">✔ VERIFIED EVENT</span>
+                      <span className="nebula-badge nebula-badge-lime">VERIFIED EVENT</span>
                     </td>
                   </tr>
                 ))}

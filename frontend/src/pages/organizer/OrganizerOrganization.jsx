@@ -85,12 +85,12 @@ export default function OrganizerOrganization() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading organizations...</p>
           </div>
         ) : organizations.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🏢</div>
+            <div className="nebula-empty-icon"></div>
             <h3>No Organization Formed</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
               Establish an esports organization to host branded leagues, assign staff permissions, and build a verified event portfolio.
@@ -127,8 +127,8 @@ export default function OrganizerOrganization() {
                   )}
 
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.82rem', color: 'var(--nebula-text-muted)', marginBottom: '1.25rem' }}>
-                    <span>👥 Staff: {org._count?.memberships || 1}</span>
-                    <span>🏆 Events: {org._count?.tournaments || 0}</span>
+                    <span>Staff: {org._count?.memberships || 1}</span>
+                    <span>Events: {org._count?.tournaments || 0}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

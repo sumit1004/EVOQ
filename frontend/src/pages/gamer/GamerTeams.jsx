@@ -136,7 +136,7 @@ export default function GamerTeams() {
         {invitations.length > 0 && (
           <div className="nebula-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--nebula-cyan)' }}>
             <h2 className="nebula-card-title" style={{ color: 'var(--nebula-cyan)', marginBottom: '1rem' }}>
-              <span>📩</span> Pending Team Invitations ({invitations.length})
+               Pending Team Invitations ({invitations.length})
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {invitations.map((inv) => (
@@ -183,12 +183,12 @@ export default function GamerTeams() {
         {/* Teams Grid */}
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading your squads...</p>
           </div>
         ) : teams.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🛡️</div>
+            <div className="nebula-empty-icon"></div>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Active Teams</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
               Create a squad to register in 5v5 or team-based tournaments, manage rosters, and earn team tournament achievements.
@@ -228,8 +228,8 @@ export default function GamerTeams() {
                   )}
 
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.82rem', color: 'var(--nebula-text-muted)', marginBottom: '1.25rem' }}>
-                    <span>👥 Roster: {team.memberships?.length || team._count?.memberships || 1} members</span>
-                    <span>🏆 Tournaments: {team._count?.registrations || 0}</span>
+                    <span>Roster: {team.memberships?.length || team._count?.memberships || 1} members</span>
+                    <span>Tournaments: {team._count?.registrations || 0}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

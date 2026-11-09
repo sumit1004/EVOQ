@@ -86,11 +86,11 @@ export function GamerDashboard() {
                   </h1>
                   <span className="nebula-badge nebula-badge-violet">COMPETITOR</span>
                   {user?.emailVerified && (
-                    <span className="nebula-badge nebula-badge-lime">✔ VERIFIED</span>
+                    <span className="nebula-badge nebula-badge-lime">VERIFIED</span>
                   )}
                 </div>
                 <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', margin: '0.25rem 0 0 0' }}>
-                  Gamer Tag: <strong>@{user?.username}</strong> {profile?.country ? `• 🌍 ${profile.country}` : ''}
+                  Gamer Tag: <strong>@{user?.username}</strong> {profile?.country ? `• ${profile.country}` : ''}
                 </p>
               </div>
             </div>
@@ -164,7 +164,7 @@ export function GamerDashboard() {
             <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
               <div className="nebula-card-header">
                 <h2 className="nebula-card-title">
-                  <span>🏆</span> Active &amp; Upcoming Tournaments
+                   Active &amp; Upcoming Tournaments
                 </h2>
                 <Link to="/gamer/tournaments" style={{ fontSize: '0.85rem', color: 'var(--nebula-violet)', fontWeight: 700 }}>
                   Browse All →
@@ -173,7 +173,7 @@ export function GamerDashboard() {
 
               {tournaments.length === 0 ? (
                 <div className="nebula-empty-state">
-                  <div className="nebula-empty-icon">🎮</div>
+                  <div className="nebula-empty-icon">—</div>
                   <p>No active tournaments open right now.</p>
                 </div>
               ) : (
@@ -213,7 +213,7 @@ export function GamerDashboard() {
             <div className="nebula-card">
               <div className="nebula-card-header">
                 <h2 className="nebula-card-title">
-                  <span>🎖️</span> Verified Achievement Cabinet
+                   Verified Achievement Cabinet
                 </h2>
                 <Link to="/gamer/achievements" style={{ fontSize: '0.85rem', color: 'var(--nebula-lime)', fontWeight: 700 }}>
                   View All ({achievements.length}) →
@@ -256,7 +256,7 @@ export function GamerDashboard() {
             <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
               <div className="nebula-card-header">
                 <h2 className="nebula-card-title">
-                  <span>🛡️</span> My Teams
+                   My Teams
                 </h2>
                 <Link to="/gamer/teams" style={{ fontSize: '0.85rem', color: 'var(--nebula-violet)', fontWeight: 700 }}>
                   Manage →
@@ -306,7 +306,7 @@ export function GamerDashboard() {
             <div className="nebula-card">
               <div className="nebula-card-header">
                 <h2 className="nebula-card-title">
-                  <span>🎮</span> Game Identities
+                   Game Identities
                 </h2>
                 <Link to="/gamer/profile/edit" style={{ fontSize: '0.85rem', color: 'var(--nebula-cyan)', fontWeight: 700 }}>
                   + Connect

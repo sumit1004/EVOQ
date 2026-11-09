@@ -293,27 +293,27 @@ export default function TournamentManager() {
           <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
             {tournament.status === 'DRAFT' && (
               <button className="evoq-btn evoq-btn-primary" onClick={() => handleStatusChange('ANNOUNCED')}>
-                📢 Announce Tournament
+                Announce Tournament
               </button>
             )}
             {['DRAFT', 'ANNOUNCED'].includes(tournament.status) && (
               <button className="evoq-btn evoq-btn-primary" onClick={() => handleStatusChange('REGISTRATION_OPEN')}>
-                🔓 Open Registrations
+                Open Registrations
               </button>
             )}
             {tournament.status === 'REGISTRATION_OPEN' && (
               <button className="evoq-btn evoq-btn-secondary" onClick={() => handleStatusChange('REGISTRATION_CLOSED')}>
-                🔒 Close Registrations
+                Close Registrations
               </button>
             )}
             {['REGISTRATION_CLOSED', 'REGISTRATION_OPEN'].includes(tournament.status) && (
               <button className="evoq-btn evoq-btn-primary" onClick={() => handleStatusChange('ONGOING')}>
-                ⚔ Start Tournament (Ongoing)
+                Start Tournament (Ongoing)
               </button>
             )}
             {tournament.status === 'ONGOING' && (
               <button className="evoq-btn evoq-btn-success" onClick={() => handleStatusChange('CONCLUDED')}>
-                🏆 Conclude Tournament & Finalize Standings
+                Conclude Tournament & Finalize Standings
               </button>
             )}
             {tournament.status !== 'CANCELLED' && tournament.status !== 'CONCLUDED' && (
@@ -364,7 +364,7 @@ export default function TournamentManager() {
                   onClick={handleGenerateMatches}
                   disabled={generating}
                 >
-                  {generating ? 'Generating...' : '⚡ Generate Matches from Approved'}
+                  {generating ? 'Generating...' : 'Generate Matches from Approved'}
                 </button>
               )}
             </div>
@@ -469,7 +469,7 @@ export default function TournamentManager() {
                   onClick={handleGenerateMatches}
                   disabled={generating || approvedCount < 2}
                 >
-                  {generating ? 'Generating...' : '⚡ Generate Matches'}
+                  {generating ? 'Generating...' : 'Generate Matches'}
                 </button>
               )}
             </div>
@@ -543,14 +543,14 @@ export default function TournamentManager() {
                             setScheduleTime(m.scheduledAt ? m.scheduledAt.slice(0, 16) : '');
                           }}
                         >
-                          🕒 Schedule
+                          Schedule
                         </button>
                         <button
                           className="evoq-btn evoq-btn-secondary"
                           style={{ padding: '4px 10px', fontSize: '0.8rem' }}
                           onClick={() => openCredModal(m)}
                         >
-                          🔒 Credentials {m.credentials?.isReleased ? '✔' : ''}
+                          Credentials {m.credentials?.isReleased ? '' : ''}
                         </button>
                         {!isCompleted && p1 && p2 && (
                           <button
@@ -558,7 +558,7 @@ export default function TournamentManager() {
                             style={{ padding: '4px 10px', fontSize: '0.8rem' }}
                             onClick={() => openResultModal(m)}
                           >
-                            🏆 Enter Result
+                            Enter Result
                           </button>
                         )}
                       </div>
@@ -728,7 +728,7 @@ export default function TournamentManager() {
                     Cancel
                   </button>
                   <button type="submit" className="evoq-btn evoq-btn-primary" disabled={savingResult}>
-                    {savingResult ? 'Approving...' : '✔ Authorize & Approve Result'}
+                    {savingResult ? 'Approving...' : 'Authorize & Approve Result'}
                   </button>
                 </div>
               </form>

@@ -9,7 +9,7 @@ export function GamerProtectedRoute({ children }) {
     return (
       <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🎮</div>
+          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
           <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
             Verifying Gamer Credentials...
           </p>
@@ -39,7 +39,7 @@ export function OrganizerProtectedRoute({ children }) {
     return (
       <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚡</div>
+          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
           <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
             Verifying Operations Credentials...
           </p>
@@ -77,7 +77,7 @@ export default function ProtectedRoute({ children, allowedAccountType = null }) 
     return (
       <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
           <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
             Authenticating Session...
           </p>

@@ -322,21 +322,42 @@
 }
 
 /* ==========================================================================
-   SECTION 02: HERO
+   SECTION 02: HERO (INTERACTIVE PRODUCT SIMULATION)
    ========================================================================== */
-.evoq-hero-grid {
+.evoq-hero-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 3rem;
-  align-items: flex-end;
-  margin-bottom: 3.5rem;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 3.5rem;
+  align-items: center;
+  margin-bottom: 3rem;
 }
 
-@media (max-width: 1024px) {
-  .evoq-hero-grid {
+@media (max-width: 1100px) {
+  .evoq-hero-layout {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 2.5rem;
   }
+}
+
+.evoq-hero-brand-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.evoq-hero-simulation-col {
+  width: 100%;
+}
+
+.evoq-heading-hero {
+  font-family: var(--evoq-font-heading);
+  font-size: clamp(3.25rem, 6.2vw, 6.5rem);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  color: #f4f5ef;
+  margin: 0;
+  text-transform: uppercase;
 }
 
 .evoq-hero-preview-frame {
@@ -1066,6 +1087,161 @@
   color: var(--evoq-text-muted);
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+/* ==========================================================================
+   SPONSORS & ORGANISATIONS SECTION
+   ========================================================================== */
+.evoq-sponsors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+@media (max-width: 1024px) {
+  .evoq-sponsors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .evoq-sponsors-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.evoq-sponsor-card {
+  background-color: var(--evoq-surface-card);
+  border: 1px solid var(--evoq-border-card);
+  border-radius: var(--evoq-radius-md);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all var(--evoq-transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.evoq-sponsor-card:hover {
+  border-color: var(--evoq-border-highlight);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+}
+
+.evoq-sponsor-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.evoq-sponsor-emblem {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #161c14;
+  border: 1px solid #283222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color var(--evoq-transition-fast);
+}
+
+.evoq-sponsor-card:hover .evoq-sponsor-emblem {
+  border-color: var(--evoq-lime-primary);
+}
+
+.evoq-sponsor-badge {
+  font-family: var(--evoq-font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  background-color: rgba(201, 255, 82, 0.08);
+  color: var(--evoq-lime-primary);
+  border: 1px solid rgba(201, 255, 82, 0.25);
+  text-transform: uppercase;
+}
+
+.evoq-sponsor-title {
+  font-family: var(--evoq-font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--evoq-text-primary);
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.02em;
+}
+
+.evoq-sponsor-category {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--evoq-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.85rem;
+}
+
+.evoq-sponsor-desc {
+  font-size: 0.85rem;
+  color: var(--evoq-text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.evoq-sponsors-banner {
+  margin-top: 2.5rem;
+  padding: 1.75rem 2rem;
+  background-color: #10140e;
+  border: 1px solid var(--evoq-border-card);
+  border-radius: var(--evoq-radius-md);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .evoq-sponsors-banner {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.evoq-sponsors-banner-title {
+  font-family: var(--evoq-font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--evoq-text-primary);
+  margin: 0 0 0.4rem 0;
+}
+
+.evoq-sponsors-banner-desc {
+  font-size: 0.875rem;
+  color: var(--evoq-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.evoq-sponsor-pill-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.evoq-sponsor-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--evoq-text-muted);
+  background-color: #161c14;
+  border: 1px solid #242c1f;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
 }
 
 /* Reduced Motion Override */

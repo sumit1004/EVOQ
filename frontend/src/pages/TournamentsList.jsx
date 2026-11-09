@@ -66,10 +66,10 @@ export default function TournamentsList() {
           </div>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <Link to="/gamer/login" className="nebula-btn nebula-btn-primary">
-              🎮 Join as Competitor
+              Join as Competitor
             </Link>
             <Link to="/organizer/login" className="nebula-btn nebula-btn-cyan">
-              ⚡ Host Tournament
+              Host Tournament
             </Link>
           </div>
         </div>
@@ -139,12 +139,12 @@ export default function TournamentsList() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading tournaments...</p>
           </div>
         ) : tournaments.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🎮</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Tournaments Found</h3>
             <p style={{ color: 'var(--nebula-text-secondary)' }}>Try adjusting your search criteria or game filters.</p>
           </div>
@@ -224,11 +224,11 @@ export default function TournamentsList() {
                   }}
                 >
                   <span>
-                    👥 {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
+                    Roster: {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
                   </span>
                   {t.prizePool && (
                     <span style={{ color: 'var(--nebula-lime)', fontWeight: 700 }}>
-                      🏆 {t.prizePool} {t.prizeCurrency || 'USD'}
+                      {t.prizePool} {t.prizeCurrency || 'USD'}
                     </span>
                   )}
                 </div>

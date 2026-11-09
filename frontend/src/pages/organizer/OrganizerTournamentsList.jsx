@@ -88,12 +88,12 @@ export default function OrganizerTournamentsList() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading tournament list...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🎮</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Tournaments Matching Filter</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1rem' }}>
               Create an event or clear status filter.
@@ -150,7 +150,7 @@ export default function OrganizerTournamentsList() {
                           to={`/organizer/tournaments/${t.id}`}
                           className="nebula-btn nebula-btn-cyan nebula-btn-sm"
                         >
-                          Control Room ⚙
+                          Control Room 
                         </Link>
                         <Link
                           to={`/tournaments/${t.slug}`}

@@ -31,7 +31,7 @@ export default function PublicOrganizationProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading organization profile...</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function PublicOrganizationProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Organization Not Found</h2>
           <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
           <Link to="/tournaments" className="nebula-btn nebula-btn-cyan" style={{ marginTop: '1.5rem' }}>
@@ -131,7 +131,7 @@ export default function PublicOrganizationProfile() {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>{org.name}</h1>
-                <span className="nebula-badge nebula-badge-cyan">✔ VERIFIED CLUB</span>
+                <span className="nebula-badge nebula-badge-cyan">VERIFIED CLUB</span>
               </div>
               {org.tagline && (
                 <p style={{ color: 'var(--nebula-cyan)', fontSize: '1rem', margin: '0.25rem 0 0 0', fontWeight: 600 }}>
@@ -150,7 +150,7 @@ export default function PublicOrganizationProfile() {
                     marginTop: '0.35rem',
                   }}
                 >
-                  🔗 {org.websiteUrl}
+                  {org.websiteUrl}
                 </a>
               )}
             </div>
@@ -201,7 +201,7 @@ export default function PublicOrganizationProfile() {
           <div>
             <div className="nebula-card">
               <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                <span>🏆</span> Official Tournaments
+                 Official Tournaments
               </h2>
               {org.tournaments && org.tournaments.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

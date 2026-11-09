@@ -45,12 +45,12 @@ export default function GamerAchievements() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading trophy cabinet...</p>
           </div>
         ) : achievements.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🏆</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Verified Achievements Yet</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
               Compete in EVOQ verified tournaments. Podium finishes and championship runs generate permanent credentials on your public player profile.

@@ -144,7 +144,7 @@ export default function GamerProfileEdit() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading editor...</p>
           </div>
         ) : (
@@ -152,7 +152,7 @@ export default function GamerProfileEdit() {
             {/* Identity Details Form */}
             <form onSubmit={handleSaveProfile} className="nebula-card">
               <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                <span>👤</span> Core Gamer Details
+                Core Gamer Details
               </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
@@ -286,7 +286,7 @@ export default function GamerProfileEdit() {
             {/* Link Game Identities Card */}
             <div className="nebula-card">
               <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                <span>🎮</span> Connect Game Accounts
+                 Connect Game Accounts
               </h2>
               <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.88rem', marginBottom: '1.25rem' }}>
                 Linking your publisher accounts (Riot ID, Steam ID, Epic Games) enables automatic roster verification in title-specific brackets.

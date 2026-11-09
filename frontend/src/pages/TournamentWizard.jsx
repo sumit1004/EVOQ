@@ -461,7 +461,7 @@ export default function TournamentWizard() {
                   </button>
                 ) : (
                   <button type="submit" className="evoq-btn evoq-btn-primary" disabled={submitting}>
-                    {submitting ? 'Creating Tournament...' : '🚀 Create Tournament'}
+                    {submitting ? 'Creating Tournament...' : 'Create Tournament'}
                   </button>
                 )}
               </div>

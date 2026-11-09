@@ -97,12 +97,12 @@ export default function OrganizerNotifications() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading alerts...</p>
           </div>
         ) : displayed.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🔔</div>
+            <div className="nebula-empty-icon">—</div>
             <p>{filterUnread ? 'No unread operational alerts.' : 'Inbox is clear.'}</p>
           </div>
         ) : (

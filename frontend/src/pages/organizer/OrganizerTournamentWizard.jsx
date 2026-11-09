@@ -210,7 +210,7 @@ export default function OrganizerTournamentWizard() {
         <div className="nebula-card">
           {loading ? (
             <div className="nebula-empty-state">
-              <div className="nebula-empty-icon">⏳</div>
+              <div className="nebula-empty-icon">—</div>
               <p>Loading wizard...</p>
             </div>
           ) : (
@@ -568,7 +568,7 @@ export default function OrganizerTournamentWizard() {
                   </button>
                 ) : (
                   <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={submitting}>
-                    {submitting ? 'Deploying Event...' : '🚀 Deploy Tournament Control Room'}
+                    {submitting ? 'Deploying Event...' : 'Deploy Tournament Control Room'}
                   </button>
                 )}
               </div>

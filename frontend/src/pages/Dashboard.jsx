@@ -45,7 +45,7 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
             <span className={`evoq-badge ${user?.emailVerified ? 'badge-success' : 'badge-warning'}`}>
-              {user?.emailVerified ? '✔ Email Verified' : 'Verification Pending'}
+              {user?.emailVerified ? 'Email Verified' : 'Verification Pending'}
             </span>
             <button
               onClick={handleLogout}
@@ -66,7 +66,7 @@ export default function Dashboard() {
         <div className="grid-cards" style={{ marginBottom: 'var(--space-2xl)' }}>
           {/* Gamer Profile */}
           <Link to="/dashboard/profile" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>👤</div>
+            
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Gamer Profile</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               Manage game identities (Riot ID, Steam, Epic), bio, and public player portfolio.
@@ -75,7 +75,7 @@ export default function Dashboard() {
 
           {/* Teams */}
           <Link to="/dashboard/teams" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>🛡️</div>
+            
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Teams &amp; Rosters</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               Form competitive teams, manage rosters, send invitations, and view team history.
@@ -84,7 +84,7 @@ export default function Dashboard() {
 
           {/* Organizer Operations Hub */}
           <Link to="/dashboard/organizer" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>⚙️</div>
+            
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Organizer Hub</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               Host tournaments, control room match operations, and view organizer credibility metrics.
@@ -93,7 +93,7 @@ export default function Dashboard() {
 
           {/* Tournaments Discovery */}
           <Link to="/tournaments" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>🏆</div>
+            
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Compete in Tournaments</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               Discover active competitions, register solo or with your squad, and view live brackets.
@@ -102,7 +102,7 @@ export default function Dashboard() {
 
           {/* Organizations */}
           <Link to="/dashboard/organizations" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>🏢</div>
+            
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Organizations</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               Create or manage esports organizations, staff roles, and public brand profiles.
@@ -111,7 +111,7 @@ export default function Dashboard() {
 
           {/* Notifications */}
           <Link to="/dashboard/notifications" className="evoq-card clickable" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}>🔔</div>
+            <div style={{ fontSize: '1.8rem', marginBottom: 'var(--space-xs)' }}></div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 'var(--space-xs)' }}>Notifications</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
               View match reminders, tournament announcements, and team invitations.

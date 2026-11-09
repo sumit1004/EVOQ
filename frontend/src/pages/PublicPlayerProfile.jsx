@@ -24,7 +24,7 @@ export default function PublicPlayerProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading player portfolio...</p>
         </div>
       </div>
@@ -36,7 +36,7 @@ export default function PublicPlayerProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Player Profile Not Found</h2>
           <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
           <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
@@ -145,10 +145,10 @@ export default function PublicPlayerProfile() {
                   <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>
                     {profile.displayName || profile.inGameName}
                   </h1>
-                  <span className="nebula-badge nebula-badge-lime">✔ VERIFIED ESPORTS ID</span>
+                  <span className="nebula-badge nebula-badge-lime">VERIFIED ESPORTS ID</span>
                 </div>
                 <div style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.95rem', marginTop: '0.25rem' }}>
-                  <strong>@{profile.user?.username || profile.inGameName}</strong> {profile.country ? `• 🌍 ${profile.country}` : ''}
+                  <strong>@{profile.user?.username || profile.inGameName}</strong> {profile.country ? `• ${profile.country}` : ''}
                 </div>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function PublicPlayerProfile() {
           <div className="nebula-grid-2col">
             <div className="nebula-card">
               <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                <span>🎮</span> Connected Publisher Handles
+                 Connected Publisher Handles
               </h2>
               {identities.length === 0 ? (
                 <p style={{ color: 'var(--nebula-text-secondary)' }}>No public game identities connected.</p>

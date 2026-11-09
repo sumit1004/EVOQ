@@ -224,7 +224,7 @@ export default function OrganizerTournamentWorkspace() {
       <div className="nebula-shell">
         <OrganizerNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading tournament workspace...</p>
         </div>
       </div>
@@ -236,7 +236,7 @@ export default function OrganizerTournamentWorkspace() {
       <div className="nebula-shell">
         <OrganizerNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Control Room Error</h2>
           <p>{error}</p>
           <Link to="/organizer/dashboard" className="nebula-btn nebula-btn-cyan">
@@ -289,27 +289,27 @@ export default function OrganizerTournamentWorkspace() {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {tournament.status === 'DRAFT' && (
                 <button onClick={() => handleStatusChange('ANNOUNCED')} className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                  📢 Announce Event
+                  Announce Event
                 </button>
               )}
               {['DRAFT', 'ANNOUNCED'].includes(tournament.status) && (
                 <button onClick={() => handleStatusChange('REGISTRATION_OPEN')} className="nebula-btn nebula-btn-lime nebula-btn-sm">
-                  🔓 Open Registrations
+                  Open Registrations
                 </button>
               )}
               {tournament.status === 'REGISTRATION_OPEN' && (
                 <button onClick={() => handleStatusChange('REGISTRATION_CLOSED')} className="nebula-btn nebula-btn-secondary nebula-btn-sm">
-                  🔒 Close Registrations
+                  Close Registrations
                 </button>
               )}
               {['REGISTRATION_CLOSED', 'REGISTRATION_OPEN'].includes(tournament.status) && (
                 <button onClick={() => handleStatusChange('ONGOING')} className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                  ⚔ Start Tournament (Live)
+                  Start Tournament (Live)
                 </button>
               )}
               {tournament.status === 'ONGOING' && (
                 <button onClick={() => handleStatusChange('CONCLUDED')} className="nebula-btn nebula-btn-lime nebula-btn-sm">
-                  🏆 Conclude &amp; Award Trophies
+                  Conclude &amp; Award Trophies
                 </button>
               )}
               {tournament.status !== 'CANCELLED' && tournament.status !== 'CONCLUDED' && (
@@ -360,7 +360,7 @@ export default function OrganizerTournamentWorkspace() {
                   className="nebula-btn nebula-btn-cyan"
                   disabled={generating}
                 >
-                  {generating ? 'Generating...' : '⚡ Generate Bracket from Approved'}
+                  {generating ? 'Generating...' : 'Generate Bracket from Approved'}
                 </button>
               )}
             </div>
@@ -461,14 +461,14 @@ export default function OrganizerTournamentWorkspace() {
                     className="nebula-btn nebula-btn-cyan"
                     disabled={generating || approvedCount < 2}
                   >
-                    {generating ? 'Generating...' : '⚡ Generate Fixtures'}
+                    {generating ? 'Generating...' : 'Generate Fixtures'}
                   </button>
                 )}
               </div>
 
               {matches.length === 0 ? (
                 <div className="nebula-empty-state">
-                  <div className="nebula-empty-icon">⚔️</div>
+                  <div className="nebula-empty-icon">—</div>
                   <p>Approve at least 2 competitors in the Registrations tab, then generate tournament matches.</p>
                 </div>
               ) : (
@@ -508,20 +508,20 @@ export default function OrganizerTournamentWorkspace() {
                             }}
                             className="nebula-btn nebula-btn-secondary nebula-btn-sm"
                           >
-                            🕒 Schedule
+                            Schedule
                           </button>
                           <button
                             onClick={() => openCredModal(m)}
                             className="nebula-btn nebula-btn-secondary nebula-btn-sm"
                           >
-                            🔒 Room Credentials {m.credentials?.isReleased ? '✔' : ''}
+                            Room Credentials {m.credentials?.isReleased ? '' : ''}
                           </button>
                           {!isCompleted && p1 && p2 && (
                             <button
                               onClick={() => openResultModal(m)}
                               className="nebula-btn nebula-btn-cyan nebula-btn-sm"
                             >
-                              🏆 Enter Result
+                              Enter Result
                             </button>
                           )}
                         </div>
@@ -540,7 +540,7 @@ export default function OrganizerTournamentWorkspace() {
             <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
               <div className="nebula-modal-header">
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  🔒 Match Lobby Credentials (Match #{activeCredMatch.matchNumber})
+                  Match Lobby Credentials (Match #{activeCredMatch.matchNumber})
                 </h2>
                 <button className="nebula-modal-close" onClick={() => setActiveCredMatch(null)}>×</button>
               </div>
@@ -623,7 +623,7 @@ export default function OrganizerTournamentWorkspace() {
             <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
               <div className="nebula-modal-header">
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  🏆 Authorize Match Result (Match #{activeResultMatch.matchNumber})
+                  Authorize Match Result (Match #{activeResultMatch.matchNumber})
                 </h2>
                 <button className="nebula-modal-close" onClick={() => setActiveResultMatch(null)}>×</button>
               </div>
@@ -695,7 +695,7 @@ export default function OrganizerTournamentWorkspace() {
                     Cancel
                   </button>
                   <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={savingResult}>
-                    {savingResult ? 'Authorizing...' : '✔ Authorize & Advance Winner'}
+                    {savingResult ? 'Authorizing...' : 'Authorize & Advance Winner'}
                   </button>
                 </div>
               </form>

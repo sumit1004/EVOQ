@@ -67,7 +67,7 @@ export default function OrganizerLogin() {
         <div className="nebula-card" style={{ maxWidth: '440px', width: '100%', borderTop: '4px solid var(--nebula-cyan)' }}>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <span className="nebula-badge nebula-badge-cyan" style={{ marginBottom: '0.75rem' }}>
-              ⚡ OPERATIONS &amp; TOURNAMENT HUB
+              OPERATIONS &amp; TOURNAMENT HUB
             </span>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em', margin: '0.25rem 0' }}>
               Organizer Sign In
@@ -79,7 +79,7 @@ export default function OrganizerLogin() {
 
           {serverError && (
             <div className="nebula-alert nebula-alert-danger" role="alert">
-              ⚠️ {serverError}
+              {serverError}
             </div>
           )}
 
@@ -139,7 +139,7 @@ export default function OrganizerLogin() {
                   title={showPassword ? 'Hide password' : 'Show password'}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}

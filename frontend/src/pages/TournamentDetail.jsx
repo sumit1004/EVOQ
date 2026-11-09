@@ -135,7 +135,7 @@ export default function TournamentDetail() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading tournament...</p>
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function TournamentDetail() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Tournament Not Found</h2>
           <p style={{ color: 'var(--nebula-text-secondary)' }}>{error}</p>
           <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
@@ -256,7 +256,7 @@ export default function TournamentDetail() {
             }}
           >
             <span className="nebula-badge nebula-badge-lime" style={{ marginBottom: '0.5rem' }}>
-              🔒 MATCH LOBBY CREDENTIALS RELEASED
+              MATCH LOBBY CREDENTIALS RELEASED
             </span>
             <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
               Lobby credentials have been released by the tournament referee for your fixture.
@@ -416,7 +416,7 @@ export default function TournamentDetail() {
           <div>
             {matches.length === 0 ? (
               <div className="nebula-card nebula-empty-state">
-                <div className="nebula-empty-icon">⚔️</div>
+                <div className="nebula-empty-icon">—</div>
                 <h3>Bracket Fixtures Pending</h3>
                 <p>Matches will populate once the organizer generates the tournament bracket.</p>
               </div>

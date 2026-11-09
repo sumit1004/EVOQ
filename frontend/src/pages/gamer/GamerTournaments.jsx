@@ -131,12 +131,12 @@ export default function GamerTournaments() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading tournaments...</p>
           </div>
         ) : tournaments.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">🎮</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Tournaments Found</h3>
             <p style={{ color: 'var(--nebula-text-secondary)' }}>Try adjusting your search criteria or game filters.</p>
           </div>
@@ -216,11 +216,11 @@ export default function GamerTournaments() {
                   }}
                 >
                   <span>
-                    👥 {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
+                    Roster: {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
                   </span>
                   {t.prizePool && (
                     <span style={{ color: 'var(--nebula-lime)', fontWeight: 700 }}>
-                      🏆 {t.prizePool} {t.prizeCurrency || 'USD'}
+                      {t.prizePool} {t.prizeCurrency || 'USD'}
                     </span>
                   )}
                 </div>

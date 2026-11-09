@@ -105,12 +105,12 @@ export default function OrganizerStaff() {
 
         {loading ? (
           <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">⏳</div>
+            <div className="nebula-empty-icon">—</div>
             <p>Loading staff rosters...</p>
           </div>
         ) : organizations.length === 0 ? (
           <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">👥</div>
+            <div className="nebula-empty-icon">—</div>
             <h3>No Organization Found</h3>
             <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1rem' }}>
               Create an organization first to assign staff and referee roles.
@@ -148,7 +148,7 @@ export default function OrganizerStaff() {
                 {/* Add Staff Card */}
                 <div className="nebula-card">
                   <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
-                    <span>➕</span> Grant Staff or Referee Role
+                     Grant Staff or Referee Role
                   </h2>
                   <form onSubmit={handleAddStaff} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr auto', gap: '0.85rem', alignItems: 'flex-end' }}>
                     <div>
@@ -198,7 +198,7 @@ export default function OrganizerStaff() {
                 {/* Staff Table */}
                 <div className="nebula-card">
                   <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                    <span>🛡️</span> Active Staff Roster — {selectedOrg.name}
+                     Active Staff Roster — {selectedOrg.name}
                   </h2>
 
                   <div className="nebula-table-wrapper">

@@ -33,11 +33,11 @@ export default function PublicNavbar() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               {user.accountType === 'ORGANIZER' ? (
                 <Link to="/organizer/dashboard" className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                  ⚡ Operations Hub ({user.username})
+                  Operations Hub ({user.username})
                 </Link>
               ) : (
                 <Link to="/gamer/dashboard" className="nebula-btn nebula-btn-primary nebula-btn-sm">
-                  🎮 Gamer Dashboard ({user.username})
+                  Gamer Dashboard ({user.username})
                 </Link>
               )}
             </div>
@@ -47,7 +47,7 @@ export default function PublicNavbar() {
                 Gamer Sign In
               </Link>
               <Link to="/organizer/login" className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                Organizer Portal ⚡
+                Organizer Portal
               </Link>
             </div>
           )}

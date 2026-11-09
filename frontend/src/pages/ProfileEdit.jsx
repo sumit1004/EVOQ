@@ -164,7 +164,7 @@ export default function ProfileEdit() {
           </div>
           {profile?.slug && (
             <Link to={`/players/${profile.slug}`} className="btn-secondary">
-              👁️ View Public Profile
+              View Public Profile
             </Link>
           )}
         </div>

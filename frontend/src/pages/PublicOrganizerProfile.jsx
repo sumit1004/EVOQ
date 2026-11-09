@@ -31,7 +31,7 @@ export default function PublicOrganizerProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⏳</div>
+          <div className="nebula-empty-icon">—</div>
           <p>Loading organizer credibility profile...</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function PublicOrganizerProfile() {
       <div className="nebula-shell">
         <PublicNavbar />
         <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">⚠️</div>
+          <div className="nebula-empty-icon">—</div>
           <h2>Organizer Not Found</h2>
           <p style={{ color: 'var(--nebula-text-secondary)', marginTop: '0.5rem' }}>{error}</p>
           <Link to="/tournaments" className="nebula-btn nebula-btn-cyan" style={{ marginTop: '1.5rem' }}>
@@ -84,7 +84,7 @@ export default function PublicOrganizerProfile() {
                 <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>
                   {organizer.organizationName || organizer.user?.username || 'Verified Esports Organizer'}
                 </h1>
-                <span className="nebula-badge nebula-badge-cyan">✔ VERIFIED DIRECTOR</span>
+                <span className="nebula-badge nebula-badge-cyan">VERIFIED DIRECTOR</span>
               </div>
               <p style={{ color: 'var(--nebula-text-secondary)', margin: '0.25rem 0 0 0' }}>
                 Official Organizer Profile • Member since {new Date(organizer.createdAt).toLocaleDateString()}
@@ -168,7 +168,7 @@ export default function PublicOrganizerProfile() {
                       <td>{item.participantCount}</td>
                       <td>{item.matchCount}</td>
                       <td>{new Date(item.completedAt || item.createdAt).toLocaleDateString()}</td>
-                      <td><span className="nebula-badge nebula-badge-lime">✔ VERIFIED</span></td>
+                      <td><span className="nebula-badge nebula-badge-lime">VERIFIED</span></td>
                     </tr>
                   ))}
                 </tbody>
