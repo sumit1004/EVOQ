@@ -23,6 +23,50 @@ describe('Landing page', () => {
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getAllByText('Login')[0]).toBeInTheDocument();
   });
+
+  it('renders About section with high-clarity copy and 3 pillars', () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Landing />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+    expect(screen.getByText('// ABOUT EVOQ · EST. 2026')).toBeInTheDocument();
+    expect(screen.getByText('01 / FOR GAMERS')).toBeInTheDocument();
+    expect(screen.getByText('02 / FOR ORGANIZERS')).toBeInTheDocument();
+    expect(screen.getByText('03 / FOR PLAYERS')).toBeInTheDocument();
+  });
+
+  it('renders Features section with 8 features and interactive navigation pips', () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Landing />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+    expect(screen.getByText('// EXPLORE EVOQ FEATURES')).toBeInTheDocument();
+    expect(screen.getByText('01 / 08 FEATURES')).toBeInTheDocument();
+    expect(screen.getByLabelText('Feature 01')).toBeInTheDocument();
+    expect(screen.getByLabelText('Feature 08')).toBeInTheDocument();
+  });
+
+  it('renders Games section with 5 supported games and live telemetry radar', () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Landing />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+    expect(screen.getAllByText('FREE FIRE')[0]).toBeInTheDocument();
+    expect(screen.getByText('BGMI')).toBeInTheDocument();
+    expect(screen.getByText('VALORANT')).toBeInTheDocument();
+    expect(screen.getByText('CALL OF DUTY')).toBeInTheDocument();
+    expect(screen.getByText('CS2')).toBeInTheDocument();
+    expect(screen.getByText('LIVE TELEMETRY')).toBeInTheDocument();
+  });
 });
 
 describe('NotFound page', () => {

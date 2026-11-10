@@ -79,24 +79,25 @@ export function Navbar({
       }
 
       const tl = gsap.timeline({
-        defaults: { ease: 'power3.out' },
+        defaults: { ease: 'power2.out' },
       });
 
-      tl.to(surface, { scaleX: 1, opacity: 1, duration: 0.58, ease: 'power3.out' }, 0.05);
-      tl.to(logo, { opacity: 1, x: 0, duration: 0.38, ease: 'power3.out' }, 0.28);
+      // Slow, cinematic navbar expansion from center
+      tl.to(surface, { scaleX: 1, opacity: 1, duration: 1.25, ease: 'power2.out' }, 0.05);
+      tl.to(logo, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' }, 0.55);
 
       if (navLinks.length > 0) {
         tl.to(
           navLinks,
-          { opacity: 1, y: 0, duration: 0.34, stagger: 0.04, ease: 'power3.out' },
-          0.32
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: 'power2.out' },
+          0.65
         );
       }
 
-      tl.to(right, { opacity: 1, x: 0, duration: 0.38, ease: 'power3.out' }, 0.34);
+      tl.to(right, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' }, 0.75);
 
       if (mobileToggle) {
-        tl.to(mobileToggle, { opacity: 1, duration: 0.3, ease: 'power3.out' }, 0.38);
+        tl.to(mobileToggle, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0.8);
       }
     }, containerRef);
 
@@ -380,6 +381,390 @@ const SPONSORS_LIST = [
   { code: 'SYS-06', brand: 'PRISMA TELEMETRY', role: 'Real-Time Esports Database & Match Ledger' },
 ];
 
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+/**
+ * Deterministic Letter Scrambling Engine
+ * Transitions deterministically from initial text to final text based on normalized progress t [0, 1].
+ * Reversible on scroll up and down with consistent intermediate digital states.
+ */
+function scrambleWord(initial, final, t) {
+  if (t <= 0.02) return initial;
+  if (t >= 0.96) return final;
+
+  const targetLen = t < 0.25 ? initial.length : final.length;
+  let result = '';
+
+  for (let i = 0; i < targetLen; i++) {
+    const start = 0.06 + (i / targetLen) * 0.46;
+    const end = Math.min(0.95, start + 0.36);
+
+    if (t < start) {
+      result += (i < initial.length) ? initial[i] : '';
+    } else if (t >= end) {
+      result += (i < final.length) ? final[i] : '';
+    } else {
+      const cycle = Math.floor(t * 140);
+      const glyphIdx = Math.abs((cycle * 7 + i * 13 + ((t * 1000) | 0)) % GLYPHS.length);
+      result += GLYPHS[glyphIdx];
+    }
+  }
+  return result;
+}
+
+/**
+ * Renders bespoke high-fidelity esports visuals for each of the 8 features
+ */
+function renderFeatureVisual(idx) {
+  switch (idx) {
+    case 0:
+      // 01 / TOURNAMENT MANAGEMENT: Double Elimination Live Bracket Engine
+      return (
+        <div className="visual-panel visual-bracket">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">LIVE BRACKET</span>
+            <span className="visual-header-tag">// DOUBLE ELIMINATION · RO8</span>
+          </div>
+          <div className="bracket-tree-layout">
+            <div className="bracket-col bracket-col-r1">
+              <div className="bracket-match match-winner">
+                <div className="bracket-team win">
+                  <span className="team-seed">01</span>
+                  <span className="team-name">SKR GAMING</span>
+                  <span className="team-score">2</span>
+                </div>
+                <div className="bracket-team">
+                  <span className="team-seed">08</span>
+                  <span className="team-name">NOVA ESPORTS</span>
+                  <span className="team-score">1</span>
+                </div>
+              </div>
+              <div className="bracket-match match-winner">
+                <div className="bracket-team win">
+                  <span className="team-seed">03</span>
+                  <span className="team-name">SENTINELS</span>
+                  <span className="team-score">2</span>
+                </div>
+                <div className="bracket-team">
+                  <span className="team-seed">06</span>
+                  <span className="team-name">FNATIC</span>
+                  <span className="team-score">0</span>
+                </div>
+              </div>
+            </div>
+            <div className="bracket-connectors" aria-hidden="true">
+              <svg width="40" height="150" viewBox="0 0 40 150">
+                <path d="M0,35 H20 V75 H40" fill="none" stroke="rgba(201, 255, 82, 0.45)" strokeWidth="1.5" />
+                <path d="M0,115 H20 V75" fill="none" stroke="rgba(201, 255, 82, 0.45)" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <div className="bracket-col bracket-col-finals">
+              <div className="bracket-final-card">
+                <div className="final-card-tag">CHAMPIONSHIP STAGE</div>
+                <div className="final-teams">
+                  <span className="lime">SKR</span> <span className="final-vs">VS</span> <span className="lime">SEN</span>
+                </div>
+                <div className="final-prize-meter">
+                  <span>ESCROW PRIZE</span>
+                  <span className="lime">$25,000 USD</span>
+                </div>
+                <div className="final-status-pill">MAP 3 · LIVE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 1:
+      // 02 / GAMER PROFILES: Verified Esports Passport & Identity Card
+      return (
+        <div className="visual-panel visual-passport">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">VERIFIED PASSPORT</span>
+            <span className="visual-header-tag">// GLOBAL ESPORTS ID · 884-02X</span>
+          </div>
+          <div className="passport-body">
+            <div className="passport-top-row">
+              <div className="passport-avatar-wrap">
+                <div className="passport-avatar-ring">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9FF52" strokeWidth="2">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+                  </svg>
+                </div>
+              </div>
+              <div className="passport-meta">
+                <div className="passport-handle">@VORTEX_PRIME</div>
+                <div className="passport-tier-pill">TIER-1 PRO COMPETITOR</div>
+              </div>
+            </div>
+            <div className="passport-game-handles">
+              <div className="handle-chip"><span>VAL</span> Vortex#EU1</div>
+              <div className="handle-chip"><span>BGMI</span> 512994021</div>
+              <div className="handle-chip"><span>CS2</span> FACEIT-LVL10</div>
+            </div>
+            <div className="passport-stats-row">
+              <div className="passport-stat-box">
+                <span className="stat-label">WIN RATE</span>
+                <span className="stat-num lime">71.4%</span>
+              </div>
+              <div className="passport-stat-box">
+                <span className="stat-label">K/D RATIO</span>
+                <span className="stat-num lime">4.62</span>
+              </div>
+              <div className="passport-stat-box">
+                <span className="stat-label">TOURNAMENTS</span>
+                <span className="stat-num">42 PLACED</span>
+              </div>
+            </div>
+            <div className="passport-ledger-hash">
+              <span>LEDGER // 0x8F92...B3A4</span>
+              <span className="lime">VERIFIED ✓</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 2:
+      // 03 / TEAM & SQUAD OPS: Roster Management Matrix
+      return (
+        <div className="visual-panel visual-roster">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">ROSTER MESH</span>
+            <span className="visual-header-tag">// VALKYRIE PRIME [VK]</span>
+          </div>
+          <div className="roster-grid">
+            {[
+              { role: 'IGL', name: 'VORTEX_PRIME', status: 'READY' },
+              { role: 'ENTRY', name: 'CYPHER_99', status: 'READY' },
+              { role: 'SNIPER', name: 'SHADOW_X', status: 'READY' },
+              { role: 'SUPPORT', name: 'BLAZE_IQ', status: 'READY' },
+              { role: 'FLEX', name: 'NEXUS_CORE', status: 'IN-LOBBY' },
+            ].map((slot) => (
+              <div key={slot.name} className="roster-slot-row">
+                <span className="slot-role">{slot.role}</span>
+                <span className="slot-name">{slot.name}</span>
+                <span className="slot-status">
+                  <span className="status-dot-lime" /> {slot.status}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="roster-footer-row">
+            <span>VOICE PROTOCOL // 5 OF 5 ACTIVE</span>
+            <span className="lime">SUBS [2] ELIGIBLE</span>
+          </div>
+        </div>
+      );
+
+    case 3:
+      // 04 / ORGANIZER PORTAL: Enterprise Operations Controller
+      return (
+        <div className="visual-panel visual-organizer">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">COMMAND HUB</span>
+            <span className="visual-header-tag">// OPERATIONS DASHBOARD</span>
+          </div>
+          <div className="organizer-metrics-grid">
+            <div className="org-metric-card">
+              <span className="org-metric-num lime">64 / 64</span>
+              <span className="org-metric-title">SQUADS CHECKED-IN</span>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '100%' }} /></div>
+            </div>
+            <div className="org-metric-card">
+              <span className="org-metric-num lime">$10,000</span>
+              <span className="org-metric-title">PRIZE ESCROW LOCKED</span>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '85%' }} /></div>
+            </div>
+            <div className="org-metric-card">
+              <span className="org-metric-num">8 / 8</span>
+              <span className="org-metric-title">DEDICATED SERVERS</span>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '100%' }} /></div>
+            </div>
+          </div>
+          <div className="org-actions-strip">
+            <div className="org-action-pill">
+              <span className="action-icon">⚡</span>
+              <span>AUTO-BRACKET SEEDING: COMPLETE</span>
+            </div>
+            <div className="org-action-pill">
+              <span className="action-icon">✓</span>
+              <span>0 OPEN DISPUTES</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 4:
+      // 05 / MATCH & RESULT OPS: Match Telemetry & Result Proof Engine
+      return (
+        <div className="visual-panel visual-matchops">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">TELEMETRY LOBBY</span>
+            <span className="visual-header-tag">// MATCH VALIDATION</span>
+          </div>
+          <div className="matchops-card">
+            <div className="custom-room-row">
+              <div className="room-item">
+                <span className="room-label">PRIVATE ROOM ID</span>
+                <span className="room-val lime">#8849-EVQ</span>
+              </div>
+              <div className="room-item">
+                <span className="room-label">PASSCODE</span>
+                <span className="room-val">•••••••• [ENCRYPTED]</span>
+              </div>
+              <div className="room-item">
+                <span className="room-label">SERVER TICK</span>
+                <span className="room-val">128 TICK DEDICATED</span>
+              </div>
+            </div>
+            <div className="ocr-verification-box">
+              <div className="ocr-header">
+                <span>SCREENSHOT OCR PROOF ANALYZER</span>
+                <span className="lime">CONFIDENCE 99.8%</span>
+              </div>
+              <div className="ocr-result-row">
+                <div className="ocr-team">SKR GAMING // 13</div>
+                <div className="ocr-vs">DEF</div>
+                <div className="ocr-team muted">SENTINELS // 09</div>
+              </div>
+              <div className="ocr-audit-stamp">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9FF52" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>ARBITER STAMP: RESULTS VERIFIED & SIGNED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 5:
+      // 06 / VERIFIED ACHIEVEMENTS: Digital Trophy Vault & Badges
+      return (
+        <div className="visual-panel visual-trophy">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">PERMANENT LEDGER</span>
+            <span className="visual-header-tag">// SOULBOUND TROPHY VAULT</span>
+          </div>
+          <div className="trophy-display-area">
+            <div className="trophy-emblem-box">
+              <div className="trophy-svg-wrap">
+                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9FF52" strokeWidth="1.8">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                  <path d="M4 22h16" />
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                </svg>
+              </div>
+              <div className="trophy-title-tag">2026 NATIONAL CHAMPION</div>
+              <div className="trophy-tier-tag">TIER-1 PLATINUM CUP</div>
+            </div>
+            <div className="badges-constellation">
+              <div className="badge-pill"><span>★</span> SEASON MVP</div>
+              <div className="badge-pill"><span>⚔</span> FLAWLESS GROUP</div>
+              <div className="badge-pill"><span>🛡</span> BEST DEFENDER</div>
+              <div className="badge-pill"><span>50+</span> PODIUMS</div>
+            </div>
+          </div>
+          <div className="trophy-footer">
+            <span>CRYPTO PROOF // ED25519 IMMUTABLE</span>
+            <span className="lime">VERIFIED ON-CHAIN</span>
+          </div>
+        </div>
+      );
+
+    case 6:
+      // 07 / GLOBAL LEADERBOARDS: Dynamic ELO Power Rankings
+      return (
+        <div className="visual-panel visual-leaderboard">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">POWER MATRIX</span>
+            <span className="visual-header-tag">// GLOBAL REGIONAL ELO</span>
+          </div>
+          <div className="leaderboard-table">
+            {[
+              { rank: '01', team: 'TEAM APEX', pts: '2,840 PTS', trend: '▲ +120', active: true },
+              { rank: '02', team: 'ECLIPSE PRIME', pts: '2,710 PTS', trend: '▲ +45', active: false },
+              { rank: '03', team: 'CYBERPUNK SQUAD', pts: '2,650 PTS', trend: '—', active: false },
+              { rank: '04', team: 'PHANTOM REIGN', pts: '2,590 PTS', trend: '▼ -30', active: false },
+              { rank: '05', team: 'VALKYRIE PRIME', pts: '2,540 PTS', trend: '▲ +80', active: false },
+            ].map((row) => (
+              <div key={row.rank} className={`leaderboard-row ${row.active ? 'top-rank' : ''}`}>
+                <span className="lb-rank">{row.rank}</span>
+                <span className="lb-team">{row.team}</span>
+                <span className="lb-pts lime">{row.pts}</span>
+                <span className="lb-trend">{row.trend}</span>
+              </div>
+            ))}
+          </div>
+          <div className="leaderboard-cutoff">
+            <span>PRO CIRCUIT CUTOFF // TOP 16 QUALIFY</span>
+            <span className="lime">SEASON 02</span>
+          </div>
+        </div>
+      );
+
+    case 7:
+    default:
+      // 08 / GAME STATS SYNC: Live Publisher API Pipeline
+      return (
+        <div className="visual-panel visual-statssync">
+          <div className="visual-panel-header">
+            <span className="visual-badge-live">PUBLISHER BRIDGE</span>
+            <span className="visual-header-tag">// REAL-TIME TELEMETRY</span>
+          </div>
+          <div className="api-nodes-row">
+            <div className="api-node active">
+              <span className="node-indicator" />
+              <span className="node-title">RIOT DIRECT</span>
+              <span className="node-ping lime">12ms</span>
+            </div>
+            <div className="api-node active">
+              <span className="node-indicator" />
+              <span className="node-title">KRAFTON LIGHT</span>
+              <span className="node-ping lime">18ms</span>
+            </div>
+            <div className="api-node active">
+              <span className="node-indicator" />
+              <span className="node-title">VALVE GC</span>
+              <span className="node-ping lime">9ms</span>
+            </div>
+          </div>
+          <div className="stats-stream-bars">
+            <div className="stream-stat-item">
+              <div className="stream-stat-header">
+                <span>HEADSHOT ACCURACY</span>
+                <span className="lime">42.8%</span>
+              </div>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '72%' }} /></div>
+            </div>
+            <div className="stream-stat-item">
+              <div className="stream-stat-header">
+                <span>AVG DAMAGE / ROUND</span>
+                <span className="lime">184.2</span>
+              </div>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '82%' }} /></div>
+            </div>
+            <div className="stream-stat-item">
+              <div className="stream-stat-header">
+                <span>K/D RATIO (RANKED)</span>
+                <span className="lime">3.84</span>
+              </div>
+              <div className="org-bar-track"><div className="org-bar-fill" style={{ width: '78%' }} /></div>
+            </div>
+          </div>
+          <div className="stream-footer">
+            <span className="lime">● STREAMING 100% IN SYNC</span>
+            <span>ZERO LATENCY OVERHEAD</span>
+          </div>
+        </div>
+      );
+  }
+}
+
 /**
  * Main Cinematic Landing Page Component
  */
@@ -399,6 +784,101 @@ export default function Landing() {
   const charStageRef = useRef(null);
   const charRafRef = useRef(null);
   const heroRafRef = useRef(null);
+
+  // Hero Transformation Refs for zero-rerender 60fps DOM updates
+  const bgWordmarkRef = useRef(null);
+  const fgWordmarkRef = useRef(null);
+  const levelProgressRef = useRef(null);
+  const statusLabelRef = useRef(null);
+  const scrollCueRef = useRef(null);
+
+  // Features and Games Transition Refs
+  const activeFeatureIdxRef = useRef(0);
+  const activeGameIdxRef = useRef(0);
+  const tunnelStageRef = useRef(null);
+  const featureContentRef = useRef(null);
+  const gameRadarRef = useRef(null);
+
+  // Features Cursor Parallax Tracking Refs (Zero React re-renders)
+  const featTiltRafRef = useRef(null);
+  const featTiltTargetRef = useRef({ x: 0, y: 0, glow: 0, cx: 0, cy: 0 });
+  const featTiltCurrentRef = useRef({ x: 0, y: 0, glow: 0, cx: 0, cy: 0 });
+
+  // Features Mouse Cursor Parallax Tracking (Zero React re-renders)
+  const handleFeaturesPointerMove = useCallback((e) => {
+    if (!featuresSceneRef.current) return;
+    const rect = featuresSceneRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const nx = ((x / rect.width) - 0.5) * 2; // -1 to 1
+    const ny = ((y / rect.height) - 0.5) * 2; // -1 to 1
+
+    featTiltTargetRef.current = {
+      x: Math.max(-1, Math.min(1, nx)),
+      y: Math.max(-1, Math.min(1, ny)),
+      glow: 1,
+      cx: x,
+      cy: y,
+    };
+
+    if (!featTiltRafRef.current) {
+      const animateTilt = () => {
+        const cur = featTiltCurrentRef.current;
+        const target = featTiltTargetRef.current;
+        cur.x += (target.x - cur.x) * 0.08;
+        cur.y += (target.y - cur.y) * 0.08;
+        cur.glow += (target.glow - cur.glow) * 0.08;
+        cur.cx += (target.cx - cur.cx) * 0.15;
+        cur.cy += (target.cy - cur.cy) * 0.15;
+
+        if (featuresSceneRef.current) {
+          featuresSceneRef.current.style.setProperty('--feat-tilt-x', cur.x.toFixed(4));
+          featuresSceneRef.current.style.setProperty('--feat-tilt-y', cur.y.toFixed(4));
+          featuresSceneRef.current.style.setProperty('--feat-cursor-glow', cur.glow.toFixed(3));
+          featuresSceneRef.current.style.setProperty('--feat-cursor-x', `${cur.cx.toFixed(1)}px`);
+          featuresSceneRef.current.style.setProperty('--feat-cursor-y', `${cur.cy.toFixed(1)}px`);
+        }
+
+        const isSettled =
+          Math.abs(cur.x - target.x) < 0.001 &&
+          Math.abs(cur.y - target.y) < 0.001 &&
+          Math.abs(cur.glow - target.glow) < 0.005;
+
+        if (!isSettled) {
+          featTiltRafRef.current = requestAnimationFrame(animateTilt);
+        } else {
+          featTiltRafRef.current = null;
+        }
+      };
+      featTiltRafRef.current = requestAnimationFrame(animateTilt);
+    }
+  }, []);
+
+  const handleFeaturesPointerLeave = useCallback(() => {
+    featTiltTargetRef.current = { x: 0, y: 0, glow: 0, cx: 0, cy: 0 };
+    if (!featTiltRafRef.current) {
+      const animateReset = () => {
+        const cur = featTiltCurrentRef.current;
+        const target = featTiltTargetRef.current;
+        cur.x += (target.x - cur.x) * 0.08;
+        cur.y += (target.y - cur.y) * 0.08;
+        cur.glow += (target.glow - cur.glow) * 0.08;
+
+        if (featuresSceneRef.current) {
+          featuresSceneRef.current.style.setProperty('--feat-tilt-x', cur.x.toFixed(4));
+          featuresSceneRef.current.style.setProperty('--feat-tilt-y', cur.y.toFixed(4));
+          featuresSceneRef.current.style.setProperty('--feat-cursor-glow', cur.glow.toFixed(3));
+        }
+
+        if (Math.abs(cur.x) > 0.001 || Math.abs(cur.y) > 0.001 || cur.glow > 0.005) {
+          featTiltRafRef.current = requestAnimationFrame(animateReset);
+        } else {
+          featTiltRafRef.current = null;
+        }
+      };
+      featTiltRafRef.current = requestAnimationFrame(animateReset);
+    }
+  }, []);
 
   // Hero Interactive Dot Grid Pointer Tracking (Zero React re-renders)
   const updateHeroPointer = useCallback((clientX, clientY) => {
@@ -476,6 +956,7 @@ export default function Landing() {
     return () => {
       if (heroRafRef.current) cancelAnimationFrame(heroRafRef.current);
       if (charRafRef.current) cancelAnimationFrame(charRafRef.current);
+      if (featTiltRafRef.current) cancelAnimationFrame(featTiltRafRef.current);
     };
   }, []);
 
@@ -496,33 +977,140 @@ export default function Landing() {
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: '+=5000',
+          end: () =>
+            typeof window !== 'undefined' && window.innerWidth < 768
+              ? '+=16000'
+              : '+=26000',
           pin: pinnedStageRef.current,
           scrub: 0.8,
           onUpdate: (self) => {
             const p = self.progress;
+
+            // 1. Hero Laser Scan & Typography Scramble (normalized over p: 0.00 to 0.065)
+            const heroProgress = Math.min(1, Math.max(0, p / 0.065));
+
+            if (charStageRef.current) {
+              const laserYPercent = (heroProgress * 100).toFixed(2);
+              charStageRef.current.style.setProperty('--laser-y', `${laserYPercent}%`);
+
+              let laserOpacity = 0;
+              if (heroProgress > 0.005 && heroProgress < 0.98) {
+                laserOpacity = Math.min(1, heroProgress * 10);
+              } else if (heroProgress >= 0.98) {
+                laserOpacity = Math.max(0, 1 - (heroProgress - 0.98) * 50);
+              }
+              charStageRef.current.style.setProperty('--laser-opacity', laserOpacity.toFixed(2));
+            }
+
+            // Scramble Outlined Wordmark: EVOQ -> BEYOND
+            if (bgWordmarkRef.current) {
+              bgWordmarkRef.current.textContent = scrambleWord('EVOQ', 'BEYOND', heroProgress);
+            }
+
+            // Scramble Foreground Headline: ESPORTS -> GAMING
+            if (fgWordmarkRef.current) {
+              fgWordmarkRef.current.textContent = scrambleWord('ESPORTS', 'GAMING', heroProgress);
+            }
+
+            // Update HUD labels dynamically with scan telemetry
+            if (levelProgressRef.current) {
+              levelProgressRef.current.textContent = `LEVEL PROGRESS ${String(Math.round(heroProgress * 100)).padStart(3, '0')}%`;
+            }
+            if (statusLabelRef.current) {
+              statusLabelRef.current.textContent = heroProgress >= 0.95 ? 'STATUS: ASCENDED' : 'STATUS: PLAYER';
+            }
+            if (scrollCueRef.current) {
+              scrollCueRef.current.textContent = heroProgress >= 0.95 ? 'IDENTITY SYNCHRONIZED' : 'SCROLL TO LEVEL UP';
+            }
+
+            // 2. Active Scene Selection with calibrated thresholds (About reduced by ~18%)
             let currentIdx = 0;
-            if (p < 0.18) currentIdx = 0;
-            else if (p < 0.34) currentIdx = 1;
+            if (p < 0.08) currentIdx = 0;
+            else if (p < 0.17) currentIdx = 1;
             else if (p < 0.58) currentIdx = 2;
-            else if (p < 0.76) currentIdx = 3;
+            else if (p < 0.80) currentIdx = 3;
             else if (p < 0.90) currentIdx = 4;
             else currentIdx = 5;
 
             setActiveScene(currentIdx);
 
-            // Sub-progress for Features (Scene 03)
-            if (p >= 0.34 && p < 0.58) {
-              const featP = (p - 0.34) / 0.24;
-              const fIdx = Math.min(7, Math.max(0, Math.floor(featP * 8)));
-              setActiveFeatureIdx(fIdx);
+            // Sub-progress for Features (Scene 03: p = 0.17 to 0.58 => 10,660px / 8 = 1,332.5px/feature)
+            if (p >= 0.17 && p < 0.58) {
+              const featP = (p - 0.17) / 0.41;
+              const rawFeat = featP * 8;
+              const fIdx = Math.min(7, Math.max(0, Math.floor(rawFeat)));
+              const subP = rawFeat - fIdx;
+
+              if (fIdx !== activeFeatureIdxRef.current) {
+                activeFeatureIdxRef.current = fIdx;
+                setActiveFeatureIdx(fIdx);
+              }
+
+              // Continuous 3D perspective tunnel depth translation
+              if (tunnelStageRef.current) {
+                tunnelStageRef.current.style.setProperty(
+                  '--tunnel-scroll-z',
+                  `${(featP * 880).toFixed(1)}px`
+                );
+                tunnelStageRef.current.style.setProperty(
+                  '--tunnel-scroll-y',
+                  `${(-featP * 40).toFixed(1)}px`
+                );
+              }
+
+              // Controlled one-at-a-time transition with generous reading plateau:
+              // 0.00 to 0.75: stable reading plateau (100% opacity, crisp focus)
+              // 0.75 to 1.00: gentle dissolve/entry transition
+              if (featureContentRef.current) {
+                let featOpacity = 1;
+                let featScale = 1;
+
+                if (subP < 0.12 && fIdx > 0) {
+                  const entryP = subP / 0.12;
+                  featOpacity = 0.45 + entryP * 0.55;
+                  featScale = 0.98 + entryP * 0.02;
+                } else if (subP > 0.75) {
+                  const exitP = (subP - 0.75) / 0.25;
+                  featOpacity = 1 - exitP * 0.55;
+                  featScale = 1 - exitP * 0.02;
+                }
+
+                featureContentRef.current.style.opacity = featOpacity.toFixed(3);
+                featureContentRef.current.style.transform = `scale(${featScale.toFixed(3)})`;
+              }
+            } else if (featureContentRef.current) {
+              featureContentRef.current.style.opacity = '1';
+              featureContentRef.current.style.transform = 'scale(1)';
             }
 
-            // Sub-progress for Games (Scene 04)
-            if (p >= 0.58 && p < 0.76) {
-              const gameP = (p - 0.58) / 0.18;
-              const gIdx = Math.min(4, Math.max(0, Math.floor(gameP * 5)));
-              setActiveGameIdx(gIdx);
+            // Sub-progress for Games (Scene 04: p = 0.58 to 0.80 => 5,720px / 5 = 1,144px/game)
+            if (p >= 0.58 && p < 0.80) {
+              const gameP = (p - 0.58) / 0.22;
+              const rawGame = gameP * 5;
+              const gIdx = Math.min(4, Math.max(0, Math.floor(rawGame)));
+
+              if (gIdx !== activeGameIdxRef.current) {
+                activeGameIdxRef.current = gIdx;
+                setActiveGameIdx(gIdx);
+              }
+
+              // Smooth radar telemetry transition
+              if (gameRadarRef.current) {
+                const subG = rawGame - gIdx;
+                let gameOpacity = 1;
+
+                if (subG < 0.15 && gIdx > 0) {
+                  const entryP = subG / 0.15;
+                  gameOpacity = 0.45 + entryP * 0.55;
+                } else if (subG > 0.80) {
+                  const exitP = (subG - 0.80) / 0.20;
+                  gameOpacity = 1 - exitP * 0.55;
+                }
+
+                gameRadarRef.current.style.opacity = gameOpacity.toFixed(3);
+              }
+            } else if (gameRadarRef.current) {
+              gameRadarRef.current.style.opacity = '1';
             }
           },
         },
@@ -534,27 +1122,67 @@ export default function Landing() {
         gsap.set(scenes[i], { opacity: 0, autoAlpha: 0, scale: 0.98 });
       }
 
-      // ─── SCENE TRANSITION TIMELINE ───
-      // 1. Hero -> About
+      // ─── HERO CONTENT INITIAL LOAD FADE-IN ENTRANCE ───
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const heroDotGrid = heroSceneRef.current?.querySelector('.hero-dot-grid-base');
+      const heroBg = bgWordmarkRef.current;
+      const heroChar = charStageRef.current;
+      const heroFg = fgWordmarkRef.current;
+      const heroHud = heroSceneRef.current?.querySelector('.hud-layer');
+
+      if (prefersReducedMotion) {
+        gsap.set([heroDotGrid, heroBg, heroChar, heroFg, heroHud], { opacity: 1 });
+      } else {
+        const heroEntranceTl = gsap.timeline({
+          defaults: { ease: 'power2.out' },
+        });
+
+        // Coordinated cinematic entrance: Dot grid -> EVOQ -> Athlete -> ESPORTS -> HUD
+        if (heroDotGrid) {
+          heroEntranceTl.fromTo(heroDotGrid, { opacity: 0 }, { opacity: 1, duration: 1.4 }, 0.15);
+        }
+        if (heroBg) {
+          heroEntranceTl.fromTo(heroBg, { opacity: 0 }, { opacity: 1, duration: 1.3 }, 0.45);
+        }
+        if (heroChar) {
+          heroEntranceTl.fromTo(heroChar, { opacity: 0 }, { opacity: 1, duration: 1.35 }, 0.7);
+        }
+        if (heroFg) {
+          heroEntranceTl.fromTo(heroFg, { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0.95);
+        }
+        if (heroHud) {
+          heroEntranceTl.fromTo(heroHud, { opacity: 0 }, { opacity: 1, duration: 1.0 }, 1.15);
+        }
+      }
+
+      // ─── SCENE TRANSITION TIMELINE (Total 26.0s duration maps directly to 26,000px scroll) ───
       masterTl
-        .to(scenes[0], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 1 }, 1.5)
-        .to(scenes[1], { opacity: 1, autoAlpha: 1, scale: 1, duration: 1 }, 1.8)
+        // 1. Hero -> About (p: 0.08 = 2.08s)
+        .to(scenes[0], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 0.30, ease: 'power2.inOut' }, 1.85)
+        .to(scenes[1], { opacity: 1, autoAlpha: 1, scale: 1, duration: 0.30, ease: 'power2.inOut' }, 2.05)
 
-        // 2. About -> Features (3D Tunnel)
-        .to(scenes[1], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 1 }, 3.5)
-        .to(scenes[2], { opacity: 1, autoAlpha: 1, scale: 1, duration: 1 }, 3.8)
+        // 2. About -> Features (3D Tunnel) (p: 0.17 = 4.42s)
+        .to(scenes[1], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 0.30, ease: 'power2.inOut' }, 4.18)
+        .to(scenes[2], { opacity: 1, autoAlpha: 1, scale: 1, duration: 0.30, ease: 'power2.inOut' }, 4.38)
 
-        // 3. Features -> Games
-        .to(scenes[2], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 1 }, 6.2)
-        .to(scenes[3], { opacity: 1, autoAlpha: 1, scale: 1, duration: 1 }, 6.5)
+        // 3. Features -> Games (p: 0.58 = 15.08s)
+        .to(scenes[2], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 0.30, ease: 'power2.inOut' }, 14.85)
+        .to(scenes[3], { opacity: 1, autoAlpha: 1, scale: 1, duration: 0.30, ease: 'power2.inOut' }, 15.05)
 
-        // 4. Games -> Sponsors
-        .to(scenes[3], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 1 }, 8.4)
-        .to(scenes[4], { opacity: 1, autoAlpha: 1, scale: 1, duration: 1 }, 8.7)
+        // 4. Games -> Sponsors (p: 0.80 = 20.80s)
+        .to(scenes[3], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 0.35, ease: 'power2.inOut' }, 20.55)
+        .to(scenes[4], { opacity: 1, autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.inOut' }, 20.75)
 
-        // 5. Sponsors -> Contact
-        .to(scenes[4], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 1 }, 10.4)
-        .to(scenes[5], { opacity: 1, autoAlpha: 1, scale: 1, duration: 1 }, 10.7);
+        // 5. Sponsors -> Contact (p: 0.90 = 23.40s)
+        .to(scenes[4], { opacity: 0, autoAlpha: 0, scale: 0.96, duration: 0.35, ease: 'power2.inOut' }, 23.15)
+        .to(scenes[5], { opacity: 1, autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.inOut' }, 23.35)
+
+        // Pinned timeline tail anchor to guarantee exactly 26.0s total duration
+        .set({}, {}, 26.0);
 
     }, containerRef);
 
@@ -564,13 +1192,14 @@ export default function Landing() {
   // Navbar link click navigation to scenes
   const handleNavToScene = (href) => {
     let scrollFraction = 0;
-    if (href === '#about') scrollFraction = 0.22;
-    else if (href === '#features' || href === '#tournaments') scrollFraction = 0.44;
-    else if (href === '#games') scrollFraction = 0.64;
-    else if (href === '#sponsors') scrollFraction = 0.82;
-    else if (href === '#contact') scrollFraction = 0.96;
+    if (href === '#about') scrollFraction = 0.11;
+    else if (href === '#features' || href === '#tournaments') scrollFraction = 0.20;
+    else if (href === '#games') scrollFraction = 0.60;
+    else if (href === '#sponsors') scrollFraction = 0.83;
+    else if (href === '#contact') scrollFraction = 0.93;
 
-    const totalScroll = 5000;
+    const totalScroll =
+      typeof window !== 'undefined' && window.innerWidth < 768 ? 16000 : 26000;
     window.scrollTo({
       top: scrollFraction * totalScroll,
       behavior: 'smooth',
@@ -620,15 +1249,12 @@ export default function Landing() {
               <div className="hero-ambient-glow" aria-hidden="true" />
               <div className="hero-dot-grid-glow" aria-hidden="true" />
 
-              {/* Massive Outlined Background Typography */}
-              <div className="hero-bg-wordmark" aria-hidden="true">
+              {/* Massive Outlined Background Typography: EVOQ -> BEYOND */}
+              <div className="hero-bg-wordmark" ref={bgWordmarkRef} aria-hidden="true">
                 EVOQ
               </div>
 
-              {/* Head Reticle Reticles */}
-              <div className="hero-reticle-head" aria-hidden="true" />
-
-              {/* Central Character & Dual-Layer Hover Reveal */}
+              {/* Central Character Stage: Base + Scroll Laser Scan + Hover Reveal */}
               <div
                 className="hero-character-stage"
                 ref={charStageRef}
@@ -637,14 +1263,38 @@ export default function Landing() {
                 onTouchMove={handleCharacterTouchMove}
                 onTouchStart={handleCharacterTouchMove}
               >
-                {/* Base Player Image */}
+                {/* Layer 1: Base Player Image */}
                 <img
                   src="/images/one.png"
                   alt="EVOQ Esports Competitor"
                   className="hero-char-img hero-char-base"
                 />
 
-                {/* Enhanced Visor Reveal Layer */}
+                {/* Layer 2: Progressive Scroll Laser Reveal Layer */}
+                <div
+                  className="hero-char-scroll-reveal"
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/images/two2.png"
+                    alt="EVOQ Transformed Competitor"
+                    className="hero-char-img hero-char-transformed"
+                  />
+                </div>
+
+                {/* Layer 3: Thin Glowing Horizontal Laser Bar (Travels Vertically) */}
+                <div
+                  className="hero-char-laser-bar"
+                  aria-hidden="true"
+                >
+                  <div className="hero-laser-line-core" />
+                  <div className="hero-laser-line-glow" />
+                  <div className="hero-laser-spill" />
+                  <div className="hero-laser-endcap left" />
+                  <div className="hero-laser-endcap right" />
+                </div>
+
+                {/* Layer 4: Interactive Circular Hover Reveal Layer */}
                 <div className="hero-char-reveal-layer" aria-hidden="true">
                   <img
                     src="/images/two2.png"
@@ -655,12 +1305,12 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Foreground Massive Headline: ESPORTS */}
-              <div className="hero-fg-wordmark" aria-hidden="true">
+              {/* Foreground Massive Headline: ESPORTS -> GAMING */}
+              <div className="hero-fg-wordmark" ref={fgWordmarkRef} aria-hidden="true">
                 ESPORTS
               </div>
 
-              {/* Technical HUD Overlay (Exact match to Screenshot 1) */}
+              {/* Technical HUD Overlay (Screenshot 1 Placement) */}
               <div className="hud-layer">
                 <div className="hud-top-row">
                   {/* <div className="hud-tag">
@@ -671,7 +1321,6 @@ export default function Landing() {
                     GAMERS / TEAMS / ORGANIZERS
                   </div> */}
                 </div>
-
 
                 <div className="hud-bottom-row">
                   <div className="hud-desc-box">
@@ -684,13 +1333,13 @@ export default function Landing() {
                     <svg className="hud-scroll-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M12 5v14M19 12l-7 7-7-7" />
                     </svg>
-                    <span>SCROLL TO LEVEL UP</span>
+                    <span ref={scrollCueRef}>SCROLL TO LEVEL UP</span>
                   </div>
 
-                  {/* <div className="hud-status-box">
-                    <div className="hud-level-label">LEVEL PROGRESS 000%</div>
-                    <div className="hud-status-val">STATUS: PLAYER</div>
-                  </div> */}
+                  <div className="hud-status-box">
+                    <div className="hud-level-label" ref={levelProgressRef}>LEVEL PROGRESS 000%</div>
+                    <div className="hud-status-val" ref={statusLabelRef}>STATUS: PLAYER</div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -705,36 +1354,40 @@ export default function Landing() {
             >
               <div className="about-content-wrap">
                 <div className="about-tag-header">
-                  <span>// ABOUT THE OPERATING SYSTEM</span>
-                  <span>EST. 2026</span>
+                  <span>// ABOUT EVOQ · EST. 2026</span>
                 </div>
 
-                <h2 className="about-main-headline">
-                  WHERE COMPETITIVE GAMING MEETS <span className="lime">PROFESSIONAL RECOGNITION.</span>
-                </h2>
+                <div className="about-hero-block">
+                  <h2 className="about-main-headline">
+                    ONE PLATFORM TO PLAY, <span className="lime">COMPETE</span> & BUILD YOUR ESPORTS <span className="lime">IDENTITY.</span>
+                  </h2>
+                  <p className="about-main-desc">
+                    EVOQ connects gamers, teams and tournament organizers in one place. Discover competitions, manage tournaments, track results and turn your achievements into a professional gaming profile.
+                  </p>
+                </div>
 
                 <div className="about-pillars-grid">
                   <div className="about-pillar-card">
-                    <div className="about-pillar-num">01 / DISCOVER & COMPETE</div>
-                    <div className="about-pillar-title">SANCTIONED BRACKETS</div>
+                    <div className="about-pillar-num">01 / FOR GAMERS</div>
+                    <div className="about-pillar-title">FIND & <span className="lime">COMPETE</span></div>
                     <p className="about-pillar-text">
-                      Access verified esports tournaments across multiple genres. Join solo qualifiers or register your squad with real-time seedings.
+                      Discover tournaments, join teams and compete in events that match your game.
                     </p>
                   </div>
 
                   <div className="about-pillar-card">
-                    <div className="about-pillar-num">02 / UNIFIED ECOSYSTEM</div>
-                    <div className="about-pillar-title">ONE PLATFORM</div>
+                    <div className="about-pillar-num">02 / FOR ORGANIZERS</div>
+                    <div className="about-pillar-title">RUN <span className="lime">TOURNAMENTS</span></div>
                     <p className="about-pillar-text">
-                      Centralizing players, team captains and tournament organizers into one synchronized operational infrastructure.
+                      Create events, manage registrations, organize matches and publish results from one dashboard.
                     </p>
                   </div>
 
                   <div className="about-pillar-card">
-                    <div className="about-pillar-num">03 / TAMPER-PROOF CAREER</div>
-                    <div className="about-pillar-title">VERIFIED IDENTITY</div>
+                    <div className="about-pillar-num">03 / FOR PLAYERS</div>
+                    <div className="about-pillar-title">BUILD YOUR <span className="lime">LEGACY</span></div>
                     <p className="about-pillar-text">
-                      Every sanctioned match result and trophy translates into permanent, verified player credentials on your global gamer passport.
+                      Showcase your tournament results and approved achievements on your gaming profile.
                     </p>
                   </div>
                 </div>
@@ -748,31 +1401,66 @@ export default function Landing() {
               className={`evoq-scene scene-features ${activeScene === 2 ? 'scene-active' : ''}`}
               ref={featuresSceneRef}
               id="features"
+              onPointerMove={handleFeaturesPointerMove}
+              onPointerLeave={handleFeaturesPointerLeave}
             >
-              {/* 3D Wireframe Tunnel Frames */}
-              <div className="tunnel-stage" aria-hidden="true">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`tunnel-frame ${i === 1 ? 'frame-accent' : ''}`}
-                    style={{
-                      width: `${600 + i * 160}px`,
-                      height: `${400 + i * 105}px`,
-                      transform: `translateZ(${-i * 180}px)`,
-                    }}
-                  />
-                ))}
+              {/* Subtle Cursor Follow Lime Glow in background */}
+              <div className="features-cursor-glow" aria-hidden="true" />
+
+              {/* 16-Frame Nested Rectangular Wireframe Depth Tunnel */}
+              <div className="tunnel-stage" ref={tunnelStageRef} aria-hidden="true">
+                {/* Subtle perspective grid lines converging toward center */}
+                <svg className="tunnel-perspective-rays" viewBox="0 0 1000 600" preserveAspectRatio="none">
+                  {/* Outer corner perspective rays */}
+                  <line x1="0" y1="0" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.55)" strokeWidth="1" />
+                  <line x1="1000" y1="0" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.55)" strokeWidth="1" />
+                  <line x1="1000" y1="600" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.55)" strokeWidth="1" />
+                  <line x1="0" y1="600" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.55)" strokeWidth="1" />
+                  {/* Subtle technical crosshair and tertiary perspective lines */}
+                  <line x1="250" y1="0" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.25)" strokeWidth="0.8" strokeDasharray="6 6" />
+                  <line x1="750" y1="0" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.25)" strokeWidth="0.8" strokeDasharray="6 6" />
+                  <line x1="250" y1="600" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.25)" strokeWidth="0.8" strokeDasharray="6 6" />
+                  <line x1="750" y1="600" x2="500" y2="300" stroke="rgba(37, 45, 34, 0.25)" strokeWidth="0.8" strokeDasharray="6 6" />
+                  <line x1="0" y1="300" x2="1000" y2="300" stroke="rgba(201, 255, 82, 0.08)" strokeWidth="0.5" strokeDasharray="4 8" />
+                  <line x1="500" y1="0" x2="500" y2="600" stroke="rgba(201, 255, 82, 0.08)" strokeWidth="0.5" strokeDasharray="4 8" />
+                </svg>
+
+                {/* 16 Progressively Smaller Nested Wireframe Frames */}
+                {Array.from({ length: 16 }).map((_, i) => {
+                  const zPos = 120 - i * 110;
+                  const isAccent = i === 2 || i === 6 || i === 11;
+                  const parallaxMult = (0.35 + (i / 15) * 0.95).toFixed(3);
+                  return (
+                    <div
+                      key={i}
+                      className={`tunnel-frame ${isAccent ? 'frame-accent' : ''}`}
+                      style={{
+                        '--frame-z': `${zPos}px`,
+                        '--parallax-mult': parallaxMult,
+                        width: `calc(106vw - ${i * 4.6}vw)`,
+                        height: `calc(106vh - ${i * 4.6}vh)`,
+                      }}
+                    >
+                      {isAccent && (
+                        <span className="tunnel-depth-tag">
+                          // Z-{Math.abs(zPos)}M
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Active Feature Content */}
+              {/* Active Features HUD & Clean Foreground Content (No Background Clutter) */}
               <div className="features-container">
                 <div className="features-top-hud">
                   <span>// EXPLORE EVOQ FEATURES</span>
                   <span className="active-counter">{currentFeature.num} / 08 FEATURES</span>
                 </div>
 
-                <div className="features-main-stage">
-                  {/* Left Pane */}
+                {/* Clean Foreground Feature Stage: Active Feature Only */}
+                <div className="features-main-stage" ref={featureContentRef}>
+                  {/* Left Column: Number, Title, Description, Path */}
                   <div className="feature-left-pane">
                     <div className="feature-number-outlined">{currentFeature.num}</div>
                     <h3 className="feature-title-huge">{currentFeature.title}</h3>
@@ -782,7 +1470,7 @@ export default function Landing() {
                     </div>
                   </div>
 
-                  {/* Right Perspective Panel (Screenshot 2) */}
+                  {/* Right Column: Approved Feature Demonstration Panel */}
                   <div className="feature-right-pane">
                     <div className="feature-card-glow-edge" />
                     <div className="feature-corner-tick tl" />
@@ -791,17 +1479,7 @@ export default function Landing() {
                     <div className="feature-corner-tick br" />
 
                     <div className="feature-visual-content">
-                      <div className="feature-icon-badge">
-                        <div className="feature-icon-circle">
-                          {currentFeature.icon}
-                        </div>
-                        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.8rem', color: '#F4F5EF' }}>
-                          EVOQ CORE ENGINE
-                        </div>
-                        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.68rem', color: '#C9FF52' }}>
-                          MODULE READY // STATUS ONLINE
-                        </div>
-                      </div>
+                      {renderFeatureVisual(activeFeatureIdx)}
                     </div>
                   </div>
                 </div>
@@ -812,7 +1490,14 @@ export default function Landing() {
                     <div
                       key={feat.num}
                       className={`feature-pip ${idx === activeFeatureIdx ? 'active' : ''}`}
-                      onClick={() => setActiveFeatureIdx(idx)}
+                      onClick={() => {
+                        setActiveFeatureIdx(idx);
+                        activeFeatureIdxRef.current = idx;
+                        const targetP = 0.17 + (idx + 0.35) * (0.41 / 8);
+                        const total =
+                          typeof window !== 'undefined' && window.innerWidth < 768 ? 16000 : 26000;
+                        window.scrollTo({ top: targetP * total, behavior: 'smooth' });
+                      }}
                       role="button"
                       aria-label={`Feature ${feat.num}`}
                       tabIndex={0}
@@ -839,8 +1524,14 @@ export default function Landing() {
                       <div
                         key={game.name}
                         className={`game-list-row ${isSelected ? 'active' : ''}`}
-                        onClick={() => setActiveGameIdx(idx)}
-                        onMouseEnter={() => setActiveGameIdx(idx)}
+                        onClick={() => {
+                          setActiveGameIdx(idx);
+                          activeGameIdxRef.current = idx;
+                          const targetP = 0.58 + (idx + 0.35) * (0.22 / 5);
+                          const total =
+                            typeof window !== 'undefined' && window.innerWidth < 768 ? 16000 : 26000;
+                          window.scrollTo({ top: targetP * total, behavior: 'smooth' });
+                        }}
                         role="button"
                         tabIndex={0}
                         aria-label={`Select ${game.name}`}
@@ -858,7 +1549,7 @@ export default function Landing() {
                 </div>
 
                 {/* Right Side: Pentagon Radar Scan & Metrics */}
-                <div className="games-radar-card">
+                <div className="games-radar-card" ref={gameRadarRef}>
                   <div className="radar-header-row">
                     <span className="scan-id">SCAN / {currentGame.pwr}</span>
                     <span className="live-status">
