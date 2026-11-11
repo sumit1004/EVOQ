@@ -1,2 +1,2 @@
-export { useAuth } from '../features/auth/AuthContext.jsx';
+export { useAuth, getDashboardPath } from '../features/auth/AuthContext.jsx';
 

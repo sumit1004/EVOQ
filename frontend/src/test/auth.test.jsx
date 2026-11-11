@@ -66,3 +66,115 @@ describe('Frontend Form Validation & Auth Components', () => {
   });
 });
 
+describe('Authentication-Aware Navbar & Dashboard Routing', () => {
+  it('correctly resolves dashboard destinations via getDashboardPath', async () => {
+    const { getDashboardPath } = await import('../features/auth/AuthContext.jsx');
+
+    expect(getDashboardPath(null)).toBe('/gamer/login');
+    expect(getDashboardPath({ accountType: 'GAMER' })).toBe('/gamer/dashboard');
+    expect(getDashboardPath({ accountType: 'ORGANIZER' })).toBe('/organizer/dashboard');
+    expect(getDashboardPath({ role: 'ORGANIZER' })).toBe('/organizer/dashboard');
+    expect(getDashboardPath({ role: 'GAMER' })).toBe('/gamer/dashboard');
+  });
+
+  it('renders Login button for unauthenticated users in PublicNavbar', async () => {
+    const { default: PublicNavbar } = await import('../components/PublicNavbar.jsx');
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <PublicNavbar />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    const loginBtns = screen.getAllByRole('link', { name: /login/i });
+    expect(loginBtns.length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /dashboard/i })).not.toBeInTheDocument();
+  });
+
+  it('renders Dashboard button linking to /gamer/dashboard for authenticated GAMER', async () => {
+    const { default: PublicNavbar } = await import('../components/PublicNavbar.jsx');
+    const { authService } = await import('../services/auth.service.js');
+
+    localStorage.setItem('evoq_has_session', 'true');
+    vi.spyOn(authService, 'me').mockResolvedValueOnce({
+      userId: 1,
+      username: 'GamerOne',
+      accountType: 'GAMER',
+    });
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <PublicNavbar />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    const dashboardLink = await screen.findByRole('link', { name: /dashboard/i });
+    expect(dashboardLink).toBeInTheDocument();
+    expect(dashboardLink).toHaveAttribute('href', '/gamer/dashboard');
+    expect(screen.queryByRole('link', { name: /login/i })).not.toBeInTheDocument();
+
+    localStorage.removeItem('evoq_has_session');
+    vi.restoreAllMocks();
+  });
+
+  it('renders Dashboard button linking to /organizer/dashboard for authenticated ORGANIZER', async () => {
+    const { default: PublicNavbar } = await import('../components/PublicNavbar.jsx');
+    const { authService } = await import('../services/auth.service.js');
+
+    localStorage.setItem('evoq_has_session', 'true');
+    vi.spyOn(authService, 'me').mockResolvedValueOnce({
+      userId: 2,
+      username: 'OrganizerOrg',
+      accountType: 'ORGANIZER',
+    });
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <PublicNavbar />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    const dashboardLink = await screen.findByRole('link', { name: /dashboard/i });
+    expect(dashboardLink).toBeInTheDocument();
+    expect(dashboardLink).toHaveAttribute('href', '/organizer/dashboard');
+    expect(screen.queryByRole('link', { name: /login/i })).not.toBeInTheDocument();
+
+    localStorage.removeItem('evoq_has_session');
+    vi.restoreAllMocks();
+  });
+
+  it('renders Dashboard button on Landing page navbar when user is authenticated', async () => {
+    const { default: Landing } = await import('../pages/Landing.jsx');
+    const { authService } = await import('../services/auth.service.js');
+
+    localStorage.setItem('evoq_has_session', 'true');
+    vi.spyOn(authService, 'me').mockResolvedValueOnce({
+      userId: 1,
+      username: 'ProGamer',
+      accountType: 'GAMER',
+    });
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Landing />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    const dashboardLink = await screen.findByRole('link', { name: /dashboard/i });
+    expect(dashboardLink).toBeInTheDocument();
+    expect(dashboardLink).toHaveAttribute('href', '/gamer/dashboard');
+    expect(screen.queryByRole('link', { name: /^login$/i })).not.toBeInTheDocument();
+
+    localStorage.removeItem('evoq_has_session');
+    vi.restoreAllMocks();
+  });
+});
+

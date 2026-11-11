@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useAuth, getDashboardPath } from '../features/auth/AuthContext.jsx';
 import './Landing.css';
 
 if (typeof window !== 'undefined' && !window.matchMedia) {
@@ -33,11 +34,27 @@ export function Navbar({
     { label: 'Tournaments', href: '/tournaments' },
     { label: 'Contact', href: '#contact' },
   ],
-  actionLabel = 'Login',
-  actionHref = '/login',
+  actionLabel,
+  actionHref,
   activeScene = 0,
   onNavigate = null,
 }) {
+  let user = null;
+  let loading = false;
+  let dashboardPath = '/gamer/dashboard';
+
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+    loading = auth?.loading;
+    dashboardPath = auth?.dashboardPath || getDashboardPath(user);
+  } catch (e) {
+    user = null;
+    loading = false;
+  }
+
+  const effectiveLabel = actionLabel !== undefined ? actionLabel : (user ? 'Dashboard' : 'Login');
+  const effectiveHref = actionHref !== undefined ? actionHref : (user ? dashboardPath : '/gamer/login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const containerRef = useRef(null);
@@ -198,24 +215,40 @@ export function Navbar({
 
           {/* RIGHT: Login Action */}
           <div className="evoq-nav-right" ref={rightRef}>
-            <Link to={actionHref} className="evoq-btn-login">
-              <span>{actionLabel}</span>
-              <svg
-                className="evoq-btn-arrow"
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {loading ? (
+              <div
+                className="evoq-btn-login"
+                style={{
+                  opacity: 0.6,
+                  cursor: 'default',
+                  pointerEvents: 'none',
+                  minWidth: '88px',
+                  justifyContent: 'center',
+                }}
                 aria-hidden="true"
               >
-                <path d="M5 12h14" />
-                <path d="M13 6l6 6-6 6" />
-              </svg>
-            </Link>
+                <span style={{ display: 'inline-block', width: '40px', height: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '3px' }} />
+              </div>
+            ) : (
+              <Link to={effectiveHref} className="evoq-btn-login">
+                <span>{effectiveLabel}</span>
+                <svg
+                  className="evoq-btn-arrow"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            )}
 
             <button
               className="evoq-mobile-toggle"
@@ -267,6 +300,34 @@ export function Navbar({
                   </a>
                 )
               )}
+
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                {loading ? null : (
+                  <Link
+                    to={effectiveHref}
+                    className="evoq-btn-login"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span>{effectiveLabel}</span>
+                    <svg
+                      className="evoq-btn-arrow"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M13 6l6 6-6 6" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -1470,8 +1531,6 @@ export default function Landing() {
           { label: 'Tournaments', href: '/tournaments' },
           { label: 'Contact', href: '#contact' },
         ]}
-        actionLabel="Login"
-        actionHref="/login"
         activeScene={activeScene}
         onNavigate={handleNavToScene}
       />

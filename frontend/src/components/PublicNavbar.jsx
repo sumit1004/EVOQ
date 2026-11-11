@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../features/auth/AuthContext.jsx';
+import { useAuth, getDashboardPath } from '../features/auth/AuthContext.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 
 export default function PublicNavbar() {
   let user = null;
+  let loading = false;
+  let dashboardPath = '/gamer/dashboard';
+
   try {
     const auth = useAuth();
     user = auth?.user;
+    loading = auth?.loading;
+    dashboardPath = auth?.dashboardPath || getDashboardPath(user);
   } catch (e) {
     user = null;
+    loading = false;
   }
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,47 +106,58 @@ export default function PublicNavbar() {
 
           {/* RIGHT: User State or Login CTA */}
           <div className="evoq-nav-right">
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {user.accountType === 'ORGANIZER' ? (
-                  <Link to="/organizer/dashboard" className="evoq-btn-login">
-                    <span>OPS ({user.username || 'ORGANIZER'})</span>
-                    <svg className="evoq-btn-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14" />
-                      <path d="M13 6l6 6-6 6" />
-                    </svg>
-                  </Link>
-                ) : (
-                  <Link to="/gamer/dashboard" className="evoq-btn-login">
-                    <span>DASHBOARD</span>
-                    <svg className="evoq-btn-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14" />
-                      <path d="M13 6l6 6-6 6" />
-                    </svg>
-                  </Link>
-                )}
+            {loading ? (
+              <div
+                className="evoq-btn-login"
+                style={{
+                  opacity: 0.6,
+                  cursor: 'default',
+                  pointerEvents: 'none',
+                  minWidth: '88px',
+                  justifyContent: 'center',
+                }}
+                aria-hidden="true"
+              >
+                <span style={{ display: 'inline-block', width: '40px', height: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '3px' }} />
               </div>
+            ) : user ? (
+              <Link to={dashboardPath} className="evoq-btn-login">
+                <span>Dashboard</span>
+                <svg
+                  className="evoq-btn-arrow"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M13 6l6 6-6 6" />
+                </svg>
+              </Link>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Link to="/gamer/login" className="evoq-btn-login">
-                  <span>LOGIN</span>
-                  <svg
-                    className="evoq-btn-arrow"
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="M13 6l6 6-6 6" />
-                  </svg>
-                </Link>
-              </div>
+              <Link to="/gamer/login" className="evoq-btn-login">
+                <span>Login</span>
+                <svg
+                  className="evoq-btn-arrow"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M13 6l6 6-6 6" />
+                </svg>
+              </Link>
             )}
 
             <button
@@ -179,35 +196,55 @@ export default function PublicNavbar() {
                 </Link>
               ))}
 
-              <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {user ? (
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                {loading ? null : user ? (
                   <Link
-                    to={user.accountType === 'ORGANIZER' ? '/organizer/dashboard' : '/gamer/dashboard'}
-                    className="evoq-btn-primary"
-                    style={{ textAlign: 'center', width: '100%', textDecoration: 'none' }}
+                    to={dashboardPath}
+                    className="evoq-btn-login"
+                    style={{ width: '100%', justifyContent: 'center' }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Go to {user.accountType === 'ORGANIZER' ? 'Operations' : 'Dashboard'}
+                    <span>Dashboard</span>
+                    <svg
+                      className="evoq-btn-arrow"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M13 6l6 6-6 6" />
+                    </svg>
                   </Link>
                 ) : (
-                  <>
-                    <Link
-                      to="/gamer/login"
-                      className="evoq-btn-primary"
-                      style={{ textAlign: 'center', width: '100%', textDecoration: 'none' }}
-                      onClick={() => setMobileMenuOpen(false)}
+                  <Link
+                    to="/gamer/login"
+                    className="evoq-btn-login"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span>Login</span>
+                    <svg
+                      className="evoq-btn-arrow"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
                     >
-                      Gamer Sign In
-                    </Link>
-                    <Link
-                      to="/organizer/login"
-                      className="evoq-btn-ghost"
-                      style={{ textAlign: 'center', width: '100%', textDecoration: 'none' }}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Organizer Operations
-                    </Link>
-                  </>
+                      <path d="M5 12h14" />
+                      <path d="M13 6l6 6-6 6" />
+                    </svg>
+                  </Link>
                 )}
               </div>
             </div>
