@@ -117,6 +117,11 @@ export class RegistrationsService {
       throw new NotFoundError('Team not found');
     }
 
+    // Verify game compatibility
+    if (tournament.gameId && team.primaryGameId && team.primaryGameId !== tournament.gameId) {
+      throw new ValidationError(`This team is configured for a different game than this tournament.`);
+    }
+
     // Verify user is team captain or owner
     const myMembership = team.memberships.find((m) => m.userId === userId);
     if (!myMembership || !['OWNER', 'CAPTAIN'].includes(myMembership.role)) {
@@ -258,6 +263,91 @@ export class RegistrationsService {
     });
 
     return updated;
+  }
+
+  async getEligibleTeams(tournamentId, userId) {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { game: true },
+    });
+
+    if (!tournament) {
+      throw new NotFoundError('Tournament not found');
+    }
+
+    // Find all teams where user is an active member
+    const memberships = await prisma.teamMembership.findMany({
+      where: { userId, status: 'ACTIVE' },
+      include: {
+        team: {
+          include: {
+            primaryGame: true,
+            memberships: {
+              where: { status: 'ACTIVE' },
+              include: {
+                user: {
+                  include: { gamerProfile: true },
+                },
+              },
+            },
+            registrations: {
+              where: { tournamentId },
+            },
+          },
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    return memberships.map((m) => {
+      const team = m.team;
+      const gameMatches = !tournament.gameId || !team.primaryGameId || team.primaryGameId === tournament.gameId;
+      const confirmedMembers = team.memberships || [];
+      const meetsSize = confirmedMembers.length >= (tournament.teamSize || 1);
+      const isCaptainOrOwner = ['OWNER', 'CAPTAIN'].includes(m.role);
+      const existingRegistration = team.registrations?.[0] || null;
+      const isRegistered = !!existingRegistration && existingRegistration.status !== 'WITHDRAWN';
+
+      let eligibilityReason = 'Eligible';
+      let isEligible = true;
+
+      if (!isCaptainOrOwner) {
+        isEligible = false;
+        eligibilityReason = 'Only Team Captain or Owner can register';
+      } else if (!gameMatches) {
+        isEligible = false;
+        eligibilityReason = `Team game (${team.primaryGame?.name || 'Unknown'}) does not match tournament game (${tournament.game?.name || 'Any'})`;
+      } else if (!meetsSize) {
+        isEligible = false;
+        eligibilityReason = `Team has ${confirmedMembers.length} member(s), but tournament requires at least ${tournament.teamSize}`;
+      } else if (isRegistered) {
+        isEligible = false;
+        eligibilityReason = `Already registered (${existingRegistration.status})`;
+      }
+
+      return {
+        id: team.id,
+        name: team.name,
+        slug: team.slug,
+        logoUrl: team.logoUrl,
+        primaryGame: team.primaryGame,
+        myRole: m.role,
+        membersCount: confirmedMembers.length,
+        requiredSize: tournament.teamSize,
+        members: confirmedMembers.map((cm) => ({
+          userId: cm.userId,
+          role: cm.role,
+          displayName: cm.user?.gamerProfile?.displayName || cm.user?.username,
+          avatarUrl: cm.user?.gamerProfile?.avatarUrl,
+          evoqId: cm.user?.gamerProfile?.evoqId,
+          inGameName: cm.user?.gamerProfile?.inGameName,
+        })),
+        isEligible,
+        eligibilityReason,
+        isRegistered,
+        existingRegistrationStatus: existingRegistration?.status || null,
+      };
+    });
   }
 
   /**

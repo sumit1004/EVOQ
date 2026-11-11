@@ -93,13 +93,25 @@ export default function GamerTournamentDetail() {
     setRegSuccess('');
     if (tournament.participationType === 'TEAM') {
       try {
-        const teams = await evoqService.getMyTeams();
-        setMyTeams(teams || []);
-        if (teams && teams.length > 0) {
-          setSelectedTeamId(teams[0].team?.id || teams[0].id);
+        const teamsData = await evoqService.getEligibleTeamsForTournament(tournament.id);
+        const teamsList = teamsData?.teams || teamsData || [];
+        setMyTeams(teamsList);
+        const firstEligible = teamsList.find((t) => t.isEligible) || teamsList[0];
+        if (firstEligible) {
+          setSelectedTeamId(firstEligible.id || firstEligible.team?.id);
         }
       } catch (err) {
-        console.error('Error fetching teams:', err);
+        console.error('Error fetching eligible teams:', err);
+        // Fallback to getMyTeams
+        try {
+          const fallbackTeams = await evoqService.getMyTeams();
+          setMyTeams(fallbackTeams || []);
+          if (fallbackTeams && fallbackTeams.length > 0) {
+            setSelectedTeamId(fallbackTeams[0].team?.id || fallbackTeams[0].id);
+          }
+        } catch (fbErr) {
+          console.error('Fallback error:', fbErr);
+        }
       }
     }
   };
@@ -519,35 +531,123 @@ export default function GamerTournamentDetail() {
               {myTeams.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
                   <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.9rem', marginBottom: '14px' }}>
-                    This tournament requires a squad roster. You do not hold an active team membership.
+                    This tournament requires a squad roster. You do not hold an active team membership for {tournament.game?.name || 'this game'}.
                   </p>
                   <Link to="/gamer/teams" className="evoq-btn evoq-btn-primary evoq-btn-sm">
                     Create or Join a Squad
                   </Link>
                 </div>
               ) : (
-                <Select
-                  label="Select Registering Squad"
-                  id="regTeam"
-                  value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
-                  required
-                >
-                  {myTeams.map((t) => {
-                    const teamObj = t.team || t;
+                <>
+                  <Select
+                    label="Select Registering Squad"
+                    id="regTeam"
+                    value={selectedTeamId}
+                    onChange={(e) => setSelectedTeamId(e.target.value)}
+                    required
+                  >
+                    {myTeams.map((t) => {
+                      const teamObj = t.team || t;
+                      const isEligible = t.isEligible !== false;
+                      return (
+                        <option key={teamObj.id} value={teamObj.id}>
+                          {teamObj.name} [{teamObj.tag || 'TEAM'}]{!isEligible ? ` (${t.ineligibilityReason || 'Ineligible'})` : ''}
+                        </option>
+                      );
+                    })}
+                  </Select>
+
+                  {/* Active Selected Team Summary */}
+                  {(() => {
+                    const selected = myTeams.find((t) => (t.team?.id || t.id) === selectedTeamId);
+                    const teamObj = selected?.team || selected;
+                    if (!teamObj) return null;
+                    const members = teamObj.members || [];
+                    const isEligible = selected?.isEligible !== false;
+
                     return (
-                      <option key={teamObj.id} value={teamObj.id}>
-                        {teamObj.name} [{teamObj.tag || 'TEAM'}]
-                      </option>
+                      <div
+                        style={{
+                          marginTop: '12px',
+                          padding: '14px',
+                          backgroundColor: 'var(--evoq-surface-elevated)',
+                          borderRadius: 'var(--evoq-radius-sm)',
+                          border: isEligible ? '1px solid var(--evoq-border)' : '1px solid #ff5c5c',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                          <span className="evoq-mono-label">ACTIVE SQUAD ROSTER</span>
+                          <span style={{ fontSize: '0.78rem', color: isEligible ? 'var(--evoq-lime)' : '#ff5c5c', fontWeight: 700 }}>
+                            {members.length} Competitors ({isEligible ? 'Eligible' : selected?.ineligibilityReason || 'Ineligible'})
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {members.map((m) => {
+                            const mUser = m.user || {};
+                            const mProf = mUser.gamerProfile || {};
+                            const mName = mProf.displayName || mUser.username || 'Competitor';
+                            return (
+                              <div
+                                key={m.id || m.userId}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  fontSize: '0.8rem',
+                                  padding: '4px 6px',
+                                  borderRadius: '4px',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                }}
+                              >
+                                <div>
+                                  <strong style={{ color: 'var(--evoq-text-primary)' }}>{mName}</strong>
+                                  {mProf.inGameName && (
+                                    <span style={{ color: 'var(--evoq-text-muted)', marginLeft: '6px', fontSize: '0.74rem' }}>
+                                      IGN: {mProf.inGameName}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {mProf.evoqId && (
+                                    <span style={{ fontFamily: 'var(--evoq-font-mono)', fontSize: '0.7rem', color: 'var(--evoq-lime)' }}>
+                                      {mProf.evoqId}
+                                    </span>
+                                  )}
+                                  <Badge variant={m.role === 'CAPTAIN' ? 'lime' : 'neutral'} size="xs">
+                                    {m.role || 'PLAYER'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
-                  })}
-                </Select>
+                  })()}
+                </>
               )}
             </div>
           ) : (
-            <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', margin: '0 0 16px 0' }}>
-              Registering your individual gamer handle <strong style={{ color: 'var(--evoq-text-primary)' }}>@{user?.username}</strong> for this tournament.
-            </p>
+            <div
+              style={{
+                padding: '14px',
+                backgroundColor: 'var(--evoq-surface-elevated)',
+                borderRadius: 'var(--evoq-radius-sm)',
+                border: '1px solid var(--evoq-border)',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)', fontFamily: 'var(--evoq-font-mono)' }}>
+                INDIVIDUAL COMPETITOR ENTRY
+              </div>
+              <div style={{ marginTop: '4px', fontSize: '0.95rem', fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+                @{user?.username}
+              </div>
+              <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.82rem', margin: '6px 0 0 0' }}>
+                Your verified gamer passport and linked publisher ID will be registered for the match lobby.
+              </p>
+            </div>
           )}
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>

@@ -40,6 +40,29 @@ export class TeamsService {
         team: {
           include: {
             primaryGame: true,
+            captain: { select: { id: true, username: true } },
+            owner: { select: { id: true, username: true } },
+            memberships: {
+              where: { status: 'ACTIVE' },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    gamerProfile: {
+                      select: {
+                        id: true,
+                        displayName: true,
+                        inGameName: true,
+                        avatarUrl: true,
+                        evoqId: true,
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
             _count: { select: { memberships: true } },
           },
         },
@@ -51,6 +74,7 @@ export class TeamsService {
       ...m.team,
       myRole: m.role,
       joinedAt: m.joinedAt,
+      membersCount: m.team.memberships?.length || m.team._count?.memberships || 1,
     }));
   }
 
@@ -152,7 +176,7 @@ export class TeamsService {
     });
   }
 
-  async inviteMember(teamId, inviterId, { usernameOrEmail, role }) {
+  async inviteMember(teamId, inviterId, { evoqId, usernameOrEmail, role }) {
     const inviterMembership = await prisma.teamMembership.findUnique({
       where: { teamId_userId: { teamId, userId: inviterId } },
     });
@@ -161,17 +185,60 @@ export class TeamsService {
       throw new ForbiddenError('Only team leadership can invite players');
     }
 
-    const invitee = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: usernameOrEmail.toLowerCase() },
-          { username: usernameOrEmail },
-        ],
-      },
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { primaryGame: true },
     });
 
+    if (!team) {
+      throw new NotFoundError('Team not found');
+    }
+
+    let invitee = null;
+    let inviteeProfile = null;
+
+    if (evoqId) {
+      const normalizedEvoqId = evoqId.trim().toUpperCase();
+      inviteeProfile = await prisma.gamerProfile.findUnique({
+        where: { evoqId: normalizedEvoqId },
+        include: {
+          user: true,
+          gameIdentities: true,
+        },
+      });
+
+      if (!inviteeProfile) {
+        throw new NotFoundError(`Gamer with EVOQ ID '${normalizedEvoqId}' not found`);
+      }
+      invitee = inviteeProfile.user;
+    } else if (usernameOrEmail) {
+      invitee = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: usernameOrEmail.toLowerCase() },
+            { username: usernameOrEmail },
+          ],
+        },
+        include: {
+          gamerProfile: {
+            include: { gameIdentities: true },
+          },
+        },
+      });
+
+      if (!invitee) {
+        throw new NotFoundError(`User '${usernameOrEmail}' not found`);
+      }
+      inviteeProfile = invitee.gamerProfile;
+    }
+
     if (!invitee) {
-      throw new NotFoundError(`User '${usernameOrEmail}' not found`);
+      throw new ValidationError('Please provide a valid EVOQ ID or Username/Email');
+    }
+
+    // Cannot invite yourself
+    if (invitee.id === inviterId) {
+      throw new ValidationError('You are already the creator/captain of this team');
     }
 
     // Check existing active membership
@@ -179,7 +246,7 @@ export class TeamsService {
       where: { teamId_userId: { teamId, userId: invitee.id } },
     });
     if (existingMember && existingMember.status === 'ACTIVE') {
-      throw new ConflictError('User is already a member of this team');
+      throw new ConflictError('Player is already an active member of this team');
     }
 
     // Check pending invitation
@@ -187,14 +254,12 @@ export class TeamsService {
       where: { teamId, inviteeId: invitee.id, status: 'PENDING' },
     });
     if (existingInvite) {
-      throw new ConflictError('An active invitation is already pending for this user');
+      throw new ConflictError('An active invitation is already pending for this player');
     }
 
     const rawToken = generateSecureToken(32);
     const tokenHash = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
 
     const invitation = await prisma.teamInvitation.create({
       data: {

@@ -2,6 +2,48 @@ import prisma from '../src/database/prisma.js';
 
 const CANONICAL_GAMES = [
   {
+    name: 'Free Fire',
+    slug: 'free-fire',
+    shortName: 'FF',
+    genre: 'Battle Royale',
+    publisher: 'Garena',
+    logoUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=200&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
+    status: 'ACTIVE',
+    platforms: ['Mobile'],
+    supportedRoles: ['Rusher', 'Sniper', 'IGL', 'Supporter'],
+    identityFields: [
+      { key: 'inGameName', label: 'In-Game Name (IGN)', required: true, placeholder: 'e.g. VORTEX_PRO' },
+      { key: 'playerUid', label: 'Player UID', required: true, placeholder: 'e.g. 192837465' },
+    ],
+    scoringTemplate: {
+      format: 'BATTLE_ROYALE',
+      killPointsMultiplier: 1,
+      placementPoints: { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 },
+    },
+  },
+  {
+    name: 'BGMI',
+    slug: 'bgmi',
+    shortName: 'BGMI',
+    genre: 'Battle Royale',
+    publisher: 'Krafton',
+    logoUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=200&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+    status: 'ACTIVE',
+    platforms: ['Mobile'],
+    supportedRoles: ['Assaulter', 'Sniper', 'IGL', 'Entry Fragger', 'Support'],
+    identityFields: [
+      { key: 'inGameName', label: 'In-Game Name (IGN)', required: true, placeholder: 'e.g. SoulMortal' },
+      { key: 'characterId', label: 'Character ID / Player ID', required: true, placeholder: 'e.g. 5123456789' },
+    ],
+    scoringTemplate: {
+      format: 'BATTLE_ROYALE',
+      killPointsMultiplier: 1,
+      placementPoints: { 1: 15, 2: 12, 3: 10, 4: 8, 5: 6, 6: 4, 7: 2, 8: 1 },
+    },
+  },
+  {
     name: 'Valorant',
     slug: 'valorant',
     shortName: 'VAL',
@@ -13,9 +55,9 @@ const CANONICAL_GAMES = [
     platforms: ['PC'],
     supportedRoles: ['Duelist', 'Initiator', 'Controller', 'Sentinel'],
     identityFields: [
-      { key: 'riotId', label: 'Riot ID (Name#Tag)', required: true },
-      { key: 'serverRegion', label: 'Server Region', required: true, options: ['NA', 'EU', 'AP', 'KR', 'BR', 'LATAM'] },
-      { key: 'primaryRole', label: 'Primary Role', required: false },
+      { key: 'riotId', label: 'Riot ID', required: true, placeholder: 'e.g. TenZ' },
+      { key: 'tagline', label: 'Tagline', required: true, placeholder: 'e.g. NA1' },
+      { key: 'serverRegion', label: 'Server Region', required: false, options: ['NA', 'EU', 'AP', 'KR', 'BR', 'LATAM', 'IN'] },
     ],
     scoringTemplate: {
       format: 'ROUNDS',
@@ -23,6 +65,27 @@ const CANONICAL_GAMES = [
       pointsPerDraw: 1,
       pointsPerLoss: 0,
       tieBreakers: ['ROUND_DIFFERENTIAL', 'HEAD_TO_HEAD'],
+    },
+  },
+  {
+    name: 'Call of Duty',
+    slug: 'call-of-duty',
+    shortName: 'COD',
+    genre: 'Action Shooter',
+    publisher: 'Activision',
+    logoUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=200&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    status: 'ACTIVE',
+    platforms: ['PC', 'PlayStation', 'Xbox', 'Mobile'],
+    supportedRoles: ['Slayer', 'Anchor', 'Objective', 'Flex'],
+    identityFields: [
+      { key: 'inGameName', label: 'In-Game Name (IGN)', required: true, placeholder: 'e.g. GhostOperator' },
+      { key: 'activisionId', label: 'Activision ID', required: true, placeholder: 'e.g. Player#1234567' },
+    ],
+    scoringTemplate: {
+      format: 'POINTS',
+      pointsPerWin: 3,
+      pointsPerLoss: 0,
     },
   },
   {
@@ -37,8 +100,8 @@ const CANONICAL_GAMES = [
     platforms: ['PC'],
     supportedRoles: ['Entry Fragger', 'AWPer', 'In-Game Leader (IGL)', 'Support', 'Lurker'],
     identityFields: [
-      { key: 'steamId64', label: 'SteamID64', required: true },
-      { key: 'inGameName', label: 'Player Handle', required: true },
+      { key: 'inGameName', label: 'In-Game Name (IGN)', required: true, placeholder: 'e.g. s1mple' },
+      { key: 'steamId', label: 'Steam ID / SteamID64', required: true, placeholder: 'e.g. 76561198000000000' },
     ],
     scoringTemplate: {
       format: 'ROUNDS',

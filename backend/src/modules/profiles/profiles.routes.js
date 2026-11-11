@@ -16,6 +16,10 @@ router.patch('/me', authenticate, requireGamer, validate(upsertProfileSchema.par
 router.post('/me/identities', authenticate, requireGamer, validate(addGameIdentitySchema), profilesController.addIdentity);
 router.delete('/me/identities/:gameId', authenticate, requireGamer, profilesController.removeIdentity);
 
+// EVOQ ID Lookup (AUTHENTICATED)
+router.get('/lookup/evoq/:evoqId', authenticate, profilesController.lookupEvoq);
+router.get('/lookup/evoq', authenticate, profilesController.lookupEvoq);
+
 // Public gamer profile (PUBLIC)
 router.get('/:slug', profilesController.getPublic);
 

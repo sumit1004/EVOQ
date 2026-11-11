@@ -49,6 +49,19 @@ export class ProfilesController {
     }
   }
 
+  async lookupEvoq(req, res, next) {
+    try {
+      const evoqId = req.params.evoqId || req.query.evoqId;
+      const profile = await profilesService.lookupByEvoqId(evoqId);
+      res.status(200).json({
+        data: profile,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async removeIdentity(req, res, next) {
     try {
       await profilesService.removeGameIdentity(req.user.id, req.params.gameId);

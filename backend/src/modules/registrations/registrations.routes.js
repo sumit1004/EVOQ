@@ -14,6 +14,7 @@ const router = Router({ mergeParams: true });
 router.get('/', registrationsController.list);
 
 // Authenticated gamer actions (GAMER ONLY)
+router.get('/eligible-teams', authenticate, requireGamer, registrationsController.getEligibleTeams);
 router.post('/', authenticate, requireGamer, validate(registerTournamentSchema), registrationsController.register);
 router.post('/withdraw', authenticate, requireGamer, registrationsController.withdraw);
 

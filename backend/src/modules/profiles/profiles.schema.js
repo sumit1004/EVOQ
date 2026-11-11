@@ -9,6 +9,7 @@ export const upsertProfileSchema = z.object({
     .max(64)
     .regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, numbers, and hyphens'),
   inGameName: z.string().trim().max(128).optional().nullable(),
+  phoneNumber: z.string().trim().max(32).optional().nullable(),
   bio: z.string().trim().max(1000).optional().nullable(),
   avatarUrl: z.string().url().max(512).optional().nullable().or(z.literal('')),
   coverUrl: z.string().url().max(512).optional().nullable().or(z.literal('')),
@@ -26,17 +27,32 @@ export const upsertProfileSchema = z.object({
       youtube: z.string().optional(),
       steam: z.string().optional(),
       instagram: z.string().optional(),
+      customLinks: z.array(z.object({ platform: z.string().trim(), url: z.string().trim() })).optional(),
     })
+    .catchall(z.any())
     .optional()
     .nullable(),
   website: z.string().url().max(255).optional().nullable().or(z.literal('')),
   visibility: z.enum(['PUBLIC', 'UNLISTED', 'PRIVATE']).default('PUBLIC'),
+  // Optional embedded game identity during onboarding
+  gameIdentity: z
+    .object({
+      gameId: z.string().uuid(),
+      inGameName: z.string().trim().min(1, 'In-game name (IGN) is required').max(128),
+      inGameUid: z.string().trim().max(128).optional().nullable(),
+      tagline: z.string().trim().max(32).optional().nullable(),
+      serverRegion: z.string().trim().max(64).optional().nullable(),
+      competitiveRole: z.string().trim().max(64).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
 });
 
 export const addGameIdentitySchema = z.object({
   gameId: z.string().uuid(),
   inGameName: z.string().trim().min(1, 'In-game name (IGN) is required').max(128),
   inGameUid: z.string().trim().max(128).optional().nullable(),
+  tagline: z.string().trim().max(32).optional().nullable(),
   serverRegion: z.string().trim().max(64).optional().nullable(),
   competitiveRole: z.string().trim().max(64).optional().nullable(),
   isPrimary: z.boolean().default(false),

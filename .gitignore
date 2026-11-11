@@ -17,3 +17,5 @@ logs/
 # OS files
 Thumbs.db
 .DS_Store
+# MySQL local data directory
+backend/mysql-data/

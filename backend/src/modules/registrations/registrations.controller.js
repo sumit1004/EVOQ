@@ -60,6 +60,21 @@ export class RegistrationsController {
       next(err);
     }
   }
+
+  async getEligibleTeams(req, res, next) {
+    try {
+      const teams = await registrationsService.getEligibleTeams(
+        req.params.tournamentId,
+        req.user.id
+      );
+      res.status(200).json({
+        data: teams,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const registrationsController = new RegistrationsController();

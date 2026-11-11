@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { evoqService } from '../../services/evoq.service.js';
+import GamerOnboardingModal from '../../components/GamerOnboardingModal.jsx';
 import {
   StatCard,
   PrimaryButton,
@@ -23,28 +24,38 @@ export default function GamerDashboard() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [copiedEvoqId, setCopiedEvoqId] = useState(false);
+
+  const loadGamerData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [profData, myTeams, tourns] = await Promise.all([
+        evoqService.getMyProfile().catch(() => null),
+        evoqService.getMyTeams().catch(() => []),
+        evoqService.getTournaments({ pageSize: 4 }).catch(() => ({ tournaments: [] })),
+      ]);
+      setProfile(profData);
+      setTeams(myTeams || []);
+      setTournaments(tourns?.tournaments || tourns?.data || []);
+    } catch (err) {
+      setError('Failed to synchronize gamer profile with EVOQ network.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadGamerData() {
-      setLoading(true);
-      setError('');
-      try {
-        const [profData, myTeams, tourns] = await Promise.all([
-          evoqService.getMyProfile().catch(() => null),
-          evoqService.getMyTeams().catch(() => []),
-          evoqService.getTournaments({ pageSize: 4 }).catch(() => ({ tournaments: [] })),
-        ]);
-        setProfile(profData);
-        setTeams(myTeams || []);
-        setTournaments(tourns?.tournaments || tourns?.data || []);
-      } catch (err) {
-        setError('Failed to synchronize gamer profile with EVOQ network.');
-      } finally {
-        setLoading(false);
-      }
-    }
     loadGamerData();
   }, []);
+
+  const handleCopyEvoqId = () => {
+    if (!profile?.evoqId) return;
+    navigator.clipboard.writeText(profile.evoqId);
+    setCopiedEvoqId(true);
+    setTimeout(() => setCopiedEvoqId(false), 2000);
+  };
 
   const achievements = profile?.achievements || [];
   const careerRecords = profile?.careerRecords || [];
@@ -53,6 +64,61 @@ export default function GamerDashboard() {
 
   return (
     <GamerLayout activeTab="overview">
+      {/* ── Gamer Onboarding Action Banner ── */}
+      {(!profile?.evoqId || !profile?.isComplete || identities.length === 0) && (
+        <div
+          className="evoq-card"
+          style={{
+            marginBottom: '20px',
+            border: '1px solid var(--evoq-lime)',
+            backgroundColor: 'rgba(201, 255, 82, 0.04)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            padding: '16px 20px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(201, 255, 82, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--evoq-lime)',
+                flexShrink: 0,
+              }}
+            >
+              <Icon name="gamepad" size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <strong style={{ fontSize: '1rem', color: 'var(--evoq-text-primary)' }}>
+                  Complete Gamer Passport & Claim EVOQ ID
+                </strong>
+                <Badge variant="lime" size="sm">ACTION REQUIRED</Badge>
+              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--evoq-text-secondary)' }}>
+                Select your primary competitive title (Free Fire, BGMI, Valorant, CoD, CS2), set your in-game identity, and receive your permanent unique EVOQ ID.
+              </p>
+            </div>
+          </div>
+
+          <PrimaryButton
+            size="sm"
+            onClick={() => setShowOnboarding(true)}
+            icon="arrow-right"
+          >
+            Start Onboarding
+          </PrimaryButton>
+        </div>
+      )}
+
       {/* ── Gamer Hero Overview Card ── */}
       <div className="evoq-card" style={{ marginBottom: '24px', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -68,14 +134,68 @@ export default function GamerDashboard() {
                 <h1 className="evoq-display-title" style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)' }}>
                   {profile?.displayName || user?.username || 'Competitor'}
                 </h1>
-                <Badge variant="lime">TIER-1 PRO</Badge>
+                {profile?.primaryGame?.name && (
+                  <Badge variant="lime">{profile.primaryGame.name.toUpperCase()}</Badge>
+                )}
+                <Badge variant="neutral">TIER-1 PRO</Badge>
                 {user?.emailVerified && <Badge variant="neutral">VERIFIED</Badge>}
               </div>
-              <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', margin: '4px 0 0 0' }}>
-                Handle: <strong style={{ color: 'var(--evoq-text-primary)' }}>@{user?.username}</strong>
-                {profile?.country ? ` • ${profile.country}` : ''}
-                {identities.length > 0 && ` • ${identities.length} Connected Game${identities.length === 1 ? '' : 's'}`}
-              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '6px' }}>
+                <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', margin: 0 }}>
+                  Handle: <strong style={{ color: 'var(--evoq-text-primary)' }}>@{user?.username}</strong>
+                  {profile?.country ? ` • ${profile.country}` : ''}
+                  {identities.length > 0 && ` • ${identities.length} Connected Game${identities.length === 1 ? '' : 's'}`}
+                </p>
+
+                {profile?.evoqId ? (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '3px 10px',
+                      background: 'rgba(201, 255, 82, 0.08)',
+                      border: '1px solid rgba(201, 255, 82, 0.3)',
+                      borderRadius: 'var(--evoq-radius-sm)',
+                      fontFamily: 'var(--evoq-font-mono)',
+                      fontSize: '0.82rem',
+                    }}
+                  >
+                    <span style={{ color: 'var(--evoq-text-muted)', fontSize: '0.72rem' }}>EVOQ ID</span>
+                    <strong style={{ color: 'var(--evoq-lime)', letterSpacing: '0.05em' }}>
+                      {profile.evoqId}
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={handleCopyEvoqId}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: copiedEvoqId ? 'var(--evoq-lime)' : 'var(--evoq-text-secondary)',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="Copy EVOQ ID"
+                    >
+                      <Icon name={copiedEvoqId ? 'check' : 'copy'} size={13} />
+                      <span style={{ fontSize: '0.7rem' }}>{copiedEvoqId ? 'COPIED' : 'COPY'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowOnboarding(true)}
+                    className="evoq-btn evoq-btn-secondary evoq-btn-xs"
+                    style={{ color: 'var(--evoq-lime)', borderColor: 'var(--evoq-lime)' }}
+                  >
+                    Claim EVOQ ID
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -431,6 +551,17 @@ export default function GamerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Gamer Onboarding Modal ── */}
+      <GamerOnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        initialProfile={profile}
+        onComplete={(updated) => {
+          setProfile((prev) => ({ ...prev, ...updated }));
+          loadGamerData();
+        }}
+      />
     </GamerLayout>
   );
 }

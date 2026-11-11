@@ -42,10 +42,38 @@ export default function GamerTeams() {
   const [inviteIdentifier, setInviteIdentifier] = useState('');
   const [inviteRole, setInviteRole] = useState('PLAYER');
   const [inviting, setInviting] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupResult, setLookupResult] = useState(null);
+  const [lookupError, setLookupError] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!inviteIdentifier || inviteIdentifier.trim().length < 3) {
+      setLookupResult(null);
+      setLookupError('');
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setLookupLoading(true);
+      setLookupError('');
+      try {
+        const res = await evoqService.lookupGamerByEvoqId(inviteIdentifier.trim());
+        setLookupResult(res);
+        setLookupError('');
+      } catch (err) {
+        setLookupResult(null);
+        if (inviteIdentifier.trim().toUpperCase().startsWith('EVOQ-')) {
+          setLookupError('No competitor found with this EVOQ ID.');
+        }
+      } finally {
+        setLookupLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [inviteIdentifier]);
 
   async function loadData() {
     setLoading(true);
@@ -299,28 +327,65 @@ export default function GamerTeams() {
 
                 {/* Team Members List */}
                 {members.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span className="evoq-mono-label">ACTIVE ROSTER</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {members.map((m) => (
-                        <span
-                          key={m.id || m.userId}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            padding: '3px 8px',
-                            borderRadius: 'var(--evoq-radius-sm)',
-                            backgroundColor: 'var(--evoq-surface-elevated)',
-                            fontSize: '0.78rem',
-                            color: 'var(--evoq-text-secondary)',
-                          }}
-                        >
-                          <Avatar src={m.user?.avatarUrl} name={m.user?.username} size="xs" />
-                          <span>{m.user?.username || m.username || 'Player'}</span>
-                          {m.role === 'CAPTAIN' && <span style={{ color: 'var(--evoq-lime)' }}>★</span>}
-                        </span>
-                      ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <span className="evoq-mono-label">ACTIVE ROSTER ({members.length})</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {members.map((m) => {
+                        const mUser = m.user || {};
+                        const mProfile = mUser.gamerProfile || {};
+                        const mName = mProfile.displayName || mUser.username || 'Competitor';
+                        const mEvoqId = mProfile.evoqId;
+                        const mIgn = mProfile.inGameName;
+                        const mRole = m.role || 'PLAYER';
+                        return (
+                          <div
+                            key={m.id || m.userId}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '6px 10px',
+                              borderRadius: 'var(--evoq-radius-sm)',
+                              backgroundColor: 'var(--evoq-surface-elevated)',
+                              border: '1px solid var(--evoq-border-subtle)',
+                              fontSize: '0.82rem',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Avatar src={mProfile.avatarUrl || mUser.avatarUrl} name={mName} size="xs" />
+                              <div>
+                                <span style={{ fontWeight: 600, color: 'var(--evoq-text-primary)' }}>{mName}</span>
+                                {mIgn && (
+                                  <span style={{ color: 'var(--evoq-text-muted)', fontSize: '0.74rem', marginLeft: '6px' }}>
+                                    IGN: {mIgn}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {mEvoqId && (
+                                <span
+                                  style={{
+                                    fontFamily: 'var(--evoq-font-mono)',
+                                    fontSize: '0.72rem',
+                                    color: 'var(--evoq-lime)',
+                                    background: 'rgba(201, 255, 82, 0.08)',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    border: '1px solid rgba(201, 255, 82, 0.2)',
+                                  }}
+                                >
+                                  {mEvoqId}
+                                </span>
+                              )}
+                              <Badge variant={mRole === 'CAPTAIN' ? 'lime' : 'neutral'} size="xs">
+                                {mRole}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -432,21 +497,85 @@ export default function GamerTeams() {
       {/* ── Invite Member Modal ── */}
       <Modal
         isOpen={!!activeTeamForInvite}
-        onClose={() => setActiveTeamForInvite(null)}
+        onClose={() => {
+          setActiveTeamForInvite(null);
+          setInviteIdentifier('');
+          setLookupResult(null);
+          setLookupError('');
+        }}
         title={`Invite to ${activeTeamForInvite?.name}`}
-        subtitle="Dispatch an official roster invitation to a competitor"
-        maxWidth="440px"
+        subtitle="Dispatch an official roster invitation using competitor's EVOQ ID"
+        maxWidth="460px"
       >
         <form onSubmit={handleSendInvite} noValidate>
           <Input
-            label="Player Username or Email"
+            label="Teammate EVOQ ID or Username"
             id="inviteIdentifier"
             value={inviteIdentifier}
             onChange={(e) => setInviteIdentifier(e.target.value)}
-            placeholder="e.g. ShadowStrike_99"
+            placeholder="e.g. EVOQ-XXXXXX or username"
             required
-            helperText="Competitor must hold a registered EVOQ account."
+            helperText="Enter teammate's permanent EVOQ ID or username for live verification."
           />
+
+          {lookupLoading && (
+            <div style={{ fontSize: '0.82rem', color: 'var(--evoq-text-muted)', margin: '-8px 0 14px 0' }}>
+              Resolving player passport...
+            </div>
+          )}
+
+          {lookupResult && (
+            <div
+              style={{
+                padding: '12px 14px',
+                marginBottom: '16px',
+                backgroundColor: 'rgba(201, 255, 82, 0.05)',
+                border: '1px solid var(--evoq-lime)',
+                borderRadius: 'var(--evoq-radius-sm)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Avatar
+                  src={lookupResult.avatarUrl}
+                  name={lookupResult.displayName || lookupResult.username}
+                  size="md"
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--evoq-text-primary)' }}>
+                      {lookupResult.displayName || lookupResult.username}
+                    </strong>
+                    {lookupResult.evoqId && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--evoq-font-mono)',
+                          fontSize: '0.72rem',
+                          color: 'var(--evoq-lime)',
+                          fontWeight: 700,
+                          background: 'rgba(201, 255, 82, 0.12)',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        {lookupResult.evoqId}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)', marginTop: '2px' }}>
+                    @{lookupResult.username}
+                    {lookupResult.primaryGame?.name && ` • ${lookupResult.primaryGame.name}`}
+                    {lookupResult.inGameName && ` • IGN: ${lookupResult.inGameName}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {lookupError && (
+            <div style={{ fontSize: '0.8rem', color: '#ff6b6b', margin: '-8px 0 14px 0' }}>
+              {lookupError}
+            </div>
+          )}
 
           <Select
             label="Roster Role"
@@ -461,11 +590,19 @@ export default function GamerTeams() {
           </Select>
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-            <SecondaryButton onClick={() => setActiveTeamForInvite(null)} disabled={inviting}>
+            <SecondaryButton
+              onClick={() => {
+                setActiveTeamForInvite(null);
+                setInviteIdentifier('');
+                setLookupResult(null);
+                setLookupError('');
+              }}
+              disabled={inviting}
+            >
               Cancel
             </SecondaryButton>
             <PrimaryButton type="submit" disabled={inviting || !inviteIdentifier.trim()} loading={inviting}>
-              {inviting ? 'Dispatching...' : 'Send Invitation'}
+              {inviting ? 'Dispatching...' : 'Invite to Squad'}
             </PrimaryButton>
           </div>
         </form>

@@ -37,6 +37,11 @@ export const evoqService = {
     return res.data.data;
   },
 
+  async lookupGamerByEvoqId(evoqId) {
+    const res = await api.get(`/profiles/lookup/evoq/${encodeURIComponent(evoqId)}`);
+    return res.data.data;
+  },
+
   // ── Teams ──
   async getTeams(params = {}) {
     const res = await api.get('/teams', { params });
@@ -167,6 +172,11 @@ export const evoqService = {
   },
 
   // ── Registrations ──
+  async getEligibleTeamsForTournament(tournamentId) {
+    const res = await api.get(`/tournaments/${tournamentId}/registrations/eligible-teams`);
+    return res.data.data;
+  },
+
   async registerTournament(tournamentId, data) {
     const res = await api.post(`/tournaments/${tournamentId}/registrations`, data);
     return res.data.data;

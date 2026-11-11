@@ -21,6 +21,7 @@ export default function GamerProfileView() {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [copiedEvoqId, setCopiedEvoqId] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -42,9 +43,17 @@ export default function GamerProfileView() {
     loadProfile();
   }, []);
 
+  const handleCopyEvoqId = () => {
+    if (!profile?.evoqId) return;
+    navigator.clipboard.writeText(profile.evoqId);
+    setCopiedEvoqId(true);
+    setTimeout(() => setCopiedEvoqId(false), 2000);
+  };
+
   const achievements = profile?.achievements || [];
   const careerRecords = profile?.careerRecords || [];
   const identities = profile?.gameIdentities || [];
+  const isReady = profile?.evoqId && (identities.length > 0 || profile?.inGameName);
 
   return (
     <GamerLayout activeTab="profile">
@@ -105,13 +114,60 @@ export default function GamerProfileView() {
                     <h1 className="evoq-display-title" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)' }}>
                       {profile?.displayName || user?.username}
                     </h1>
-                    <Badge variant="lime">TIER-1 PRO</Badge>
+                    {profile?.primaryGame?.name && (
+                      <Badge variant="lime">{profile.primaryGame.name.toUpperCase()}</Badge>
+                    )}
+                    <Badge variant={isReady ? 'lime' : 'neutral'}>
+                      {isReady ? 'COMPETITION READY' : 'PROFILE INCOMPLETE'}
+                    </Badge>
                     {user?.emailVerified && <Badge variant="neutral">VERIFIED</Badge>}
                   </div>
-                  <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', margin: '4px 0 0 0' }}>
-                    Handle: <strong style={{ color: 'var(--evoq-text-primary)' }}>@{user?.username}</strong>
-                    {profile?.country ? ` • ${profile.country}` : ''}
-                  </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '6px' }}>
+                    <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', margin: 0 }}>
+                      Handle: <strong style={{ color: 'var(--evoq-text-primary)' }}>@{user?.username}</strong>
+                      {profile?.country ? ` • ${profile.country}` : ''}
+                    </p>
+
+                    {profile?.evoqId && (
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '3px 10px',
+                          background: 'rgba(201, 255, 82, 0.08)',
+                          border: '1px solid rgba(201, 255, 82, 0.3)',
+                          borderRadius: 'var(--evoq-radius-sm)',
+                          fontFamily: 'var(--evoq-font-mono)',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        <span style={{ color: 'var(--evoq-text-muted)', fontSize: '0.72rem' }}>EVOQ ID:</span>
+                        <strong style={{ color: 'var(--evoq-lime)', letterSpacing: '0.05em' }}>
+                          {profile.evoqId}
+                        </strong>
+                        <button
+                          type="button"
+                          onClick={handleCopyEvoqId}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: copiedEvoqId ? 'var(--evoq-lime)' : 'var(--evoq-text-secondary)',
+                            cursor: 'pointer',
+                            padding: '2px 4px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                          title="Copy EVOQ ID"
+                        >
+                          <Icon name={copiedEvoqId ? 'check' : 'copy'} size={13} />
+                          <span style={{ fontSize: '0.7rem' }}>{copiedEvoqId ? 'COPIED' : 'COPY'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -134,12 +190,31 @@ export default function GamerProfileView() {
             </div>
 
             {profile?.bio && (
-              <div style={{ padding: '0 24px 24px 24px' }}>
+              <div style={{ padding: '0 24px 20px 24px' }}>
                 <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', margin: 0, lineHeight: 1.5 }}>
                   {profile.bio}
                 </p>
               </div>
             )}
+
+            {/* Confidentiality Privacy Note */}
+            <div
+              style={{
+                padding: '10px 24px',
+                backgroundColor: 'rgba(21, 27, 19, 0.7)',
+                borderTop: '1px solid var(--evoq-border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.78rem',
+                color: 'var(--evoq-text-muted)',
+              }}
+            >
+              <Icon name="shield" size={14} color="var(--evoq-lime)" />
+              <span>
+                Confidential Gamer Identity Protected: Contact information (phone & email) is kept strictly private and never exposed on public rosters or player profiles.
+              </span>
+            </div>
           </div>
 
           {/* ── Key Statistics ── */}
@@ -218,11 +293,17 @@ export default function GamerProfileView() {
                     }}
                   >
                     <div>
-                      <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
-                        {id.game?.name || 'Esports Title'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
+                          {id.game?.name || 'Esports Title'}
+                        </span>
+                        {profile?.primaryGameId === id.gameId && (
+                          <Badge variant="lime" size="xs">PRIMARY</Badge>
+                        )}
+                      </div>
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--evoq-text-primary)' }}>
                         {id.inGameIdentifier || id.inGameName}
+                        {id.tagline ? <span style={{ color: 'var(--evoq-lime)' }}>#{id.tagline}</span> : null}
                       </div>
                       {id.region && (
                         <div style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>

@@ -19,8 +19,11 @@ export const createTeamSchema = z.object({
 export const updateTeamSchema = createTeamSchema.partial();
 
 export const inviteTeamMemberSchema = z.object({
-  usernameOrEmail: z.string().trim().min(1, 'Target user is required'),
+  evoqId: z.string().trim().optional(),
+  usernameOrEmail: z.string().trim().optional(),
   role: z.enum(['CAPTAIN', 'MANAGER', 'PLAYER', 'SUBSTITUTE']).default('PLAYER'),
+}).refine((data) => data.evoqId || data.usernameOrEmail, {
+  message: 'Either EVOQ ID or Username/Email is required',
 });
 
 export const updateMemberRoleSchema = z.object({
