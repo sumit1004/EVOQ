@@ -120,6 +120,8 @@ body {
   flex-direction: column;
   min-width: 0;
   min-height: 100vh;
+  margin-left: 260px;
+  width: calc(100% - 260px);
   background-color: var(--evoq-bg);
   box-sizing: border-box;
 }
@@ -285,18 +287,49 @@ body {
   border-right: 1px solid var(--evoq-border);
   display: flex;
   flex-direction: column;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  bottom: 0;
   height: 100vh;
   z-index: 90;
   box-sizing: border-box;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--evoq-border) transparent;
+}
+
+.evoq-sidebar::-webkit-scrollbar,
+.evoq-portal-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.evoq-sidebar::-webkit-scrollbar-track,
+.evoq-portal-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.evoq-sidebar::-webkit-scrollbar-thumb,
+.evoq-portal-sidebar::-webkit-scrollbar-thumb {
+  background: var(--evoq-border);
+  border-radius: 4px;
+}
+
+.evoq-sidebar::-webkit-scrollbar-thumb:hover,
+.evoq-portal-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--evoq-text-muted);
 }
 
 @media (max-width: 960px) {
   .evoq-sidebar,
   .evoq-portal-sidebar {
     display: none !important;
+  }
+
+  .evoq-dashboard-main,
+  .evoq-portal-main {
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
 
