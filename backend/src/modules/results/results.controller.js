@@ -15,9 +15,21 @@ export class ResultsController {
 
   async approveResult(req, res, next) {
     try {
-      await resultsService.approveResult(req.params.id, req.user.id);
+      const result = await resultsService.approveResult(req.params.id, req.user.id);
       res.status(200).json({
-        data: { success: true, message: 'Result approved and tournament data updated' },
+        data: { success: true, message: 'Result approved and tournament data updated', result },
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async correctResult(req, res, next) {
+    try {
+      const revision = await resultsService.correctResult(req.params.id, req.user.id, req.body);
+      res.status(200).json({
+        data: { success: true, message: 'Result corrected and standings reconciled', revision },
         meta: { requestId: req.requestId },
       });
     } catch (err) {
@@ -51,4 +63,3 @@ export class ResultsController {
 }
 
 export const resultsController = new ResultsController();
-

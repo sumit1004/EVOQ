@@ -71,6 +71,48 @@ export class TournamentsService {
   }
 
   /**
+   * Get tournament details by ID
+   */
+  async getTournamentById(id) {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        game: true,
+        organization: true,
+        organizerUser: {
+          select: { id: true, username: true, organizerProfile: true },
+        },
+        staffGrants: {
+          include: { user: { select: { id: true, username: true } } },
+        },
+        stages: {
+          orderBy: { sequence: 'asc' },
+          include: {
+            rounds: {
+              orderBy: { sequence: 'asc' },
+            },
+            groups: {
+              orderBy: { sequence: 'asc' },
+            },
+          },
+        },
+        _count: {
+          select: {
+            registrations: true,
+            matches: true,
+          },
+        },
+      },
+    });
+
+    if (!tournament) {
+      throw new NotFoundError(`Tournament with ID '${id}' not found`);
+    }
+
+    return tournament;
+  }
+
+  /**
    * Get public tournament details by slug
    */
   async getTournamentBySlug(slug, currentUserId = null) {
@@ -170,29 +212,46 @@ export class TournamentsService {
     }
 
     const tournamentId = generateUuid();
+    const isMultiStage = ['GROUP_STAGE_FINALS', 'GROUP_STAGE_KNOCKOUT'].includes(data.format);
 
-    const [tournament] = await prisma.$transaction([
-      prisma.tournament.create({
+    return prisma.$transaction(async (tx) => {
+      const tournament = await tx.tournament.create({
         data: {
           id: tournamentId,
           organizerUserId: userId,
           status: 'DRAFT',
           ...data,
         },
-      }),
+      });
+
       // Default primary stage
-      prisma.tournamentStage.create({
+      await tx.tournamentStage.create({
         data: {
           id: generateUuid(),
           tournamentId,
-          name: data.format === 'GROUP_STAGE' ? 'Group Stage' : 'Main Stage',
-          stageType: data.format === 'GROUP_STAGE' ? 'GROUP' : 'BRACKET',
+          name: isMultiStage ? 'Group Stage' : (data.format === 'GROUP_STAGE' ? 'Group Stage' : 'Main Stage'),
+          stageType: (data.format === 'GROUP_STAGE' || isMultiStage) ? 'GROUP' : 'BRACKET',
           sequence: 1,
           status: 'UPCOMING',
         },
-      }),
+      });
+
+      // Second stage for finals if multi-stage
+      if (isMultiStage) {
+        await tx.tournamentStage.create({
+          data: {
+            id: generateUuid(),
+            tournamentId,
+            name: 'Grand Finals',
+            stageType: data.format === 'GROUP_STAGE_KNOCKOUT' ? 'BRACKET' : 'FINALS',
+            sequence: 2,
+            status: 'UPCOMING',
+          },
+        });
+      }
+
       // Add organizer as admin staff
-      prisma.tournamentStaff.create({
+      await tx.tournamentStaff.create({
         data: {
           id: generateUuid(),
           tournamentId,
@@ -200,10 +259,10 @@ export class TournamentsService {
           role: 'ADMIN',
           permissions: { all: true },
         },
-      }),
-    ]);
+      });
 
-    return tournament;
+      return tournament;
+    });
   }
 
   /**

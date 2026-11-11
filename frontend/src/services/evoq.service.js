@@ -151,6 +151,11 @@ export const evoqService = {
     return res.data.data;
   },
 
+  async getTournamentById(id) {
+    const res = await api.get(`/tournaments/id/${id}`);
+    return res.data.data;
+  },
+
   async createTournament(data) {
     const res = await api.post('/tournaments', data);
     return res.data.data;
@@ -235,6 +240,31 @@ export const evoqService = {
     return res.data.data;
   },
 
+  async revokeMatchCredentials(matchId) {
+    const res = await api.post(`/matches/${matchId}/credentials/revoke`);
+    return res.data.data;
+  },
+
+  async openMatchCheckIn(matchId) {
+    const res = await api.post(`/matches/${matchId}/check-in/open`);
+    return res.data.data;
+  },
+
+  async checkInToMatch(matchId) {
+    const res = await api.post(`/matches/${matchId}/check-in`);
+    return res.data.data;
+  },
+
+  async getCompetitionPresets(gameSlug = '') {
+    const res = await api.get(`/competition/presets/${gameSlug}`);
+    return res.data.data;
+  },
+
+  async advanceTournamentStage(tournamentId, data) {
+    const res = await api.post(`/tournaments/${tournamentId}/stages/advance`, data);
+    return res.data.data;
+  },
+
   // ── Results & Standings ──
   async submitMatchResult(matchId, data) {
     const res = await api.post(`/matches/${matchId}/results`, data);
@@ -243,6 +273,11 @@ export const evoqService = {
 
   async approveMatchResult(resultId) {
     const res = await api.post(`/results/${resultId}/approve`);
+    return res.data.data;
+  },
+
+  async correctMatchResult(resultId, data) {
+    const res = await api.post(`/results/${resultId}/correct`, data);
     return res.data.data;
   },
 

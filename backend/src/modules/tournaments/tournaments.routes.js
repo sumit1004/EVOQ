@@ -18,6 +18,9 @@ router.get('/', validate(listTournamentsQuerySchema, 'query'), tournamentsContro
 // Authenticated organizer dashboard (ORGANIZER ONLY)
 router.get('/organizer/dashboard', authenticate, requireOrganizer, tournamentsController.getDashboard);
 
+// Lookup by ID
+router.get('/id/:id', tournamentsController.getById);
+
 // Tournament creation (ORGANIZER ONLY)
 router.post('/', authenticate, requireOrganizer, validate(createTournamentSchema), tournamentsController.create);
 

@@ -48,13 +48,13 @@ export default function OrganizerTournamentsList() {
       render: (_, row) => (
         <div>
           <Link
-            to={`/organizer/tournaments/${row.slug || row.id}`}
+            to={`/organizer/tournaments/${row.id || row.slug}`}
             style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', textDecoration: 'none' }}
           >
             {row.name || row.title}
           </Link>
           <div style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>
-            Slug: /{row.slug || row.id}
+            Slug: /{row.slug}
           </div>
         </div>
       ),

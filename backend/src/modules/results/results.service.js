@@ -1,6 +1,8 @@
 import prisma from '../../database/prisma.js';
 import { generateUuid } from '../../utils/uuid.js';
 import { notificationService } from '../../services/notification.service.js';
+import { BattleRoyaleEngine } from '../competition/engines/battleRoyale.engine.js';
+import { HeadToHeadEngine } from '../competition/engines/headToHead.engine.js';
 import {
   NotFoundError,
   ForbiddenError,
@@ -11,7 +13,9 @@ export class ResultsService {
   /**
    * Submit match results (creates a revision)
    */
-  async submitResult(matchId, userId, { participantResults, evidenceUrls, notes }) {
+  async submitResult(matchId, userId, payload) {
+    const { participantResults, mapScores, evidenceUrls, notes } = payload;
+
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
@@ -23,7 +27,6 @@ export class ResultsService {
 
     if (!match) throw new NotFoundError('Match not found');
 
-    // Participant or organizer can submit
     const isOrganizer = match.tournament.organizerUserId === userId;
     const isParticipant = match.participants.some((p) => p.registrationId);
 
@@ -31,8 +34,30 @@ export class ResultsService {
       throw new ForbiddenError('You do not have permission to submit results for this match');
     }
 
+    const matchEngine = match.tournament.formatConfig?.matchEngine ||
+      (match.tournament.format === 'BATTLE_ROYALE' ? 'BATTLE_ROYALE' : 'HEAD_TO_HEAD');
+
+    let processedResults = participantResults || [];
+
+    // Calculate scores according to engine
+    if (matchEngine === 'BATTLE_ROYALE') {
+      const ruleset = match.tournament.formatConfig?.scoringRuleset || {};
+      processedResults = BattleRoyaleEngine.calculateMatchScores(participantResults, ruleset);
+    } else if (mapScores && mapScores.length > 0) {
+      const seriesFormat = match.seriesConfig?.format || 'BO3';
+      const seriesResult = HeadToHeadEngine.calculateSeriesResult(mapScores, seriesFormat);
+      if (seriesResult.isCompleted && seriesResult.winnerSlot) {
+        processedResults = match.participants.map((p) => ({
+          registrationId: p.registrationId,
+          slot: p.slot,
+          score: p.slot === 1 ? seriesResult.p1Wins : seriesResult.p2Wins,
+          isWinner: p.slot === seriesResult.winnerSlot,
+          metrics: { mapScores, seriesWins: p.slot === 1 ? seriesResult.p1Wins : seriesResult.p2Wins },
+        }));
+      }
+    }
+
     return prisma.$transaction(async (tx) => {
-      // Ensure match result container exists
       let matchResult = match.result;
       if (!matchResult) {
         matchResult = await tx.matchResult.create({
@@ -53,19 +78,17 @@ export class ResultsService {
           resultId: matchResult.id,
           revisionNumber: nextRevNum,
           submittedById: userId,
-          payload: { participantResults, notes },
+          payload: { participantResults: processedResults, mapScores, notes },
           evidenceUrls: evidenceUrls || [],
-          status: isOrganizer ? 'APPROVED' : 'SUBMITTED', // auto-approve if submitted directly by organizer
+          status: isOrganizer ? 'APPROVED' : 'SUBMITTED',
           reviewedById: isOrganizer ? userId : null,
           reviewedAt: isOrganizer ? new Date() : null,
         },
       });
 
       if (isOrganizer) {
-        // If organizer submitted directly, trigger immediate approval workflow
-        await this.applyApprovedRevision(tx, match, matchResult, revision, participantResults);
+        await this.applyApprovedRevision(tx, match, matchResult, revision, processedResults);
       } else {
-        // Notify organizer
         await notificationService.notifyUser({
           recipientId: match.tournament.organizerUserId,
           type: 'RESULT_SUBMITTED',
@@ -80,7 +103,7 @@ export class ResultsService {
   }
 
   /**
-   * Approve result revision (Authoritative operation)
+   * Approve result revision (Authoritative operation with idempotency)
    */
   async approveResult(resultId, actorId) {
     const matchResult = await prisma.matchResult.findUnique({
@@ -117,6 +140,11 @@ export class ResultsService {
     const latestRevision = matchResult.revisions[0];
     if (!latestRevision) throw new NotFoundError('No result revision found to approve');
 
+    // Idempotency: If already approved with the current revision, return safely
+    if (matchResult.status === 'APPROVED' && matchResult.currentApprovedRevisionId === latestRevision.id) {
+      return latestRevision;
+    }
+
     return prisma.$transaction(async (tx) => {
       await tx.resultRevision.update({
         where: { id: latestRevision.id },
@@ -129,6 +157,95 @@ export class ResultsService {
 
       const participantResults = latestRevision.payload?.participantResults || [];
       await this.applyApprovedRevision(tx, match, matchResult, latestRevision, participantResults);
+
+      // Audit Log
+      await tx.auditLog.create({
+        data: {
+          id: generateUuid(),
+          userId: actorId,
+          action: 'RESULT_APPROVED',
+          resourceType: 'MATCH_RESULT',
+          resourceId: resultId,
+          payload: { matchId: match.id, tournamentId: match.tournamentId, revisionNumber: latestRevision.revisionNumber },
+        },
+      });
+
+      return latestRevision;
+    });
+  }
+
+  /**
+   * Result correction workflow: creates a revision, preserves previous version, and recalculates standings
+   */
+  async correctResult(resultId, actorId, { participantResults, mapScores, reason, evidenceUrls }) {
+    const matchResult = await prisma.matchResult.findUnique({
+      where: { id: resultId },
+      include: {
+        match: {
+          include: {
+            tournament: { include: { game: true } },
+            round: true,
+            stage: true,
+            participants: true,
+          },
+        },
+        revisions: { orderBy: { revisionNumber: 'desc' } },
+      },
+    });
+
+    if (!matchResult) throw new NotFoundError('Match result not found');
+
+    const match = matchResult.match;
+    if (match.tournament.organizerUserId !== actorId) {
+      throw new ForbiddenError('Only the tournament organizer can correct results');
+    }
+
+    const nextRevNum = (matchResult.revisions?.length || 0) + 1;
+    const revisionId = generateUuid();
+
+    const matchEngine = match.tournament.formatConfig?.matchEngine ||
+      (match.tournament.format === 'BATTLE_ROYALE' ? 'BATTLE_ROYALE' : 'HEAD_TO_HEAD');
+
+    let processedResults = participantResults || [];
+    if (matchEngine === 'BATTLE_ROYALE') {
+      const ruleset = match.tournament.formatConfig?.scoringRuleset || {};
+      processedResults = BattleRoyaleEngine.calculateMatchScores(participantResults, ruleset);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const newRevision = await tx.resultRevision.create({
+        data: {
+          id: revisionId,
+          resultId: matchResult.id,
+          revisionNumber: nextRevNum,
+          submittedById: actorId,
+          payload: { participantResults: processedResults, mapScores, correctionReason: reason },
+          evidenceUrls: evidenceUrls || [],
+          status: 'APPROVED',
+          reviewedById: actorId,
+          reviewedAt: new Date(),
+        },
+      });
+
+      await this.applyApprovedRevision(tx, match, matchResult, newRevision, processedResults);
+
+      // Audit Log
+      await tx.auditLog.create({
+        data: {
+          id: generateUuid(),
+          userId: actorId,
+          action: 'RESULT_CORRECTED',
+          resourceType: 'MATCH_RESULT',
+          resourceId: resultId,
+          payload: {
+            matchId: match.id,
+            revisionNumber: nextRevNum,
+            reason,
+          },
+        },
+      });
+
+      return newRevision;
     });
   }
 
@@ -143,181 +260,123 @@ export class ResultsService {
       if (pr.isWinner) {
         winningRegistrationId = pr.registrationId;
       }
+
       await tx.matchParticipant.updateMany({
-        where: { matchId: match.id, registrationId: pr.registrationId },
+        where: {
+          matchId: match.id,
+          registrationId: pr.registrationId,
+        },
         data: {
-          score: pr.score,
-          metrics: pr.metrics || null,
-          isWinner: pr.isWinner || false,
+          score: Number(pr.score || 0),
+          isWinner: Boolean(pr.isWinner),
+          metrics: pr.metrics || {},
         },
       });
     }
 
-    // 2. Mark match completed
+    // 2. Update Match and MatchResult state
     await tx.match.update({
       where: { id: match.id },
-      data: {
-        status: 'COMPLETED',
-        winningRegistrationId,
-        endTime: new Date(),
-      },
+      data: { status: 'COMPLETED' },
     });
 
-    // 3. Update MatchResult
     await tx.matchResult.update({
       where: { id: matchResult.id },
       data: {
-        currentApprovedRevisionId: revision.id,
         status: 'APPROVED',
+        currentApprovedRevisionId: revision.id,
       },
     });
 
-    // 4. Bracket propagation: if single elimination, advance winner to next round match
-    if (winningRegistrationId && match.round) {
-      const nextRound = await tx.tournamentRound.findFirst({
-        where: {
-          stageId: match.stageId,
-          sequence: match.round.sequence + 1,
-        },
-      });
-
-      if (nextRound) {
-        const nextMatchNumber = Math.ceil(match.matchNumber / 2);
-        const nextSlot = match.matchNumber % 2 === 1 ? 1 : 2;
-
-        const nextMatch = await tx.match.findFirst({
-          where: {
-            roundId: nextRound.id,
-            matchNumber: nextMatchNumber,
-          },
-        });
-
-        if (nextMatch) {
-          await tx.matchParticipant.upsert({
-            where: {
-              matchId_slot: {
-                matchId: nextMatch.id,
-                slot: nextSlot,
-              },
-            },
-            create: {
-              id: generateUuid(),
-              matchId: nextMatch.id,
-              registrationId: winningRegistrationId,
-              slot: nextSlot,
-            },
-            update: {
-              registrationId: winningRegistrationId,
-            },
-          });
-        }
-      }
+    // 3. Bracket advancement for Head-to-Head formats
+    if (winningRegistrationId && match.roundId) {
+      await HeadToHeadEngine.advanceBracket(tx, match, winningRegistrationId);
     }
 
-    // 5. Recalculate Standings Snapshot
-    await this.recalculateStandings(tx, match.tournamentId, match.stageId, match.groupId);
+    // 4. Standings snapshot recalculation
+    await this.recalculateStandings(tx, match.tournamentId, match.stageId);
 
-    // 6. Cross-Module: Check if Tournament Concluded -> Award Verified Achievements & Portfolio
-    const remainingUnfinishedMatches = await tx.match.count({
-      where: {
-        tournamentId: match.tournamentId,
-        status: { not: 'COMPLETED' },
-      },
-    });
-
-    const isFinals = match.round?.name?.toLowerCase().includes('final') || remainingUnfinishedMatches === 0;
+    // 5. If this is a final round / championship match, award achievements
+    const isFinals = match.round?.name?.toLowerCase().includes('final') ||
+      match.round?.roundType === 'FINALS';
 
     if (isFinals && winningRegistrationId) {
-      await this.awardTournamentAchievements(tx, match.tournament, match, winningRegistrationId, revision.id);
+      await this.awardFinalTrophies(tx, match.tournament, winningRegistrationId, revision.id);
     }
   }
 
   /**
-   * Recalculate tournament standings
+   * Recalculate standings snapshot for tournament stage
    */
-  async recalculateStandings(tx, tournamentId, stageId = null, groupId = null) {
-    const matches = await tx.match.findMany({
-      where: {
-        tournamentId,
-        status: 'COMPLETED',
-        ...(stageId ? { stageId } : {}),
-        ...(groupId ? { groupId } : {}),
+  async recalculateStandings(tx, tournamentId, stageId) {
+    const tournament = await tx.tournament.findUnique({
+      where: { id: tournamentId },
+      include: {
+        registrations: {
+          where: { status: 'APPROVED' },
+          include: { team: true, gamerProfile: true },
+        },
+        matches: {
+          where: { status: 'COMPLETED' },
+          include: { participants: true },
+        },
       },
-      include: { participants: true },
     });
 
-    const statsMap = new Map();
+    if (!tournament) return;
 
-    for (const m of matches) {
-      for (const p of m.participants) {
-        if (!statsMap.has(p.registrationId)) {
-          statsMap.set(p.registrationId, {
-            registrationId: p.registrationId,
-            played: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            points: 0,
-            scoreFor: 0,
-          });
-        }
-        const st = statsMap.get(p.registrationId);
-        st.played += 1;
-        st.scoreFor += p.score;
-        if (p.isWinner) {
-          st.wins += 1;
-          st.points += 3;
-        } else {
-          st.losses += 1;
-        }
-      }
+    const matchEngine = tournament.formatConfig?.matchEngine ||
+      (tournament.format === 'BATTLE_ROYALE' ? 'BATTLE_ROYALE' : 'HEAD_TO_HEAD');
+
+    let rows = [];
+    if (matchEngine === 'BATTLE_ROYALE') {
+      const ruleset = tournament.formatConfig?.scoringRuleset || {};
+      rows = BattleRoyaleEngine.computeCumulativeStandings(tournament.matches, tournament.registrations, ruleset);
+    } else {
+      rows = HeadToHeadEngine.computeStandings(tournament.matches, tournament.registrations);
     }
 
-    // Sort by points desc, scoreFor desc
-    const sorted = Array.from(statsMap.values()).sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      return b.scoreFor - a.scoreFor;
-    });
-
-    // Mark previous snapshots inactive
+    // Mark previous snapshots as non-current
     await tx.standingSnapshot.updateMany({
       where: { tournamentId, isCurrent: true },
       data: { isCurrent: false },
     });
 
+    // Create new snapshot
     const snapshotId = generateUuid();
     await tx.standingSnapshot.create({
       data: {
         id: snapshotId,
         tournamentId,
         stageId,
-        groupId,
         isCurrent: true,
       },
     });
 
-    for (let i = 0; i < sorted.length; i++) {
-      const row = sorted[i];
-      await tx.standingRow.create({
-        data: {
+    // Bulk insert standing rows
+    if (rows.length > 0) {
+      await tx.standingRow.createMany({
+        data: rows.map((r) => ({
           id: generateUuid(),
           snapshotId,
-          registrationId: row.registrationId,
-          rank: i + 1,
-          played: row.played,
-          wins: row.wins,
-          losses: row.losses,
-          draws: row.draws,
-          points: row.points,
-        },
+          registrationId: r.registrationId,
+          rank: r.rank,
+          played: r.played,
+          wins: r.wins,
+          losses: r.losses,
+          draws: r.draws,
+          points: r.points,
+          metrics: r.metrics || {},
+          tieBreakValues: r.tieBreakValues || {},
+        })),
       });
     }
   }
 
   /**
-   * Verified Achievements & Career Records generation (Phase 6 & 7)
+   * Award verified tournament trophies to winners and runners-up
    */
-  async awardTournamentAchievements(tx, tournament, finalsMatch, winnerRegistrationId, revisionId) {
+  async awardFinalTrophies(tx, tournament, winnerRegistrationId, revisionId) {
     const registrations = await tx.tournamentRegistration.findMany({
       where: { tournamentId: tournament.id, status: 'APPROVED' },
       include: {
@@ -328,13 +387,12 @@ export class ResultsService {
 
     for (const reg of registrations) {
       const isWinner = reg.id === winnerRegistrationId;
-      const placement = isWinner ? 1 : 2; // Finals pairing
+      const placement = isWinner ? 1 : 2;
       const title = isWinner
         ? `Champion — ${tournament.name}`
         : `Runner-Up — ${tournament.name}`;
       const type = isWinner ? 'WINNER' : 'RUNNER_UP';
 
-      // Gather gamer profiles (individual or all team members)
       const targetProfiles = reg.entrantType === 'INDIVIDUAL'
         ? [reg.gamerProfile].filter(Boolean)
         : reg.team?.memberships?.map((m) => m.user?.gamerProfile).filter(Boolean) || [];
@@ -342,7 +400,6 @@ export class ResultsService {
       for (const gp of targetProfiles) {
         const idempotencyKey = `${tournament.id}_${gp.id}_${type}`;
 
-        // 1. Award Verified Achievement
         const achievement = await tx.gamerAchievement.upsert({
           where: { idempotencyKey },
           create: {
@@ -358,13 +415,9 @@ export class ResultsService {
             sourceResultRevisionId: revisionId,
             idempotencyKey,
           },
-          update: {
-            title,
-            placement,
-          },
+          update: { title, placement },
         });
 
-        // Add verification proof
         await tx.achievementProof.create({
           data: {
             id: generateUuid(),
@@ -372,58 +425,6 @@ export class ResultsService {
             proofType: 'RESULT_REVISION',
             description: `Official tournament result verified on EVOQ platform`,
             status: 'APPROVED',
-          },
-        });
-
-        // 2. Update Career Record
-        await tx.gamerCareerRecord.upsert({
-          where: {
-            gamerProfileId_tournamentId: {
-              gamerProfileId: gp.id,
-              tournamentId: tournament.id,
-            },
-          },
-          create: {
-            id: generateUuid(),
-            gamerProfileId: gp.id,
-            tournamentId: tournament.id,
-            teamId: reg.teamId,
-            gameId: tournament.gameId,
-            teamName: reg.team?.name || null,
-            finalPlacement: placement,
-            matchesPlayed: 1,
-            matchesWon: isWinner ? 1 : 0,
-            startDate: tournament.startDate,
-            endDate: tournament.endDate || new Date(),
-            verified: true,
-          },
-          update: {
-            finalPlacement: placement,
-            matchesWon: isWinner ? 1 : 0,
-          },
-        });
-
-        // 3. Update Gamer Statistics
-        await tx.gamerStatistic.upsert({
-          where: {
-            gamerProfileId_gameId: {
-              gamerProfileId: gp.id,
-              gameId: tournament.gameId,
-            },
-          },
-          create: {
-            id: generateUuid(),
-            gamerProfileId: gp.id,
-            gameId: tournament.gameId,
-            tournamentsPlayed: 1,
-            tournamentsWon: isWinner ? 1 : 0,
-            podiumFinishes: 1,
-            matchesPlayed: 1,
-            matchesWon: isWinner ? 1 : 0,
-          },
-          update: {
-            tournamentsWon: isWinner ? { increment: 1 } : undefined,
-            podiumFinishes: { increment: 1 },
           },
         });
       }
@@ -474,8 +475,8 @@ export class ResultsService {
           include: {
             registration: {
               include: {
-                team: { select: { id: true, name: true, slug: true, logoUrl: true } },
-                gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true } },
+                team: { select: { id: true, name: true, slug: true, logoUrl: true, tag: true } },
+                gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
               },
             },
           },
@@ -488,4 +489,3 @@ export class ResultsService {
 }
 
 export const resultsService = new ResultsService();
-

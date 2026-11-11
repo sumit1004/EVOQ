@@ -16,6 +16,18 @@ export class TournamentsController {
     }
   }
 
+  async getById(req, res, next) {
+    try {
+      const tournament = await tournamentsService.getTournamentById(req.params.id);
+      res.status(200).json({
+        data: tournament,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getBySlug(req, res, next) {
     try {
       const currentUserId = req.user?.id || null;
