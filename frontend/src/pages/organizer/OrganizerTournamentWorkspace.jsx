@@ -1,8 +1,24 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
+import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  Modal,
+  Input,
+  Select,
+  Textarea,
+  Checkbox,
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  StatusIndicator,
+  Avatar,
+  EmptyState,
+  SkeletonLoader,
+  Tabs,
+  DataTable,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function OrganizerTournamentWorkspace() {
   const { id } = useParams();
@@ -13,7 +29,7 @@ export default function OrganizerTournamentWorkspace() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState('registrations'); // registrations, matches, settings
+  const [activeTab, setActiveTab] = useState('registrations');
 
   // Credentials Modal State
   const [activeCredMatch, setActiveCredMatch] = useState(null);
@@ -39,6 +55,7 @@ export default function OrganizerTournamentWorkspace() {
   // Scheduling Modal State
   const [activeScheduleMatch, setActiveScheduleMatch] = useState(null);
   const [scheduleTime, setScheduleTime] = useState('');
+  const [savingSchedule, setSavingSchedule] = useState(false);
 
   // Bracket Generation
   const [generating, setGenerating] = useState(false);
@@ -98,31 +115,30 @@ export default function OrganizerTournamentWorkspace() {
 
   const handleGenerateMatches = async () => {
     if (!tournament) return;
-    if (!confirm('Generate bracket matches for all approved competitors?')) return;
     setGenerating(true);
     setError('');
     setSuccess('');
     try {
-      await evoqService.generateMatches(tournament.id);
-      setSuccess('Bracket fixtures generated successfully!');
+      const res = await evoqService.generateTournamentMatches(tournament.id);
+      setSuccess(`Generated ${res?.length || 'official'} bracket fixtures!`);
       const freshMatches = await evoqService.getMatches(tournament.id);
       setMatches(freshMatches || []);
-      setActiveTab('matches');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to generate matches.');
+      setError(err.response?.data?.error?.message || 'Failed to generate bracket fixtures.');
     } finally {
       setGenerating(false);
     }
   };
 
-  const openCredModal = (match) => {
-    setActiveCredMatch(match);
+  const handleOpenCredentials = (m) => {
+    setActiveCredMatch(m);
+    const existing = m.credentials || {};
     setCredForm({
-      lobbyName: match.credentials?.lobbyName || '',
-      password: '',
-      serverRegion: match.credentials?.serverRegion || '',
-      instructions: match.credentials?.instructions || '',
-      isReleased: match.credentials?.isReleased || false,
+      lobbyName: existing.lobbyName || `EVOQ-M${m.round || 1}-${m.id.slice(-4)}`,
+      password: existing.password || Math.random().toString(36).slice(-6).toUpperCase(),
+      serverRegion: existing.serverRegion || 'Default Server',
+      instructions: existing.customInstructions || '',
+      isReleased: existing.isReleased || false,
     });
   };
 
@@ -130,10 +146,15 @@ export default function OrganizerTournamentWorkspace() {
     e.preventDefault();
     if (!activeCredMatch) return;
     setSavingCred(true);
-    setError('');
     try {
-      await evoqService.setMatchCredentials(activeCredMatch.id, credForm);
-      setSuccess('Encrypted credentials saved and updated.');
+      await evoqService.updateMatchCredentials(activeCredMatch.id, {
+        lobbyName: credForm.lobbyName,
+        password: credForm.password,
+        serverRegion: credForm.serverRegion,
+        customInstructions: credForm.instructions,
+        isReleased: credForm.isReleased,
+      });
+      setSuccess('Match room credentials updated!');
       setActiveCredMatch(null);
       const freshMatches = await evoqService.getMatches(tournament.id);
       setMatches(freshMatches || []);
@@ -144,14 +165,12 @@ export default function OrganizerTournamentWorkspace() {
     }
   };
 
-  const openResultModal = (match) => {
-    setActiveResultMatch(match);
-    const p1 = match.participants?.[0];
-    const p2 = match.participants?.[1];
+  const handleOpenResult = (m) => {
+    setActiveResultMatch(m);
     setResultForm({
-      p1Score: p1?.score ?? 0,
-      p2Score: p2?.score ?? 0,
-      winnerParticipantId: p1?.isWinner ? p1.id : p2?.isWinner ? p2?.id : p1?.id || '',
+      p1Score: m.scoreA || 0,
+      p2Score: m.scoreB || 0,
+      winnerParticipantId: m.winnerParticipantId || '',
       notes: '',
     });
   };
@@ -160,585 +179,551 @@ export default function OrganizerTournamentWorkspace() {
     e.preventDefault();
     if (!activeResultMatch) return;
     setSavingResult(true);
-    setError('');
     try {
-      const p1 = activeResultMatch.participants?.[0];
-      const p2 = activeResultMatch.participants?.[1];
-
-      const participantResults = [];
-      if (p1) {
-        participantResults.push({
-          participantId: p1.id,
-          score: Number(resultForm.p1Score),
-          isWinner: resultForm.winnerParticipantId === p1.id,
-          rank: resultForm.winnerParticipantId === p1.id ? 1 : 2,
-        });
-      }
-      if (p2) {
-        participantResults.push({
-          participantId: p2.id,
-          score: Number(resultForm.p2Score),
-          isWinner: resultForm.winnerParticipantId === p2.id,
-          rank: resultForm.winnerParticipantId === p2.id ? 1 : 2,
-        });
-      }
-
-      const submitted = await evoqService.submitMatchResult(activeResultMatch.id, {
-        participantResults,
-        notes: resultForm.notes,
+      await evoqService.submitMatchResult(activeResultMatch.id, {
+        p1Score: Number(resultForm.p1Score),
+        p2Score: Number(resultForm.p2Score),
+        winnerParticipantId: resultForm.winnerParticipantId || undefined,
+        notes: resultForm.notes || undefined,
       });
-
-      if (submitted?.id) {
-        await evoqService.approveMatchResult(submitted.id);
-      }
-
-      setSuccess('Result approved! Bracket progressed and gamer achievements awarded.');
+      setSuccess('Match score and winner recorded!');
       setActiveResultMatch(null);
       const freshMatches = await evoqService.getMatches(tournament.id);
       setMatches(freshMatches || []);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to approve result.');
+      setError(err.response?.data?.error?.message || 'Failed to submit result.');
     } finally {
       setSavingResult(false);
     }
   };
 
+  const handleOpenSchedule = (m) => {
+    setActiveScheduleMatch(m);
+    setScheduleTime(m.scheduledAt ? new Date(m.scheduledAt).toISOString().slice(0, 16) : '');
+  };
+
   const handleSaveSchedule = async (e) => {
     e.preventDefault();
     if (!activeScheduleMatch) return;
+    setSavingSchedule(true);
     try {
       await evoqService.scheduleMatch(activeScheduleMatch.id, {
-        scheduledAt: new Date(scheduleTime).toISOString(),
+        scheduledAt: scheduleTime ? new Date(scheduleTime).toISOString() : undefined,
       });
-      setSuccess('Match scheduled.');
+      setSuccess('Match schedule confirmed!');
       setActiveScheduleMatch(null);
       const freshMatches = await evoqService.getMatches(tournament.id);
       setMatches(freshMatches || []);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to schedule match.');
+      setError(err.response?.data?.error?.message || 'Failed to update schedule.');
+    } finally {
+      setSavingSchedule(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="nebula-shell">
-        <OrganizerNavbar />
-        <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">—</div>
-          <p>Loading tournament workspace...</p>
-        </div>
-      </div>
+      <OrganizerLayout>
+        <SkeletonLoader type="card" count={3} height="180px" />
+      </OrganizerLayout>
     );
   }
 
-  if (error && !tournament) {
+  if (error || !tournament) {
     return (
-      <div className="nebula-shell">
-        <OrganizerNavbar />
-        <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">—</div>
-          <h2>Control Room Error</h2>
-          <p>{error}</p>
-          <Link to="/organizer/dashboard" className="nebula-btn nebula-btn-cyan">
-            Return to Operations Hub
-          </Link>
-        </div>
-      </div>
+      <OrganizerLayout>
+        <EmptyState
+          icon="tournament"
+          title="Tournament Workspace Not Found"
+          description={error || 'Could not load event control room.'}
+          action={
+            <Link to="/organizer/tournaments" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+              Back to Catalog
+            </Link>
+          }
+        />
+      </OrganizerLayout>
     );
   }
 
-  const approvedCount = registrations.filter((r) => r.status === 'APPROVED').length;
+  const workspaceTabs = [
+    { id: 'registrations', label: 'Registrations', count: registrations.length },
+    { id: 'competition', label: 'Competition & Brackets', count: matches.length },
+    { id: 'settings', label: 'Tournament Lifecycle' },
+  ];
 
   return (
-    <div className="nebula-shell">
-      <OrganizerNavbar />
-      <main className="nebula-container">
-        {/* Workspace Header */}
-        <div className="nebula-card" style={{ marginBottom: '1.75rem', borderLeft: '4px solid var(--nebula-cyan)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+    <OrganizerLayout
+      title={`Workspace: ${tournament.name || tournament.title}`}
+      actions={
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Link
+            to={`/tournaments/${tournament.slug || tournament.id}`}
+            target="_blank"
+            className="evoq-btn evoq-btn-secondary evoq-btn-sm"
+          >
+            <Icon name="external" size={13} />
+            <span>Public Arena</span>
+          </Link>
+        </div>
+      }
+    >
+      {/* ── Status Banner ── */}
+      <div
+        className="evoq-card"
+        style={{
+          marginBottom: '24px',
+          borderColor: 'rgba(34, 211, 238, 0.3)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
+            <Badge variant="cyan">{tournament.game?.name || 'Esports'}</Badge>
+            <StatusIndicator status={tournament.status} />
+            <Badge variant="neutral">{tournament.format?.replace(/_/g, ' ')}</Badge>
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 2px 0', color: 'var(--evoq-text-primary)' }}>
+            {tournament.name || tournament.title}
+          </h2>
+          <div style={{ fontSize: '0.8rem', color: 'var(--evoq-text-muted)' }}>
+            Slug: /{tournament.slug || tournament.id} • Slots: {registrations.length} / {tournament.maxParticipants || 16}
+          </div>
+        </div>
+
+        {/* Quick Lifecycle Controls */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {tournament.status === 'DRAFT' && (
+            <PrimaryButton
+              size="sm"
+              icon="check"
+              onClick={() => handleStatusChange('REGISTRATION_OPEN')}
+            >
+              Open Registrations
+            </PrimaryButton>
+          )}
+          {tournament.status === 'REGISTRATION_OPEN' && (
+            <PrimaryButton
+              size="sm"
+              icon="matches"
+              onClick={() => handleStatusChange('ONGOING')}
+            >
+              Start Competition (Live)
+            </PrimaryButton>
+          )}
+          {tournament.status === 'ONGOING' && (
+            <SecondaryButton
+              size="sm"
+              variant="secondary"
+              onClick={() => handleStatusChange('CONCLUDED')}
+            >
+              Conclude Event
+            </SecondaryButton>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="evoq-alert evoq-alert-success" role="alert">
+          <Icon name="check" size={16} />
+          <span>{success}</span>
+        </div>
+      )}
+
+      {/* ── Navigation Tabs ── */}
+      <Tabs tabs={workspaceTabs} activeTab={activeTab} onChange={setActiveTab} />
+
+      {/* ── TAB 1: REGISTRATIONS MANAGEMENT ── */}
+      {activeTab === 'registrations' && (
+        <div className="evoq-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                <span className="nebula-badge nebula-badge-cyan">{tournament.game?.name || 'Esports'}</span>
-                <span className="nebula-badge nebula-badge-neutral">{tournament.format?.replace(/_/g, ' ')}</span>
-                <span className="nebula-badge nebula-badge-lime">{tournament.status?.replace(/_/g, ' ')}</span>
-              </div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.25rem 0' }}>
-                {tournament.name || tournament.title}
-              </h1>
-              <div style={{ fontSize: '0.85rem', color: 'var(--nebula-text-muted)' }}>
-                Organizer Control Room • Tournament ID: <code>{tournament.id}</code>
-              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+                Competitor Entries ({registrations.length})
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', margin: '2px 0 0 0' }}>
+                Review, approve, or reject rosters before seeding brackets.
+              </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Link
-                to={`/tournaments/${tournament.slug}`}
-                className="nebula-btn nebula-btn-ghost nebula-btn-sm"
-                target="_blank"
+            {registrations.filter((r) => r.status === 'APPROVED').length >= 2 && matches.length === 0 && (
+              <PrimaryButton
+                size="sm"
+                icon="matches"
+                disabled={generating}
+                loading={generating}
+                onClick={handleGenerateMatches}
               >
-                View Public Page ↗
-              </Link>
-            </div>
-          </div>
-
-          {/* Lifecycle State Transitions Bar */}
-          <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--nebula-border)' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--nebula-text-muted)', marginBottom: '0.5rem' }}>
-              State Machine Transitions
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {tournament.status === 'DRAFT' && (
-                <button onClick={() => handleStatusChange('ANNOUNCED')} className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                  Announce Event
-                </button>
-              )}
-              {['DRAFT', 'ANNOUNCED'].includes(tournament.status) && (
-                <button onClick={() => handleStatusChange('REGISTRATION_OPEN')} className="nebula-btn nebula-btn-lime nebula-btn-sm">
-                  Open Registrations
-                </button>
-              )}
-              {tournament.status === 'REGISTRATION_OPEN' && (
-                <button onClick={() => handleStatusChange('REGISTRATION_CLOSED')} className="nebula-btn nebula-btn-secondary nebula-btn-sm">
-                  Close Registrations
-                </button>
-              )}
-              {['REGISTRATION_CLOSED', 'REGISTRATION_OPEN'].includes(tournament.status) && (
-                <button onClick={() => handleStatusChange('ONGOING')} className="nebula-btn nebula-btn-cyan nebula-btn-sm">
-                  Start Tournament (Live)
-                </button>
-              )}
-              {tournament.status === 'ONGOING' && (
-                <button onClick={() => handleStatusChange('CONCLUDED')} className="nebula-btn nebula-btn-lime nebula-btn-sm">
-                  Conclude &amp; Award Trophies
-                </button>
-              )}
-              {tournament.status !== 'CANCELLED' && tournament.status !== 'CONCLUDED' && (
-                <button
-                  onClick={() => { if (confirm('Cancel tournament?')) handleStatusChange('CANCELLED'); }}
-                  className="nebula-btn nebula-btn-coral nebula-btn-sm"
-                >
-                  Cancel Event
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-        {success && <div className="nebula-alert nebula-alert-success">{success}</div>}
-
-        {/* Tab Controls */}
-        <div className="nebula-tabs">
-          <button
-            className={`nebula-tab-btn nebula-tab-btn-ops ${activeTab === 'registrations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('registrations')}
-          >
-            Registrations ({registrations.length})
-          </button>
-          <button
-            className={`nebula-tab-btn nebula-tab-btn-ops ${activeTab === 'matches' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matches')}
-          >
-            Matches &amp; Bracket Operations ({matches.length})
-          </button>
-        </div>
-
-        {/* Tab 1: Registrations Management */}
-        {activeTab === 'registrations' && (
-          <div className="nebula-card">
-            <div className="nebula-card-header">
-              <div>
-                <h2 className="nebula-card-title">Participant Registrations</h2>
-                <div style={{ fontSize: '0.85rem', color: 'var(--nebula-text-muted)' }}>
-                  {approvedCount} / {tournament.maxParticipants} approved competitors
-                </div>
-              </div>
-
-              {approvedCount >= 2 && matches.length === 0 && (
-                <button
-                  onClick={handleGenerateMatches}
-                  className="nebula-btn nebula-btn-cyan"
-                  disabled={generating}
-                >
-                  {generating ? 'Generating...' : 'Generate Bracket from Approved'}
-                </button>
-              )}
-            </div>
-
-            {registrations.length === 0 ? (
-              <div className="nebula-empty-state">
-                <p>No competitor registrations submitted yet.</p>
-              </div>
-            ) : (
-              <div className="nebula-table-wrapper">
-                <table className="nebula-table">
-                  <thead>
-                    <tr>
-                      <th>Competitor</th>
-                      <th>Registered By</th>
-                      <th>Roster Members</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registrations.map((reg) => (
-                      <tr key={reg.id}>
-                        <td><strong>{reg.team?.name || reg.gamerProfile?.inGameName || 'Solo Competitor'}</strong></td>
-                        <td>{reg.user?.email || reg.user?.username}</td>
-                        <td>
-                          {reg.rosterMembers?.length > 0
-                            ? reg.rosterMembers.map((m) => m.gamerProfile?.inGameName || m.user?.username).join(', ')
-                            : '—'}
-                        </td>
-                        <td>
-                          <span
-                            className={`nebula-badge ${
-                              reg.status === 'APPROVED'
-                                ? 'nebula-badge-lime'
-                                : reg.status === 'WAITLISTED'
-                                ? 'nebula-badge-cyan'
-                                : reg.status === 'REJECTED'
-                                ? 'nebula-badge-coral'
-                                : 'nebula-badge-neutral'
-                            }`}
-                          >
-                            {reg.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.35rem' }}>
-                            {reg.status !== 'APPROVED' && (
-                              <button
-                                onClick={() => handleUpdateRegStatus(reg.id, 'APPROVED')}
-                                className="nebula-btn nebula-btn-lime nebula-btn-sm"
-                              >
-                                Approve
-                              </button>
-                            )}
-                            {reg.status !== 'WAITLISTED' && (
-                              <button
-                                onClick={() => handleUpdateRegStatus(reg.id, 'WAITLISTED')}
-                                className="nebula-btn nebula-btn-secondary nebula-btn-sm"
-                              >
-                                Waitlist
-                              </button>
-                            )}
-                            {reg.status !== 'REJECTED' && (
-                              <button
-                                onClick={() => handleUpdateRegStatus(reg.id, 'REJECTED')}
-                                className="nebula-btn nebula-btn-coral nebula-btn-sm"
-                              >
-                                Reject
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                {generating ? 'Seeding...' : 'Generate Bracket Matches'}
+              </PrimaryButton>
             )}
           </div>
-        )}
 
-        {/* Tab 2: Matches & Bracket Operations */}
-        {activeTab === 'matches' && (
-          <div>
-            <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="nebula-card-header">
-                <div>
-                  <h2 className="nebula-card-title">Match Operations &amp; Encrypted Lobbies</h2>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--nebula-text-muted)' }}>
-                    Schedule fixtures, set AES-256 encrypted room passwords, and record authoritative results.
-                  </div>
-                </div>
-
-                {matches.length === 0 && (
-                  <button
-                    onClick={handleGenerateMatches}
-                    className="nebula-btn nebula-btn-cyan"
-                    disabled={generating || approvedCount < 2}
-                  >
-                    {generating ? 'Generating...' : 'Generate Fixtures'}
-                  </button>
-                )}
-              </div>
-
-              {matches.length === 0 ? (
-                <div className="nebula-empty-state">
-                  <div className="nebula-empty-icon">—</div>
-                  <p>Approve at least 2 competitors in the Registrations tab, then generate tournament matches.</p>
-                </div>
-              ) : (
-                <div className="nebula-grid-cards">
-                  {matches.map((m) => {
-                    const p1 = m.participants?.[0];
-                    const p2 = m.participants?.[1];
-                    const isCompleted = m.status === 'COMPLETED';
-
-                    return (
-                      <div key={m.id} className="nebula-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
-                            Round {m.round?.sequence || 1} • Match #{m.matchNumber}
-                          </span>
-                          <span className={`nebula-badge ${isCompleted ? 'nebula-badge-lime' : 'nebula-badge-neutral'}`}>
-                            {m.status}
-                          </span>
-                        </div>
-
-                        <div className={`nebula-match-row ${p1?.isWinner ? 'winner' : ''}`} style={{ marginBottom: '0.4rem' }}>
-                          <span>{p1?.registration?.team?.name || p1?.registration?.gamerProfile?.inGameName || 'TBD'}</span>
-                          <span className="nebula-match-score">{p1?.score ?? '-'}</span>
-                        </div>
-
-                        <div className={`nebula-match-row ${p2?.isWinner ? 'winner' : ''}`} style={{ marginBottom: '1rem' }}>
-                          <span>{p2?.registration?.team?.name || p2?.registration?.gamerProfile?.inGameName || 'TBD'}</span>
-                          <span className="nebula-match-score">{p2?.score ?? '-'}</span>
-                        </div>
-
-                        {/* Match controls */}
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => {
-                              setActiveScheduleMatch(m);
-                              setScheduleTime(m.scheduledAt ? m.scheduledAt.slice(0, 16) : '');
-                            }}
-                            className="nebula-btn nebula-btn-secondary nebula-btn-sm"
-                          >
-                            Schedule
-                          </button>
-                          <button
-                            onClick={() => openCredModal(m)}
-                            className="nebula-btn nebula-btn-secondary nebula-btn-sm"
-                          >
-                            Room Credentials {m.credentials?.isReleased ? '' : ''}
-                          </button>
-                          {!isCompleted && p1 && p2 && (
-                            <button
-                              onClick={() => openResultModal(m)}
-                              className="nebula-btn nebula-btn-cyan nebula-btn-sm"
-                            >
-                              Enter Result
-                            </button>
-                          )}
-                        </div>
+          {registrations.length === 0 ? (
+            <EmptyState
+              icon="teams"
+              title="No Registrations Yet"
+              description="Open registration to allow competitive squads and gamers to enter."
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {registrations.map((reg) => (
+                <div
+                  key={reg.id}
+                  style={{
+                    padding: '14px 18px',
+                    backgroundColor: 'var(--evoq-surface-elevated)',
+                    borderRadius: 'var(--evoq-radius-sm)',
+                    border: '1px solid var(--evoq-border)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Avatar
+                      src={reg.team?.logoUrl || reg.user?.avatarUrl}
+                      name={reg.team?.name || reg.user?.username}
+                      size="md"
+                    />
+                    <div>
+                      <strong style={{ fontSize: '0.98rem', color: 'var(--evoq-text-primary)' }}>
+                        {reg.team?.name || reg.user?.username}
+                      </strong>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)' }}>
+                        Registered: {new Date(reg.registeredAt || reg.createdAt).toLocaleDateString()}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Credentials Modal */}
-        {activeCredMatch && (
-          <div className="nebula-modal-overlay" onClick={() => setActiveCredMatch(null)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  Match Lobby Credentials (Match #{activeCredMatch.matchNumber})
-                </h2>
-                <button className="nebula-modal-close" onClick={() => setActiveCredMatch(null)}>×</button>
-              </div>
-
-              <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                Passwords are encrypted at rest with AES-256-GCM. Released credentials appear exclusively to approved match participants.
-              </p>
-
-              <form onSubmit={handleSaveCredentials}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Lobby / Room Name *</label>
-                  <input
-                    type="text"
-                    value={credForm.lobbyName}
-                    onChange={(e) => setCredForm({ ...credForm, lobbyName: e.target.value })}
-                    required
-                    placeholder="e.g. EVOQ-ROOM-01"
-                    className="nebula-input"
-                  />
-                </div>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Lobby Password *</label>
-                  <input
-                    type="text"
-                    value={credForm.password}
-                    onChange={(e) => setCredForm({ ...credForm, password: e.target.value })}
-                    required
-                    placeholder="Enter room password to encrypt"
-                    className="nebula-input"
-                  />
-                </div>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Server Region</label>
-                  <input
-                    type="text"
-                    value={credForm.serverRegion}
-                    onChange={(e) => setCredForm({ ...credForm, serverRegion: e.target.value })}
-                    placeholder="e.g. US-East, Frankfurt"
-                    className="nebula-input"
-                  />
-                </div>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Player Instructions</label>
-                  <textarea
-                    value={credForm.instructions}
-                    onChange={(e) => setCredForm({ ...credForm, instructions: e.target.value })}
-                    rows="2"
-                    placeholder="Join 10 mins prior to start. Check-in on Discord..."
-                    className="nebula-textarea"
-                  />
-                </div>
-                <div className="nebula-form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <input
-                    type="checkbox"
-                    id="relToggle"
-                    checked={credForm.isReleased}
-                    onChange={(e) => setCredForm({ ...credForm, isReleased: e.target.checked })}
-                  />
-                  <label htmlFor="relToggle" style={{ cursor: 'pointer', margin: 0, fontSize: '0.9rem', color: 'var(--nebula-cyan)' }}>
-                    Release credentials to approved competitors now
-                  </label>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setActiveCredMatch(null)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={savingCred}>
-                    {savingCred ? 'Encrypting...' : 'Save & Encrypt'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Result Authorization Modal */}
-        {activeResultMatch && (
-          <div className="nebula-modal-overlay" onClick={() => setActiveResultMatch(null)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  Authorize Match Result (Match #{activeResultMatch.matchNumber})
-                </h2>
-                <button className="nebula-modal-close" onClick={() => setActiveResultMatch(null)}>×</button>
-              </div>
-
-              <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                Authorizing this match result will advance the winner in the tournament bracket and generate immutable Gamer Profile achievements.
-              </p>
-
-              <form onSubmit={handleSaveResult}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">
-                      {activeResultMatch.participants?.[0]?.registration?.team?.name || 'Competitor 1'} Score
-                    </label>
-                    <input
-                      type="number"
-                      value={resultForm.p1Score}
-                      onChange={(e) => setResultForm({ ...resultForm, p1Score: e.target.value })}
-                      required
-                      min="0"
-                      className="nebula-input"
-                    />
+                    </div>
                   </div>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">
-                      {activeResultMatch.participants?.[1]?.registration?.team?.name || 'Competitor 2'} Score
-                    </label>
-                    <input
-                      type="number"
-                      value={resultForm.p2Score}
-                      onChange={(e) => setResultForm({ ...resultForm, p2Score: e.target.value })}
-                      required
-                      min="0"
-                      className="nebula-input"
-                    />
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <Badge variant={reg.status === 'APPROVED' ? 'lime' : reg.status === 'REJECTED' ? 'danger' : 'warning'}>
+                      {reg.status}
+                    </Badge>
+
+                    {reg.status !== 'APPROVED' && (
+                      <PrimaryButton
+                        size="sm"
+                        icon="check"
+                        onClick={() => handleUpdateRegStatus(reg.id, 'APPROVED')}
+                      >
+                        Approve
+                      </PrimaryButton>
+                    )}
+                    {reg.status !== 'REJECTED' && (
+                      <SecondaryButton
+                        size="sm"
+                        variant="danger"
+                        icon="x"
+                        onClick={() => handleUpdateRegStatus(reg.id, 'REJECTED')}
+                      >
+                        Reject
+                      </SecondaryButton>
+                    )}
                   </div>
                 </div>
-
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Designated Winner *</label>
-                  <select
-                    value={resultForm.winnerParticipantId}
-                    onChange={(e) => setResultForm({ ...resultForm, winnerParticipantId: e.target.value })}
-                    required
-                    className="nebula-select"
-                  >
-                    <option value="">Select Match Winner</option>
-                    {activeResultMatch.participants?.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.registration?.team?.name || p.registration?.gamerProfile?.inGameName || 'Competitor'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Referee Verification Notes</label>
-                  <input
-                    type="text"
-                    value={resultForm.notes}
-                    onChange={(e) => setResultForm({ ...resultForm, notes: e.target.value })}
-                    placeholder="e.g. Official referee verification"
-                    className="nebula-input"
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setActiveResultMatch(null)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={savingResult}>
-                    {savingResult ? 'Authorizing...' : 'Authorize & Advance Winner'}
-                  </button>
-                </div>
-              </form>
+              ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* Schedule Modal */}
-        {activeScheduleMatch && (
-          <div className="nebula-modal-overlay" onClick={() => setActiveScheduleMatch(null)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  Schedule Match #{activeScheduleMatch.matchNumber}
-                </h2>
-                <button className="nebula-modal-close" onClick={() => setActiveScheduleMatch(null)}>×</button>
+      {/* ── TAB 2: COMPETITION & BRACKETS ── */}
+      {activeTab === 'competition' && (
+        <div className="evoq-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+                Fixtures &amp; Match Operations ({matches.length})
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', margin: '2px 0 0 0' }}>
+                Schedule match times, release room credentials, and confirm referee scores.
+              </p>
+            </div>
+
+            <PrimaryButton
+              size="sm"
+              icon="matches"
+              disabled={generating}
+              loading={generating}
+              onClick={handleGenerateMatches}
+            >
+              {matches.length > 0 ? 'Regenerate Bracket' : 'Generate Matches'}
+            </PrimaryButton>
+          </div>
+
+          {matches.length === 0 ? (
+            <EmptyState
+              icon="matches"
+              title="No Fixtures Generated"
+              description="Approve at least two competitor registrations, then generate the bracket."
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {matches.map((m) => (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: '16px 20px',
+                    backgroundColor: 'var(--evoq-surface-elevated)',
+                    borderRadius: 'var(--evoq-radius-sm)',
+                    border: '1px solid var(--evoq-border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="evoq-mono-label">{m.roundName || `ROUND ${m.round || 1}`}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <StatusIndicator status={m.status} />
+                      {m.credentials?.isReleased && (
+                        <Badge variant="lime" size="sm">LOBBY RELEASED</Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', backgroundColor: 'var(--evoq-bg)', padding: '12px 16px', borderRadius: 'var(--evoq-radius-sm)' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', flex: 1 }}>
+                      {m.teamA?.name || 'Competitor A'}
+                    </span>
+                    <div style={{ fontFamily: 'var(--evoq-font-display)', fontSize: '1.4rem', color: 'var(--evoq-lime)' }}>
+                      {m.scoreA ?? '-'} : {m.scoreB ?? '-'}
+                    </div>
+                    <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', flex: 1, textAlign: 'right' }}>
+                      {m.teamB?.name || 'Competitor B'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <SecondaryButton
+                      size="sm"
+                      icon="calendar"
+                      onClick={() => handleOpenSchedule(m)}
+                    >
+                      Schedule
+                    </SecondaryButton>
+                    <SecondaryButton
+                      size="sm"
+                      icon="shield"
+                      onClick={() => handleOpenCredentials(m)}
+                    >
+                      Room Credentials
+                    </SecondaryButton>
+                    <PrimaryButton
+                      size="sm"
+                      icon="check"
+                      onClick={() => handleOpenResult(m)}
+                    >
+                      Submit Result
+                    </PrimaryButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 3: LIFECYCLE SETTINGS ── */}
+      {activeTab === 'settings' && (
+        <div className="evoq-card">
+          <SectionHeader
+            title="Tournament Lifecycle & Operations"
+            subtitle="Authoritative state transitions for this event"
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '480px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)' }}>
+              <div>
+                <strong>Registration Open</strong>
+                <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)' }}>Allow teams and players to enter.</div>
               </div>
+              <PrimaryButton
+                size="sm"
+                disabled={tournament.status === 'REGISTRATION_OPEN'}
+                onClick={() => handleStatusChange('REGISTRATION_OPEN')}
+              >
+                Set Open
+              </PrimaryButton>
+            </div>
 
-              <form onSubmit={handleSaveSchedule}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Scheduled Fixture Time *</label>
-                  <input
-                    type="datetime-local"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    required
-                    className="nebula-input"
-                  />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setActiveScheduleMatch(null)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="nebula-btn nebula-btn-cyan">
-                    Save Schedule
-                  </button>
-                </div>
-              </form>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)' }}>
+              <div>
+                <strong>Live Competition (Ongoing)</strong>
+                <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)' }}>Close registration and orchestrate matches.</div>
+              </div>
+              <PrimaryButton
+                size="sm"
+                disabled={tournament.status === 'ONGOING'}
+                onClick={() => handleStatusChange('ONGOING')}
+              >
+                Set Live
+              </PrimaryButton>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)' }}>
+              <div>
+                <strong>Conclude Event</strong>
+                <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)' }}>Finalize standings and archive results.</div>
+              </div>
+              <SecondaryButton
+                size="sm"
+                disabled={tournament.status === 'CONCLUDED'}
+                onClick={() => handleStatusChange('CONCLUDED')}
+              >
+                Conclude
+              </SecondaryButton>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      )}
+
+      {/* ── Credentials Modal ── */}
+      <Modal
+        isOpen={!!activeCredMatch}
+        onClose={() => setActiveCredMatch(null)}
+        title="Match Room Credentials"
+        subtitle={`Encrypted lobby credentials for Round: ${activeCredMatch?.roundName || activeCredMatch?.round || '1'}`}
+        maxWidth="480px"
+      >
+        <form onSubmit={handleSaveCredentials} noValidate>
+          <Input
+            label="Lobby / Match Name"
+            id="lobbyName"
+            value={credForm.lobbyName}
+            onChange={(e) => setCredForm((p) => ({ ...p, lobbyName: e.target.value }))}
+            required
+          />
+
+          <Input
+            label="Lobby Password / PIN"
+            id="password"
+            value={credForm.password}
+            onChange={(e) => setCredForm((p) => ({ ...p, password: e.target.value }))}
+            required
+          />
+
+          <Input
+            label="Server Region / Cluster"
+            id="serverRegion"
+            value={credForm.serverRegion}
+            onChange={(e) => setCredForm((p) => ({ ...p, serverRegion: e.target.value }))}
+          />
+
+          <Textarea
+            label="Referee Instructions"
+            id="instructions"
+            value={credForm.instructions}
+            onChange={(e) => setCredForm((p) => ({ ...p, instructions: e.target.value }))}
+            rows={3}
+            placeholder="e.g. Join Discord channel #referee-1 for map pick/ban."
+          />
+
+          <Checkbox
+            label="Release Credentials to Registered Teams"
+            description="When checked, players on rosters for this match will see the room code."
+            checked={credForm.isReleased}
+            onChange={(e) => setCredForm((p) => ({ ...p, isReleased: e.target.checked }))}
+          />
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setActiveCredMatch(null)} disabled={savingCred}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={savingCred} loading={savingCred}>
+              {savingCred ? 'Saving...' : 'Save Credentials'}
+            </PrimaryButton>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Results Submission Modal ── */}
+      <Modal
+        isOpen={!!activeResultMatch}
+        onClose={() => setActiveResultMatch(null)}
+        title="Authoritative Match Score"
+        subtitle="Submit confirmed referee scoreline and match winner"
+        maxWidth="460px"
+      >
+        <form onSubmit={handleSaveResult} noValidate>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <Input
+              label={activeResultMatch?.teamA?.name || 'Competitor A'}
+              type="number"
+              min="0"
+              value={resultForm.p1Score}
+              onChange={(e) => setResultForm((p) => ({ ...p, p1Score: e.target.value }))}
+            />
+            <Input
+              label={activeResultMatch?.teamB?.name || 'Competitor B'}
+              type="number"
+              min="0"
+              value={resultForm.p2Score}
+              onChange={(e) => setResultForm((p) => ({ ...p, p2Score: e.target.value }))}
+            />
+          </div>
+
+          <Textarea
+            label="Referee Verification Notes (Optional)"
+            id="resultNotes"
+            value={resultForm.notes}
+            onChange={(e) => setResultForm((p) => ({ ...p, notes: e.target.value }))}
+            rows={2}
+            placeholder="e.g. Map 1: Haven (13-9). Clean match verified."
+          />
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setActiveResultMatch(null)} disabled={savingResult}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={savingResult} loading={savingResult}>
+              {savingResult ? 'Submitting...' : 'Confirm Authoritative Result'}
+            </PrimaryButton>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Scheduling Modal ── */}
+      <Modal
+        isOpen={!!activeScheduleMatch}
+        onClose={() => setActiveScheduleMatch(null)}
+        title="Schedule Match Time"
+        subtitle="Set official fixture time for competitors and broadcast"
+        maxWidth="420px"
+      >
+        <form onSubmit={handleSaveSchedule} noValidate>
+          <Input
+            label="Match Date & Time"
+            type="datetime-local"
+            value={scheduleTime}
+            onChange={(e) => setScheduleTime(e.target.value)}
+            required
+          />
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setActiveScheduleMatch(null)} disabled={savingSchedule}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={savingSchedule} loading={savingSchedule}>
+              {savingSchedule ? 'Saving...' : 'Set Schedule'}
+            </PrimaryButton>
+          </div>
+        </form>
+      </Modal>
+    </OrganizerLayout>
   );
 }
-

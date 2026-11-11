@@ -1,8 +1,18 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
+import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  EmptyState,
+  SkeletonLoader,
+  PageHeader,
+  SectionHeader,
+  DataTable,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function OrganizerPortfolio() {
   const [profile, setProfile] = useState(null);
@@ -17,7 +27,7 @@ export default function OrganizerPortfolio() {
         const prof = await evoqService.getMyOrganizerProfile();
         setProfile(prof);
       } catch (err) {
-        setError('Failed to load organizer portfolio.');
+        setError('Failed to load organizer verified event portfolio.');
       } finally {
         setLoading(false);
       }
@@ -27,72 +37,110 @@ export default function OrganizerPortfolio() {
 
   const portfolio = profile?.portfolioRecords || [];
 
-  return (
-    <div className="nebula-shell">
-      <OrganizerNavbar />
-      <main className="nebula-container">
-        <div style={{ marginBottom: '2rem' }}>
-          <span className="nebula-badge nebula-badge-cyan" style={{ marginBottom: '0.4rem' }}>
-            OPERATIONS CREDIBILITY
-          </span>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Verified Event Portfolio</h1>
-          <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Permanent operational record of concluded tournaments, verified competitor counts, and completed fixtures.
-          </p>
+  const portfolioColumns = [
+    {
+      header: 'Tournament Event',
+      accessor: (item) => (
+        <div>
+          <div style={{ fontWeight: 800, color: 'var(--evoq-text-primary)', fontSize: '0.95rem' }}>
+            {item.tournament?.name || item.tournament?.title || item.tournamentTitle || 'Tournament'}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--evoq-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            ID: {item.tournamentId || item.id}
+          </div>
         </div>
+      ),
+    },
+    {
+      header: 'Game Title',
+      accessor: (item) => <Badge variant="neutral">{item.gameName || 'Esports'}</Badge>,
+    },
+    {
+      header: 'Competitors Hosted',
+      align: 'center',
+      accessor: (item) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--evoq-accent)' }}>
+          {item.participantCount || 0}
+        </span>
+      ),
+    },
+    {
+      header: 'Completed Matches',
+      align: 'center',
+      accessor: (item) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+          {item.matchCount || 0}
+        </span>
+      ),
+    },
+    {
+      header: 'Concluded Date',
+      accessor: (item) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--evoq-text-muted)' }}>
+          {new Date(item.completedAt || item.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: 'Verification',
+      align: 'right',
+      accessor: () => <Badge variant="brand">VERIFIED CONCLUDED</Badge>,
+    },
+  ];
 
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
+  return (
+    <OrganizerLayout>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <PageHeader
+          badge="OPERATIONAL CREDENTIALS"
+          title="VERIFIED EVENT PORTFOLIO"
+          subtitle="Permanent operational record of concluded tournaments, verified competitor counts, and completed fixtures."
+          actions={
+            <PrimaryButton
+              as={Link}
+              to="/organizer/tournaments"
+              variant="ops"
+              icon="tournament"
+            >
+              Operations Center
+            </PrimaryButton>
+          }
+        />
 
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading verified event records...</p>
-          </div>
-        ) : portfolio.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <h3>No Concluded Tournaments in Portfolio Yet</h3>
-            <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
-              When you conclude a live tournament and finalize bracket results, the event is permanently verified into your organizer credentials.
-            </p>
-            <Link to="/organizer/tournaments" className="nebula-btn nebula-btn-cyan">
-              View Tournaments
-            </Link>
-          </div>
-        ) : (
-          <div className="nebula-table-wrapper">
-            <table className="nebula-table">
-              <thead>
-                <tr>
-                  <th>Tournament Event</th>
-                  <th>Game</th>
-                  <th>Competitors Hosted</th>
-                  <th>Completed Matches</th>
-                  <th>Concluded Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolio.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <strong>{item.tournament?.name || item.tournament?.title || item.tournamentTitle || 'Tournament'}</strong>
-                    </td>
-                    <td><span className="nebula-badge nebula-badge-violet">{item.gameName || 'Esports'}</span></td>
-                    <td>{item.participantCount}</td>
-                    <td>{item.matchCount}</td>
-                    <td>{new Date(item.completedAt || item.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <span className="nebula-badge nebula-badge-lime">VERIFIED EVENT</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {error && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="alert" size={18} />
+            <span>{error}</span>
           </div>
         )}
-      </main>
-    </div>
+
+        {loading ? (
+          <SkeletonLoader height={280} />
+        ) : portfolio.length === 0 ? (
+          <EmptyState
+            icon="trophy"
+            title="No Concluded Tournaments in Portfolio Yet"
+            description="When you conclude a live tournament and finalize bracket results, the event is permanently verified into your organizer credentials."
+            actionLabel="View Active Tournaments"
+            actionHref="/organizer/tournaments"
+          />
+        ) : (
+          <div className="evoq-panel">
+            <SectionHeader
+              title="Official Event Registry"
+              badge={`${portfolio.length} CONCLUDED EVENTS`}
+              subtitle="Audited records backing organizer credibility score"
+            />
+            <div style={{ marginTop: '1rem' }}>
+              <DataTable
+                columns={portfolioColumns}
+                data={portfolio}
+                keyField="id"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </OrganizerLayout>
   );
 }
-

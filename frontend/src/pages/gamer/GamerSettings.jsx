@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GamerNavbar from '../../components/GamerNavbar.jsx';
+import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
-import '../../styles/nebula.css';
+import {
+  Badge,
+  PrimaryButton,
+  SecondaryButton,
+  SectionHeader,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerSettings() {
   const { user, logoutAll } = useAuth();
@@ -12,7 +18,7 @@ export default function GamerSettings() {
   const [message, setMessage] = useState('');
 
   const handleRevokeAll = async () => {
-    if (!confirm('Revoke all active sessions on other devices? You will be signed out.')) return;
+    if (!window.confirm('Revoke all active sessions on other devices? You will be signed out.')) return;
     try {
       setRevoking(true);
       await logoutAll();
@@ -25,67 +31,77 @@ export default function GamerSettings() {
   };
 
   return (
-    <div className="nebula-shell">
-      <GamerNavbar />
-      <main className="nebula-container" style={{ maxWidth: '840px' }}>
-        <div style={{ marginBottom: '2rem' }}>
-          <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.4rem' }}>
-            ACCOUNT &amp; SECURITY
-          </span>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Gamer Account Settings</h1>
-        </div>
+    <GamerLayout title="Account Settings">
+      <div style={{ maxWidth: '840px', margin: '0 auto' }}>
+        {message && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="x" size={16} />
+            <span>{message}</span>
+          </div>
+        )}
 
-        {message && <div className="nebula-alert nebula-alert-danger">{message}</div>}
+        {/* ── Authenticated Identity Details ── */}
+        <div className="evoq-card" style={{ marginBottom: '24px' }}>
+          <SectionHeader
+            title="Authenticated Identity Details"
+            subtitle="Credentials and security passport registered on the EVOQ network"
+          />
 
-        <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
-          <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-            Authenticated Identity Details
-          </h2>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '18px',
+            }}
+          >
             <div>
-              <span className="nebula-metric-label">User ID (UUID v4)</span>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', wordBreak: 'break-all', margin: '0.25rem 0 0 0' }}>
-                {user?.id || user?.userId}
+              <span className="evoq-mono-label">COMPETITOR UUID</span>
+              <p style={{ fontFamily: 'var(--evoq-font-mono)', fontSize: '0.82rem', wordBreak: 'break-all', margin: '6px 0 0 0', color: 'var(--evoq-text-secondary)' }}>
+                {user?.id || user?.userId || 'N/A'}
               </p>
             </div>
             <div>
-              <span className="nebula-metric-label">Gamer Username</span>
-              <p style={{ fontWeight: 700, margin: '0.25rem 0 0 0' }}>{user?.username}</p>
+              <span className="evoq-mono-label">GAMER USERNAME</span>
+              <p style={{ fontWeight: 700, margin: '6px 0 0 0', color: 'var(--evoq-text-primary)' }}>
+                {user?.username}
+              </p>
             </div>
             <div>
-              <span className="nebula-metric-label">Registered Email</span>
-              <p style={{ margin: '0.25rem 0 0 0' }}>{user?.email}</p>
+              <span className="evoq-mono-label">REGISTERED EMAIL</span>
+              <p style={{ margin: '6px 0 0 0', color: 'var(--evoq-text-secondary)' }}>
+                {user?.email}
+              </p>
             </div>
             <div>
-              <span className="nebula-metric-label">Verification Status</span>
-              <p style={{ margin: '0.25rem 0 0 0' }}>
-                <span className={`nebula-badge ${user?.emailVerified ? 'nebula-badge-lime' : 'nebula-badge-coral'}`}>
+              <span className="evoq-mono-label">VERIFICATION STATUS</span>
+              <div style={{ marginTop: '6px' }}>
+                <Badge variant={user?.emailVerified ? 'lime' : 'warning'}>
                   {user?.emailVerified ? 'EMAIL VERIFIED' : 'PENDING ACTIVATION'}
-                </span>
-              </p>
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="nebula-card">
-          <h2 className="nebula-card-title" style={{ color: 'var(--nebula-coral)', marginBottom: '0.75rem' }}>
-             Session Security &amp; Device Revocation
-          </h2>
-          <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: '1.25rem' }}>
-            Your session token is cryptographically hashed with SHA-256 and stored in MySQL, delivered exclusively via HttpOnly, SameSite cookies. Revoking all sessions forces re-authentication across all mobile and desktop devices.
+        {/* ── Session Security & Device Revocation ── */}
+        <div className="evoq-card" style={{ borderColor: 'rgba(255, 77, 77, 0.3)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--evoq-danger)' }}>
+            Session Security &amp; Device Revocation
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', lineHeight: 1.5, margin: '0 0 18px 0' }}>
+            Session tokens are cryptographically secured with SHA-256 and stored in MySQL, delivered exclusively via HttpOnly, SameSite cookies. Revoking all sessions terminates authenticated tokens across all mobile and desktop devices.
           </p>
 
-          <button
+          <SecondaryButton
+            variant="danger"
             onClick={handleRevokeAll}
-            className="nebula-btn nebula-btn-coral"
             disabled={revoking}
+            loading={revoking}
           >
             {revoking ? 'Revoking...' : 'Revoke All Active Sessions'}
-          </button>
+          </SecondaryButton>
         </div>
-      </main>
-    </div>
+      </div>
+    </GamerLayout>
   );
 }
-

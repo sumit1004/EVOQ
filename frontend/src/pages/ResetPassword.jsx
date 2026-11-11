@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { authService } from '../services/auth.service.js';
-import FormInput from '../components/FormInput.jsx';
-import '../styles/auth.css';
+import AuthLayout from '../layouts/AuthLayout.jsx';
+import { Input } from '../components/ui/FormControls.jsx';
+import { PrimaryButton } from '../components/ui/Buttons.jsx';
+import { Icon } from '../components/Icons.jsx';
 
 export default function ResetPassword() {
   const { token: paramToken } = useParams();
@@ -38,93 +40,124 @@ export default function ResetPassword() {
       await authService.resetPassword(token, newPassword);
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'Password reset failed. The token may be expired or invalid.');
+      setError(
+        err.message ||
+        'Password reset failed. The token may be expired or already used.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            EVOQ
-          </Link>
-          <h2 style={{ fontSize: '1.25rem', marginTop: '0.25rem' }}>Set New Password</h2>
-          <p className="auth-subtitle">Create a secure new password for your account</p>
-        </div>
+    <AuthLayout
+      badge="PASSWORD RESET"
+      badgeType="lime"
+      title="Create New Password"
+      subtitle="Enter a new secure password meeting EVOQ security policy."
+      quote="RESTORE ACCESS. RE-ENTER THE COMPETITION."
+      quoteAuthor="EVOQ PRO NETWORK"
+      heroImage="/images/two2.png"
+    >
+      {success ? (
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--evoq-lime-subtle)',
+              border: '1px solid var(--evoq-border-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'var(--evoq-lime)',
+            }}
+          >
+            <Icon name="check" size={32} />
+          </div>
 
-        {success ? (
-          <div style={{ textAlign: 'center' }}>
-            <div className="auth-alert success" role="alert">
-              Your password has been successfully reset!
+          <h3 className="evoq-section-title" style={{ marginBottom: '10px' }}>
+            Password Updated
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '24px' }}>
+            Your credentials have been securely updated and previous sessions invalidated. You can now sign in with your new credentials.
+          </p>
+
+          <Link to="/gamer/login" className="evoq-btn evoq-btn-primary evoq-btn-lg" style={{ justifyContent: 'center' }}>
+            <span>Sign In Now</span>
+            <Icon name="arrow-right" size={16} />
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate>
+          {error && (
+            <div className="evoq-alert evoq-alert-danger" role="alert">
+              <Icon name="x" size={16} />
+              <span>{error}</span>
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              All existing sessions have been terminated. Please log in with your new password.
-            </p>
-            <Link to="/login" className="btn-primary">
-              Log In Now
+          )}
+
+          {!paramToken && (
+            <Input
+              id="token"
+              name="token"
+              label="Reset Security Token"
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Paste security token from email"
+              required
+              disabled={loading}
+              helperText="The alphanumeric token included in your reset email."
+            />
+          )}
+
+          <Input
+            id="newPassword"
+            name="newPassword"
+            label="New Password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Min 12 chars, upper, lower, number, special"
+            required
+            disabled={loading}
+          />
+
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirm New Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter new password"
+            required
+            disabled={loading}
+          />
+
+          <PrimaryButton
+            type="submit"
+            disabled={loading}
+            loading={loading}
+            fullWidth
+            iconRight="arrow-right"
+            size="lg"
+            style={{ marginTop: '8px' }}
+          >
+            {loading ? 'Updating Credentials...' : 'Set New Password'}
+          </PrimaryButton>
+
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <Link to="/gamer/login" className="evoq-link-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+              <Icon name="arrow-left" size={14} />
+              <span>Cancel and Sign In</span>
             </Link>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="auth-form" noValidate>
-            {error && (
-              <div className="auth-alert error" role="alert">
-                {error}
-              </div>
-            )}
-
-            {!paramToken && (
-              <FormInput
-                id="token"
-                label="Reset Token"
-                type="text"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="Paste token from email"
-                required
-                disabled={loading}
-              />
-            )}
-
-            <FormInput
-              id="newPassword"
-              label="New Password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••••••"
-              required
-              disabled={loading}
-            />
-
-            <FormInput
-              id="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••••••"
-              required
-              disabled={loading}
-            />
-
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Updating password...' : 'Update Password'}
-            </button>
-
-            <div className="auth-footer">
-              <Link to="/login">Back to Sign In</Link>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+        </form>
+      )}
+    </AuthLayout>
   );
 }
-

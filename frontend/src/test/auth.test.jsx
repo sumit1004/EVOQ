@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login.jsx';
@@ -7,7 +8,7 @@ import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import { AuthProvider } from '../features/auth/AuthContext.jsx';
 
 describe('Frontend Form Validation & Auth Components', () => {
-  it('validates empty login inputs and displays errors', async () => {
+  it('validates empty login inputs and displays errors', () => {
     render(
       <MemoryRouter>
         <AuthProvider>
@@ -17,10 +18,10 @@ describe('Frontend Form Validation & Auth Components', () => {
     );
 
     const submitBtn = screen.getByRole('button', { name: /sign in/i });
-    fireEvent.click(submitBtn);
+    fireEvent.submit(submitBtn.closest('form'));
 
-    expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
-    expect(await screen.findByText(/password is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/password is required/i)).toBeInTheDocument();
   });
 
   it('validates password policy on registration', async () => {
@@ -40,10 +41,10 @@ describe('Frontend Form Validation & Auth Components', () => {
     fireEvent.change(emailInput, { target: { value: 'gamer@evoq.gg' } });
     fireEvent.change(usernameInput, { target: { value: 'valid_user' } });
     fireEvent.change(passwordInput, { target: { value: 'short' } });
-    fireEvent.click(submitBtn);
+    fireEvent.submit(submitBtn.closest('form'));
 
     expect(
-      await screen.findByText(/password must be at least 12 characters/i)
+      screen.getByText(/password must be at least 12 characters/i)
     ).toBeInTheDocument();
   });
 

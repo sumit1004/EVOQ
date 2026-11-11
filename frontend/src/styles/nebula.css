@@ -1,89 +1,58 @@
-/* ─── EVOQ NEBULA DESIGN SYSTEM ──────────────────────────────────
+/* ─── EVOQ CINEMATIC DARK DESIGN SYSTEM ──────────────────────────
    Approved Core Palette:
-   Midnight:  #0B1020
-   Violet:    #8B5CF6  (Core Identity)
-   Cyan:      #22D3EE  (Interactive & Accent)
-   Coral:     #FB7185  (Warning / Danger)
-   Lime:      #A3E635  (Success / Verified)
+   Background: #080A08
+   Surface:    #10130F
+   Elevated:   #151B13
+   Border:     #252D22
+   Lime Accent:#C9FF52  (Core EVOQ Identity)
+   Text:       #F4F5EF / #A5AA9C / #687064
+   Danger:     #FF4D4D
    ───────────────────────────────────────────────────────────────── */
 
 :root,
-[data-theme="dark"] {
-  --nebula-midnight: #0B1020;
-  --nebula-violet: #8B5CF6;
-  --nebula-violet-hover: #7C3AED;
-  --nebula-violet-subtle: rgba(139, 92, 246, 0.15);
-  --nebula-cyan: #22D3EE;
-  --nebula-cyan-hover: #06B6D4;
-  --nebula-cyan-subtle: rgba(34, 211, 238, 0.15);
-  --nebula-coral: #FB7185;
-  --nebula-coral-hover: #F43F5E;
-  --nebula-coral-subtle: rgba(251, 113, 133, 0.15);
-  --nebula-lime: #A3E635;
-  --nebula-lime-hover: #84CC16;
-  --nebula-lime-subtle: rgba(163, 230, 53, 0.15);
+[data-theme="dark"],
+[data-theme="light"] {
+  --nebula-midnight: #080A08;
+  --nebula-violet: #C9FF52;
+  --nebula-violet-hover: #b5ef3b;
+  --nebula-violet-subtle: rgba(201, 255, 82, 0.12);
+  --nebula-cyan: #C9FF52;
+  --nebula-cyan-hover: #b5ef3b;
+  --nebula-cyan-subtle: rgba(201, 255, 82, 0.12);
+  --nebula-coral: #FF4D4D;
+  --nebula-coral-hover: #e03e3e;
+  --nebula-coral-subtle: rgba(255, 77, 77, 0.14);
+  --nebula-lime: #C9FF52;
+  --nebula-lime-hover: #b5ef3b;
+  --nebula-lime-subtle: rgba(201, 255, 82, 0.12);
 
   /* Surfaces */
-  --nebula-bg: #0B1020;
-  --nebula-surface-primary: #11182A;
-  --nebula-surface-elevated: #151E33;
-  --nebula-surface-secondary: #1B2740;
-  --nebula-surface-glass: rgba(17, 24, 42, 0.75);
-  --nebula-border: #293653;
-  --nebula-border-accent: rgba(139, 92, 246, 0.35);
+  --nebula-bg: #080A08;
+  --nebula-surface-primary: #10130F;
+  --nebula-surface-elevated: #151B13;
+  --nebula-surface-secondary: #1B2418;
+  --nebula-surface-glass: rgba(16, 19, 15, 0.88);
+  --nebula-border: #252D22;
+  --nebula-border-accent: rgba(201, 255, 82, 0.28);
 
   /* Typography */
-  --nebula-text-primary: #F4F6FC;
-  --nebula-text-secondary: #A6B1C7;
-  --nebula-text-muted: #75829B;
+  --nebula-text-primary: #F4F5EF;
+  --nebula-text-secondary: #A5AA9C;
+  --nebula-text-muted: #687064;
 
   /* Shadows & Glow */
-  --nebula-glow-violet: 0 0 25px rgba(139, 92, 246, 0.25);
-  --nebula-glow-cyan: 0 0 25px rgba(34, 211, 238, 0.25);
-  --nebula-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --nebula-glow-violet: 0 0 20px rgba(201, 255, 82, 0.25);
+  --nebula-glow-cyan: 0 0 20px rgba(201, 255, 82, 0.25);
+  --nebula-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 
   /* Radii */
-  --nebula-radius-sm: 6px;
-  --nebula-radius-md: 10px;
-  --nebula-radius-lg: 16px;
+  --nebula-radius-sm: 4px;
+  --nebula-radius-md: 8px;
+  --nebula-radius-lg: 12px;
   --nebula-radius-full: 9999px;
 
   /* Transitions */
   --nebula-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-[data-theme="light"] {
-  --nebula-midnight: #F8FAFC;
-  --nebula-violet: #7C3AED;
-  --nebula-violet-hover: #6D28D9;
-  --nebula-violet-subtle: rgba(124, 58, 237, 0.12);
-  --nebula-cyan: #0891B2;
-  --nebula-cyan-hover: #0E7490;
-  --nebula-cyan-subtle: rgba(8, 145, 178, 0.12);
-  --nebula-coral: #E11D48;
-  --nebula-coral-hover: #BE123C;
-  --nebula-coral-subtle: rgba(225, 29, 72, 0.12);
-  --nebula-lime: #4D7C0F;
-  --nebula-lime-hover: #3F6212;
-  --nebula-lime-subtle: rgba(77, 124, 15, 0.12);
-
-  /* Surfaces */
-  --nebula-bg: #F1F5F9;
-  --nebula-surface-primary: #FFFFFF;
-  --nebula-surface-elevated: #F8FAFC;
-  --nebula-surface-secondary: #E2E8F0;
-  --nebula-surface-glass: rgba(255, 255, 255, 0.85);
-  --nebula-border: #CBD5E1;
-  --nebula-border-accent: rgba(124, 58, 237, 0.3);
-
-  /* Typography */
-  --nebula-text-primary: #0F172A;
-  --nebula-text-secondary: #334155;
-  --nebula-text-muted: #64748B;
-
-  --nebula-glow-violet: 0 0 15px rgba(124, 58, 237, 0.15);
-  --nebula-glow-cyan: 0 0 15px rgba(8, 145, 178, 0.15);
-  --nebula-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* ─── Global Base Settings ───────────────────────────────────── */
@@ -237,25 +206,25 @@ body {
 .nebula-badge-violet {
   background-color: var(--nebula-violet-subtle);
   color: var(--nebula-violet);
-  border: 1px solid rgba(139, 92, 246, 0.4);
+  border: 1px solid rgba(201, 255, 82, 0.28);
 }
 
 .nebula-badge-cyan {
   background-color: var(--nebula-cyan-subtle);
   color: var(--nebula-cyan);
-  border: 1px solid rgba(34, 211, 238, 0.4);
+  border: 1px solid rgba(201, 255, 82, 0.28);
 }
 
 .nebula-badge-lime {
   background-color: var(--nebula-lime-subtle);
   color: var(--nebula-lime);
-  border: 1px solid rgba(163, 230, 53, 0.4);
+  border: 1px solid rgba(201, 255, 82, 0.28);
 }
 
 .nebula-badge-coral {
   background-color: var(--nebula-coral-subtle);
   color: var(--nebula-coral);
-  border: 1px solid rgba(251, 113, 133, 0.4);
+  border: 1px solid rgba(255, 77, 77, 0.3);
 }
 
 .nebula-badge-neutral {
@@ -284,23 +253,25 @@ body {
 
 .nebula-btn-primary {
   background-color: var(--nebula-violet);
-  color: #FFFFFF;
+  color: #080A08;
+  font-weight: 700;
 }
 
 .nebula-btn-primary:hover:not(:disabled) {
   background-color: var(--nebula-violet-hover);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 20px rgba(201, 255, 82, 0.4);
   transform: translateY(-1px);
 }
 
 .nebula-btn-cyan {
   background-color: var(--nebula-cyan);
-  color: #0B1020;
+  color: #080A08;
+  font-weight: 700;
 }
 
 .nebula-btn-cyan:hover:not(:disabled) {
   background-color: var(--nebula-cyan-hover);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 20px rgba(201, 255, 82, 0.4);
   transform: translateY(-1px);
 }
 

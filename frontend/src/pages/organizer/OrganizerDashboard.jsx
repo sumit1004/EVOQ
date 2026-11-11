@@ -1,10 +1,21 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
+import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  StatCard,
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  StatusIndicator,
+  EmptyState,
+  SkeletonLoader,
+  SectionHeader,
+  DataTable,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
-export function OrganizerDashboard() {
+export default function OrganizerDashboard() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +33,7 @@ export function OrganizerDashboard() {
         setData(dashData);
         setProfile(orgProf);
       } catch (err) {
-        setError('Failed to load organizer operations center.');
+        setError('Failed to synchronize organizer operations center.');
       } finally {
         setLoading(false);
       }
@@ -41,214 +52,241 @@ export function OrganizerDashboard() {
   const upcomingMatches = data?.upcomingMatches || [];
 
   return (
-    <div className="nebula-shell">
-      <OrganizerNavbar />
-      <main className="nebula-container">
-        {/* Command Center Hero */}
-        <div
-          className="nebula-card"
-          style={{
-            marginBottom: '2rem',
-            background: 'linear-gradient(135deg, var(--nebula-surface-primary) 0%, #0d1e2e 100%)',
-            borderLeft: '4px solid var(--nebula-cyan)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <span className="nebula-badge nebula-badge-cyan">OPERATIONS COMMAND CENTER</span>
-                <span className="nebula-badge nebula-badge-lime">LIVE ORCHESTRATION</span>
-              </div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0.4rem 0' }}>
-                Tournament Operations Hub
-              </h1>
-              <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.92rem', margin: 0 }}>
-                Manage bracket fixtures, release encrypted match credentials, and approve authoritative match results.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <Link to="/organizer/tournaments/create" className="nebula-btn nebula-btn-cyan">
-                + Launch New Event
-              </Link>
-              <Link to="/organizer/organization" className="nebula-btn nebula-btn-secondary">
-                Organization Profile
-              </Link>
-            </div>
-          </div>
+    <OrganizerLayout
+      title="Operations Command Center"
+      actions={
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Link to="/organizer/tournaments/create" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+            <Icon name="plus" size={14} />
+            <span>New Tournament</span>
+          </Link>
+          <Link to="/organizer/organization" className="evoq-btn evoq-btn-secondary evoq-btn-sm">
+            <Icon name="organization" size={14} />
+            <span>Organization</span>
+          </Link>
         </div>
-
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-
-        {/* Operations KPI Metrics */}
-        <div className="nebula-grid-metrics">
-          <div className="nebula-metric">
-            <span className="nebula-metric-label">Managed Tournaments</span>
-            <span className="nebula-metric-value">{metrics.totalTournaments || 0}</span>
-            <span className="nebula-metric-subtext">Events hosted on EVOQ</span>
-          </div>
-          <div className="nebula-metric">
-            <span className="nebula-metric-label">Active / In Progress</span>
-            <span className="nebula-metric-value" style={{ color: 'var(--nebula-cyan)' }}>
-              {metrics.activeTournaments || 0}
-            </span>
-            <span className="nebula-metric-subtext">Lobbies and brackets live</span>
-          </div>
-          <div className="nebula-metric">
-            <span className="nebula-metric-label">Completed Events</span>
-            <span className="nebula-metric-value" style={{ color: 'var(--nebula-lime)' }}>
-              {metrics.completedTournaments || 0}
-            </span>
-            <span className="nebula-metric-subtext">Trophies awarded to players</span>
-          </div>
-          <div className="nebula-metric">
-            <span className="nebula-metric-label">Total Competitors</span>
-            <span className="nebula-metric-value" style={{ color: 'var(--nebula-violet)' }}>
-              {metrics.totalParticipants || 0}
-            </span>
-            <span className="nebula-metric-subtext">Rosters approved</span>
-          </div>
-        </div>
-
-        {/* 2-Column Operations View */}
-        <div className="nebula-grid-2col">
-          {/* Left Column: Active Events */}
+      }
+    >
+      {/* ── Operations Hero Overview ── */}
+      <div
+        className="evoq-card"
+        style={{
+          marginBottom: '24px',
+          background: 'linear-gradient(135deg, var(--evoq-surface) 0%, #0d1b1d 100%)',
+          borderColor: 'rgba(34, 211, 238, 0.35)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div className="nebula-card">
-              <div className="nebula-card-header">
-                <h2 className="nebula-card-title">
-                   Managed Tournaments &amp; Control Rooms
-                </h2>
-                <Link to="/organizer/tournaments" style={{ fontSize: '0.85rem', color: 'var(--nebula-cyan)', fontWeight: 700 }}>
-                  View All ({tournaments.length}) →
-                </Link>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <Badge variant="cyan">OPERATIONS COMMAND</Badge>
+              <Badge variant="lime">LIVE ORCHESTRATION</Badge>
+            </div>
+            <h1 className="evoq-display-title" style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.3rem)', margin: '0 0 6px 0' }}>
+              Tournament Control Hub
+            </h1>
+            <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.9rem', margin: 0, maxWidth: '640px' }}>
+              Manage bracket seedings, generate match fixtures, release secure room credentials, and verify authoritative scores.
+            </p>
+          </div>
 
-              {loading ? (
-                <div className="nebula-empty-state" style={{ padding: '2rem' }}>
-                  <p>Loading operations center...</p>
-                </div>
-              ) : tournaments.length === 0 ? (
-                <div className="nebula-empty-state" style={{ padding: '2rem' }}>
-                  <div className="nebula-empty-icon">—</div>
-                  <h3>No Tournaments Created</h3>
-                  <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1rem' }}>
-                    Launch your first competitive event with automated bracket generation and encrypted lobbies.
-                  </p>
-                  <Link to="/organizer/tournaments/create" className="nebula-btn nebula-btn-cyan">
-                    Launch Tournament Wizard
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <Link to="/organizer/tournaments/create" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+              <Icon name="plus" size={14} />
+              <span>Launch Event</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* ── Operations Metrics ── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '28px',
+        }}
+      >
+        <StatCard
+          label="Managed Tournaments"
+          value={metrics.totalTournaments || 0}
+          subtext="Total events created"
+          icon="tournament"
+        />
+        <StatCard
+          label="Active / Live Events"
+          value={metrics.activeTournaments || 0}
+          subtext="Brackets in progress"
+          icon="matches"
+          lime
+        />
+        <StatCard
+          label="Completed Tournaments"
+          value={metrics.completedTournaments || 0}
+          subtext="Concluded & archived"
+          icon="trophy"
+        />
+        <StatCard
+          label="Total Registrations"
+          value={metrics.totalParticipants || 0}
+          subtext="Enrolled squads and soloists"
+          icon="teams"
+        />
+      </div>
+
+      {/* ── 2-Column Operations View ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        {/* Left Column: Managed Tournaments */}
+        <div className="evoq-card">
+          <SectionHeader
+            title="Managed Tournaments"
+            subtitle="Recent events requiring director attention"
+            action={
+              <Link
+                to="/organizer/tournaments"
+                className="evoq-link-muted"
+                style={{ fontSize: '0.82rem', color: 'var(--evoq-lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <span>View All ({tournaments.length})</span>
+                <Icon name="arrow-right" size={13} />
+              </Link>
+            }
+          />
+
+          {loading ? (
+            <SkeletonLoader type="card" count={2} height="120px" />
+          ) : tournaments.length === 0 ? (
+            <EmptyState
+              icon="tournament"
+              title="No Tournaments Created"
+              description="Launch your first esports tournament using our step-by-step wizard."
+              action={
+                <Link to="/organizer/tournaments/create" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+                  <Icon name="plus" size={13} />
+                  <span>Create Tournament</span>
+                </Link>
+              }
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {tournaments.slice(0, 5).map((t) => (
+                <div
+                  key={t.id}
+                  style={{
+                    padding: '14px 16px',
+                    backgroundColor: 'var(--evoq-surface-elevated)',
+                    borderRadius: 'var(--evoq-radius-sm)',
+                    border: '1px solid var(--evoq-border)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
+                      <Badge variant="cyan" size="sm">{t.game?.name || 'Esports'}</Badge>
+                      <StatusIndicator status={t.status} />
+                    </div>
+                    <strong style={{ fontSize: '0.98rem', color: 'var(--evoq-text-primary)' }}>
+                      {t.name || t.title}
+                    </strong>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--evoq-text-muted)' }}>
+                      Format: {t.format?.replace(/_/g, ' ')} • {t._count?.registrations || 0} Entries
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/organizer/tournaments/${t.slug || t.id}`}
+                    className="evoq-btn evoq-btn-secondary evoq-btn-sm"
+                  >
+                    <span>Manage Workspace</span>
+                    <Icon name="arrow-right" size={13} />
                   </Link>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  {tournaments.slice(0, 6).map((t) => (
-                    <div
-                      key={t.id}
-                      style={{
-                        padding: '1rem 1.25rem',
-                        backgroundColor: 'var(--nebula-surface-elevated)',
-                        borderRadius: 'var(--nebula-radius-md)',
-                        border: '1px solid var(--nebula-border)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: '1rem',
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem' }}>
-                          <span className="nebula-badge nebula-badge-cyan">{t.game?.name || 'Esports'}</span>
-                          <span className="nebula-badge nebula-badge-neutral">{t.format?.replace(/_/g, ' ')}</span>
-                          <span
-                            className={`nebula-badge ${
-                              t.status === 'REGISTRATION_OPEN'
-                                ? 'nebula-badge-lime'
-                                : t.status === 'ONGOING'
-                                ? 'nebula-badge-cyan'
-                                : 'nebula-badge-neutral'
-                            }`}
-                          >
-                            {t.status?.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.25rem 0' }}>
-                          {t.name || t.title}
-                        </h3>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
-                          Registrations: {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
-                        </div>
-                      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Link
-                          to={`/organizer/tournaments/${t.id}`}
-                          className="nebula-btn nebula-btn-cyan nebula-btn-sm"
-                        >
-                          Control Room 
-                        </Link>
-                        <Link
-                          to={`/tournaments/${t.slug}`}
-                          className="nebula-btn nebula-btn-ghost nebula-btn-sm"
-                          target="_blank"
-                        >
-                          Public ↗
-                        </Link>
+        {/* Right Column: Upcoming Matches & Quick Actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Upcoming Matches */}
+          <div className="evoq-card">
+            <SectionHeader
+              title="Scheduled Match Fixtures"
+              subtitle="Rounds waiting for lobby credentials or score validation"
+            />
+
+            {upcomingMatches.length === 0 ? (
+              <EmptyState
+                icon="matches"
+                title="No Pending Fixtures"
+                description="When tournament brackets generate match fixtures, they will queue here for referee review."
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {upcomingMatches.slice(0, 4).map((m) => (
+                  <div
+                    key={m.id}
+                    style={{
+                      padding: '12px 14px',
+                      backgroundColor: 'var(--evoq-surface-elevated)',
+                      borderRadius: 'var(--evoq-radius-sm)',
+                      border: '1px solid var(--evoq-border)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <span className="evoq-mono-label">{m.roundName || 'MATCH ROUND'}</span>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--evoq-text-primary)', marginTop: '2px' }}>
+                        {m.teamA?.name || 'TBD'} vs {m.teamB?.name || 'TBD'}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Quick Operations & Upcoming Matches */}
-          <div>
-            {/* Quick Actions */}
-            <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
-              <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
-                 Quick Operations
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                <Link to="/organizer/tournaments/create" className="nebula-btn nebula-btn-cyan" style={{ justifyContent: 'flex-start' }}>
-                   Create New Tournament
-                </Link>
-                <Link to="/organizer/organization/members" className="nebula-btn nebula-btn-secondary" style={{ justifyContent: 'flex-start' }}>
-                   Manage Staff &amp; Referee Roles
-                </Link>
-                <Link to="/organizer/events" className="nebula-btn nebula-btn-secondary" style={{ justifyContent: 'flex-start' }}>
-                   View Verified Event Portfolio
-                </Link>
-              </div>
-            </div>
-
-            {/* Public Portfolio Banner */}
-            {profile?.slug && (
-              <div className="nebula-card">
-                <span className="nebula-badge nebula-badge-lime" style={{ marginBottom: '0.5rem' }}>
-                  PUBLIC CREDIBILITY
-                </span>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
-                  Public Organizer URL
-                </h3>
-                <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.5' }}>
-                  Your public verified portfolio displays your completed events and operations credibility rating.
-                </p>
-                <Link
-                  to={`/organizers/${profile.slug}`}
-                  className="nebula-btn nebula-btn-secondary nebula-btn-sm"
-                  target="_blank"
-                >
-                  View Public Portfolio ↗
-                </Link>
+                    <StatusIndicator status={m.status} />
+                  </div>
+                ))}
               </div>
             )}
           </div>
+
+          {/* Quick Operations Actions */}
+          <div className="evoq-card">
+            <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 12px 0', color: 'var(--evoq-text-primary)' }}>
+              Operations Suite Shortcuts
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <Link to="/organizer/tournaments/create" className="evoq-btn evoq-btn-secondary evoq-btn-sm" style={{ justifyContent: 'center' }}>
+                <Icon name="plus" size={14} />
+                <span>Create Event</span>
+              </Link>
+              <Link to="/organizer/organization" className="evoq-btn evoq-btn-secondary evoq-btn-sm" style={{ justifyContent: 'center' }}>
+                <Icon name="organization" size={14} />
+                <span>Club Info</span>
+              </Link>
+              <Link to="/organizer/organization/members" className="evoq-btn evoq-btn-secondary evoq-btn-sm" style={{ justifyContent: 'center' }}>
+                <Icon name="teams" size={14} />
+                <span>Staff &amp; Roles</span>
+              </Link>
+              <Link to="/organizer/events" className="evoq-btn evoq-btn-secondary evoq-btn-sm" style={{ justifyContent: 'center' }}>
+                <Icon name="trophy" size={14} />
+                <span>Portfolio</span>
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </OrganizerLayout>
   );
 }
-
-export default OrganizerDashboard;
-

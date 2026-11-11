@@ -1,8 +1,21 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import GamerNavbar from '../../components/GamerNavbar.jsx';
+import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  Modal,
+  Input,
+  Select,
+  Textarea,
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  Avatar,
+  EmptyState,
+  SkeletonLoader,
+  SectionHeader,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerTeams() {
   const [teams, setTeams] = useState([]);
@@ -50,7 +63,7 @@ export default function GamerTeams() {
         setCreateForm((prev) => ({ ...prev, gameId: gamesList[0].id }));
       }
     } catch (err) {
-      setError('Failed to load teams.');
+      setError('Failed to load team rosters.');
     } finally {
       setLoading(false);
     }
@@ -62,14 +75,26 @@ export default function GamerTeams() {
     setError('');
     setSuccess('');
     try {
-      const teamSlug = createForm.slug || createForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const teamSlug =
+        createForm.slug ||
+        createForm.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
       await evoqService.createTeam({
         ...createForm,
         slug: teamSlug,
       });
-      setSuccess(`Team "${createForm.name}" created! You are the Captain.`);
+      setSuccess(`Squad "${createForm.name}" created! You are the Captain.`);
       setShowCreateModal(false);
-      setCreateForm({ name: '', tag: '', slug: '', gameId: games[0]?.id || '', bio: '', logoUrl: '' });
+      setCreateForm({
+        name: '',
+        tag: '',
+        slug: '',
+        gameId: games[0]?.id || '',
+        bio: '',
+        logoUrl: '',
+      });
       await loadData();
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to create team.');
@@ -100,296 +125,351 @@ export default function GamerTeams() {
         identifier: inviteIdentifier.trim(),
         role: inviteRole,
       });
-      setSuccess(`Invitation sent to ${inviteIdentifier}`);
+      setSuccess(`Invitation sent to ${inviteIdentifier.trim()}!`);
       setActiveTeamForInvite(null);
       setInviteIdentifier('');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to send invitation.');
+      setError(err.response?.data?.error?.message || 'Failed to dispatch squad invitation.');
     } finally {
       setInviting(false);
     }
   };
 
+  const handleLeaveTeam = async (teamId, teamName) => {
+    if (!window.confirm(`Are you sure you want to leave ${teamName}?`)) return;
+    setError('');
+    try {
+      await evoqService.leaveTeam(teamId);
+      setSuccess(`You have left ${teamName}.`);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to leave squad.');
+    }
+  };
+
   return (
-    <div className="nebula-shell">
-      <GamerNavbar />
-      <main className="nebula-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.4rem' }}>
-              ROSTER &amp; SQUADS
-            </span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>My Competitive Teams</h1>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="nebula-btn nebula-btn-primary"
-          >
-            + Create New Squad
-          </button>
+    <GamerLayout
+      title="My Competitive Teams"
+      actions={
+        <PrimaryButton
+          icon="plus"
+          size="sm"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Create Squad
+        </PrimaryButton>
+      }
+    >
+      {error && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{error}</span>
         </div>
+      )}
 
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-        {success && <div className="nebula-alert nebula-alert-success">{success}</div>}
+      {success && (
+        <div className="evoq-alert evoq-alert-success" role="alert">
+          <Icon name="check" size={16} />
+          <span>{success}</span>
+        </div>
+      )}
 
-        {/* Pending Invitations Alert Section */}
-        {invitations.length > 0 && (
-          <div className="nebula-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--nebula-cyan)' }}>
-            <h2 className="nebula-card-title" style={{ color: 'var(--nebula-cyan)', marginBottom: '1rem' }}>
-               Pending Team Invitations ({invitations.length})
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {invitations.map((inv) => (
-                <div
-                  key={inv.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '0.85rem 1.25rem',
-                    backgroundColor: 'var(--nebula-surface-elevated)',
-                    borderRadius: 'var(--nebula-radius-md)',
-                    border: '1px solid var(--nebula-border)',
-                    flexWrap: 'wrap',
-                    gap: '1rem',
-                  }}
-                >
+      {/* ── Pending Invitations Section ── */}
+      {invitations.length > 0 && (
+        <div className="evoq-card" style={{ marginBottom: '24px', borderColor: 'var(--evoq-border-accent)' }}>
+          <SectionHeader
+            title="Pending Squad Invitations"
+            subtitle="Rosters requesting your competitive membership"
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {invitations.map((inv) => (
+              <div
+                key={inv.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '14px 18px',
+                  backgroundColor: 'var(--evoq-surface-elevated)',
+                  borderRadius: 'var(--evoq-radius-sm)',
+                  border: '1px solid var(--evoq-border)',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Avatar src={inv.team?.logoUrl} name={inv.team?.name} size="md" />
                   <div>
-                    <strong>{inv.team?.name || 'Competitive Team'}</strong> [{inv.team?.tag || 'TAG'}]
-                    <div style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
-                      Invited as: <span className="nebula-badge nebula-badge-violet">{inv.role}</span> • Invited by: {inv.inviter?.username || 'Captain'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <strong style={{ fontSize: '1rem', color: 'var(--evoq-text-primary)' }}>
+                        {inv.team?.name}
+                      </strong>
+                      <Badge variant="lime">[{inv.team?.tag || 'TEAM'}]</Badge>
+                      <Badge variant="neutral">{inv.role || 'PLAYER'}</Badge>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => handleRespondInvitation(inv.id, 'ACCEPT')}
-                      className="nebula-btn nebula-btn-lime nebula-btn-sm"
-                    >
-                      Accept Roster Spot
-                    </button>
-                    <button
-                      onClick={() => handleRespondInvitation(inv.id, 'DECLINE')}
-                      className="nebula-btn nebula-btn-coral nebula-btn-sm"
-                    >
-                      Decline
-                    </button>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--evoq-text-muted)' }}>
+                      Invited by {inv.inviter?.username || 'Team Captain'} • {inv.team?.game?.name || 'Esports'}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Teams Grid */}
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading your squads...</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <PrimaryButton
+                    size="sm"
+                    icon="check"
+                    onClick={() => handleRespondInvitation(inv.id, 'ACCEPT')}
+                  >
+                    Accept
+                  </PrimaryButton>
+                  <SecondaryButton
+                    size="sm"
+                    icon="x"
+                    variant="danger"
+                    onClick={() => handleRespondInvitation(inv.id, 'REJECT')}
+                  >
+                    Decline
+                  </SecondaryButton>
+                </div>
+              </div>
+            ))}
           </div>
-        ) : teams.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon"></div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Active Teams</h3>
-            <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
-              Create a squad to register in 5v5 or team-based tournaments, manage rosters, and earn team tournament achievements.
-            </p>
-            <button onClick={() => setShowCreateModal(true)} className="nebula-btn nebula-btn-primary">
-              Create Your First Team
-            </button>
-          </div>
-        ) : (
-          <div className="nebula-grid-cards">
-            {teams.map((item) => {
-              const team = item.team || item;
-              const role = item.role || 'MEMBER';
-              const isCaptain = role === 'CAPTAIN';
+        </div>
+      )}
 
-              return (
-                <div key={team.id} className="nebula-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>{team.name}</h2>
-                        <span className="nebula-badge nebula-badge-neutral">[{team.tag || 'TEAM'}]</span>
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--nebula-cyan)', marginTop: '0.2rem', fontWeight: 600 }}>
-                        {team.game?.name || 'Esports'}
-                      </div>
+      {/* ── Active Teams Roster List ── */}
+      {loading ? (
+        <SkeletonLoader type="card" count={2} height="160px" />
+      ) : teams.length === 0 ? (
+        <EmptyState
+          icon="teams"
+          title="No Active Squad Memberships"
+          description="Form a competitive roster to compete in official team brackets and tournaments."
+          action={
+            <PrimaryButton icon="plus" onClick={() => setShowCreateModal(true)}>
+              Create Your First Squad
+            </PrimaryButton>
+          }
+        />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+          {teams.map((t) => {
+            const teamObj = t.team || t;
+            const role = t.role || (teamObj.captainId === t.userId ? 'CAPTAIN' : 'MEMBER');
+            const isCaptain = role === 'CAPTAIN';
+            const members = teamObj.members || [];
+
+            return (
+              <div key={teamObj.id} className="evoq-team-card">
+                <div className="evoq-team-card-header">
+                  <Avatar src={teamObj.logoUrl} name={teamObj.name} size="lg" />
+                  <div className="evoq-team-card-info">
+                    <div className="evoq-team-name-row">
+                      <h3 className="evoq-team-card-title">
+                        <Link to={`/teams/${teamObj.slug || teamObj.id}`}>{teamObj.name}</Link>
+                      </h3>
+                      {teamObj.tag && <Badge variant="lime">[{teamObj.tag}]</Badge>}
                     </div>
-                    <span className={`nebula-badge ${isCaptain ? 'nebula-badge-violet' : 'nebula-badge-lime'}`}>
-                      {role}
-                    </span>
-                  </div>
-
-                  {team.bio && (
-                    <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.88rem', lineHeight: '1.5', margin: '0 0 1.25rem 0' }}>
-                      {team.bio}
-                    </p>
-                  )}
-
-                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.82rem', color: 'var(--nebula-text-muted)', marginBottom: '1.25rem' }}>
-                    <span>Roster: {team.memberships?.length || team._count?.memberships || 1} members</span>
-                    <span>Tournaments: {team._count?.registrations || 0}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <Link to={`/teams/${team.slug}`} className="nebula-btn nebula-btn-secondary nebula-btn-sm" style={{ flex: 1, textAlign: 'center' }}>
-                      Public Profile
-                    </Link>
-                    {isCaptain && (
-                      <button
-                        onClick={() => setActiveTeamForInvite(team)}
-                        className="nebula-btn nebula-btn-cyan nebula-btn-sm"
-                      >
-                        + Invite Player
-                      </button>
+                    {teamObj.game && (
+                      <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
+                        {teamObj.game.name}
+                      </span>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-        {/* Create Team Modal */}
-        {showCreateModal && (
-          <div className="nebula-modal-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>Create Competitive Squad</h2>
-                <button className="nebula-modal-close" onClick={() => setShowCreateModal(false)}>×</button>
-              </div>
+                {teamObj.bio && (
+                  <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
+                    {teamObj.bio}
+                  </p>
+                )}
 
-              <form onSubmit={handleCreateSubmit}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Team Name *</label>
-                  <input
-                    type="text"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                    required
-                    placeholder="e.g. Sentinels Core"
-                    className="nebula-input"
-                  />
+                <div className="evoq-team-card-meta">
+                  <div className="evoq-team-meta-col">
+                    <span className="evoq-meta-label">MY ROLE</span>
+                    <span className="evoq-meta-val" style={{ color: isCaptain ? 'var(--evoq-lime)' : 'inherit' }}>
+                      {role}
+                    </span>
+                  </div>
+                  <div className="evoq-team-meta-col">
+                    <span className="evoq-meta-label">ROSTER</span>
+                    <span className="evoq-meta-val">{members.length || 1} Competitor{members.length === 1 ? '' : 's'}</span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Team Tag (2-5 chars) *</label>
-                    <input
-                      type="text"
-                      value={createForm.tag}
-                      onChange={(e) => setCreateForm({ ...createForm, tag: e.target.value.toUpperCase() })}
-                      required
-                      maxLength="5"
-                      placeholder="SEN"
-                      className="nebula-input"
-                    />
-                  </div>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Focus Game *</label>
-                    <select
-                      value={createForm.gameId}
-                      onChange={(e) => setCreateForm({ ...createForm, gameId: e.target.value })}
-                      className="nebula-select"
-                      required
-                    >
-                      {games.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
+                {/* Team Members List */}
+                {members.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span className="evoq-mono-label">ACTIVE ROSTER</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {members.map((m) => (
+                        <span
+                          key={m.id || m.userId}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            padding: '3px 8px',
+                            borderRadius: 'var(--evoq-radius-sm)',
+                            backgroundColor: 'var(--evoq-surface-elevated)',
+                            fontSize: '0.78rem',
+                            color: 'var(--evoq-text-secondary)',
+                          }}
+                        >
+                          <Avatar src={m.user?.avatarUrl} name={m.user?.username} size="xs" />
+                          <span>{m.user?.username || m.username || 'Player'}</span>
+                          {m.role === 'CAPTAIN' && <span style={{ color: 'var(--evoq-lime)' }}>★</span>}
+                        </span>
                       ))}
-                    </select>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Custom Slug (optional)</label>
-                  <input
-                    type="text"
-                    value={createForm.slug}
-                    onChange={(e) => setCreateForm({ ...createForm, slug: e.target.value })}
-                    placeholder="sentinels-core"
-                    className="nebula-input"
-                  />
-                </div>
-
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Squad Bio / Motto</label>
-                  <textarea
-                    value={createForm.bio}
-                    onChange={(e) => setCreateForm({ ...createForm, bio: e.target.value })}
-                    rows="2"
-                    placeholder="Tier 1 competitive squad competing in regional open qualifiers..."
-                    className="nebula-textarea"
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setShowCreateModal(false)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="nebula-btn nebula-btn-primary" disabled={creating}>
-                    {creating ? 'Creating Team...' : 'Form Team'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Invite Member Modal */}
-        {activeTeamForInvite && (
-          <div className="nebula-modal-overlay" onClick={() => setActiveTeamForInvite(null)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  Invite Player to {activeTeamForInvite.name}
-                </h2>
-                <button className="nebula-modal-close" onClick={() => setActiveTeamForInvite(null)}>×</button>
-              </div>
-
-              <form onSubmit={handleSendInvite}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Gamer Username or Email *</label>
-                  <input
-                    type="text"
-                    value={inviteIdentifier}
-                    onChange={(e) => setInviteIdentifier(e.target.value)}
-                    required
-                    placeholder="Username or user@example.com"
-                    className="nebula-input"
-                  />
-                </div>
-
-                <div className="nebula-form-group">
-                  <label className="nebula-label">Roster Role</label>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    className="nebula-select"
+                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '10px' }}>
+                  {isCaptain ? (
+                    <PrimaryButton
+                      size="sm"
+                      icon="plus"
+                      onClick={() => setActiveTeamForInvite(teamObj)}
+                      style={{ flex: 1, justifyContent: 'center' }}
+                    >
+                      Invite Member
+                    </PrimaryButton>
+                  ) : (
+                    <SecondaryButton
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleLeaveTeam(teamObj.id, teamObj.name)}
+                      style={{ flex: 1, justifyContent: 'center' }}
+                    >
+                      Leave Squad
+                    </SecondaryButton>
+                  )}
+                  <Link
+                    to={`/teams/${teamObj.slug || teamObj.id}`}
+                    className="evoq-btn evoq-btn-secondary evoq-btn-sm"
                   >
-                    <option value="PLAYER">PLAYER (Starting Roster)</option>
-                    <option value="SUBSTITUTE">SUBSTITUTE</option>
-                    <option value="COACH">COACH</option>
-                    <option value="ANALYST">ANALYST</option>
-                  </select>
+                    <span>Portfolio</span>
+                  </Link>
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setActiveTeamForInvite(null)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={inviting}>
-                    {inviting ? 'Dispatching...' : 'Send Roster Invitation'}
-                  </button>
-                </div>
-              </form>
-            </div>
+      {/* ── Create Squad Modal ── */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create Competitive Squad"
+        subtitle="Form an esports team to compete in title-specific brackets"
+        maxWidth="500px"
+      >
+        <form onSubmit={handleCreateSubmit} noValidate>
+          <Input
+            label="Squad Name"
+            id="teamName"
+            value={createForm.name}
+            onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+            placeholder="e.g. Sentinels Vanguard"
+            required
+          />
+
+          <Input
+            label="Squad Tag (2-5 letters)"
+            id="teamTag"
+            value={createForm.tag}
+            onChange={(e) => setCreateForm((p) => ({ ...p, tag: e.target.value.toUpperCase() }))}
+            placeholder="e.g. SEN"
+            maxLength={5}
+            required
+            helperText="Short acronym displayed in tournament bracket fixtures."
+          />
+
+          <Select
+            label="Primary Esports Title"
+            id="teamGame"
+            value={createForm.gameId}
+            onChange={(e) => setCreateForm((p) => ({ ...p, gameId: e.target.value }))}
+            required
+          >
+            {games.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </Select>
+
+          <Textarea
+            label="Squad Bio & Mission"
+            id="teamBio"
+            value={createForm.bio}
+            onChange={(e) => setCreateForm((p) => ({ ...p, bio: e.target.value }))}
+            placeholder="Introduce your team, ambitions, and competitive focus..."
+            rows={3}
+          />
+
+          <Input
+            label="Squad Logo URL (Optional)"
+            id="teamLogo"
+            value={createForm.logoUrl}
+            onChange={(e) => setCreateForm((p) => ({ ...p, logoUrl: e.target.value }))}
+            placeholder="https://example.com/logo.png"
+          />
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setShowCreateModal(false)} disabled={creating}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={creating || !createForm.name.trim()} loading={creating}>
+              {creating ? 'Creating Squad...' : 'Found Squad'}
+            </PrimaryButton>
           </div>
-        )}
-      </main>
-    </div>
+        </form>
+      </Modal>
+
+      {/* ── Invite Member Modal ── */}
+      <Modal
+        isOpen={!!activeTeamForInvite}
+        onClose={() => setActiveTeamForInvite(null)}
+        title={`Invite to ${activeTeamForInvite?.name}`}
+        subtitle="Dispatch an official roster invitation to a competitor"
+        maxWidth="440px"
+      >
+        <form onSubmit={handleSendInvite} noValidate>
+          <Input
+            label="Player Username or Email"
+            id="inviteIdentifier"
+            value={inviteIdentifier}
+            onChange={(e) => setInviteIdentifier(e.target.value)}
+            placeholder="e.g. ShadowStrike_99"
+            required
+            helperText="Competitor must hold a registered EVOQ account."
+          />
+
+          <Select
+            label="Roster Role"
+            id="inviteRole"
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value)}
+          >
+            <option value="PLAYER">Player (Starter)</option>
+            <option value="SUBSTITUTE">Substitute</option>
+            <option value="COACH">Coach</option>
+            <option value="MANAGER">Manager</option>
+          </Select>
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setActiveTeamForInvite(null)} disabled={inviting}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={inviting || !inviteIdentifier.trim()} loading={inviting}>
+              {inviting ? 'Dispatching...' : 'Send Invitation'}
+            </PrimaryButton>
+          </div>
+        </form>
+      </Modal>
+    </GamerLayout>
   );
 }
-

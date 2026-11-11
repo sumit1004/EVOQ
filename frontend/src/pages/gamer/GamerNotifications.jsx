@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
-import GamerNavbar from '../../components/GamerNavbar.jsx';
+import React, { useState, useEffect } from 'react';
+import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  NotificationItem,
+  SecondaryButton,
+  EmptyState,
+  SkeletonLoader,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerNotifications() {
   const [notifications, setNotifications] = useState([]);
@@ -21,7 +27,7 @@ export default function GamerNotifications() {
       const list = Array.isArray(data) ? data : data?.notifications || [];
       setNotifications(list);
     } catch (err) {
-      setError('Failed to load notifications.');
+      setError('Failed to load notifications from the network.');
     } finally {
       setLoading(false);
     }
@@ -61,99 +67,65 @@ export default function GamerNotifications() {
   const unreadCount = safeList.filter((n) => !isNotificationRead(n)).length;
 
   return (
-    <div className="nebula-shell">
-      <GamerNavbar />
-      <main className="nebula-container" style={{ maxWidth: '880px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.4rem' }}>
-              GAMER DISPATCH
-            </span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Notifications</h1>
-          </div>
-          {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead} className="nebula-btn nebula-btn-secondary nebula-btn-sm">
-              Mark All as Read ({unreadCount})
-            </button>
-          )}
-        </div>
-
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <button
-            onClick={() => setFilterUnread(false)}
-            className={`nebula-btn nebula-btn-sm ${!filterUnread ? 'nebula-btn-primary' : 'nebula-btn-ghost'}`}
+    <GamerLayout
+      title="Notifications & Alerts"
+      actions={
+        unreadCount > 0 ? (
+          <SecondaryButton
+            size="sm"
+            icon="check"
+            onClick={handleMarkAllRead}
           >
-            All ({notifications.length})
+            Mark All Read ({unreadCount})
+          </SecondaryButton>
+        ) : null
+      }
+    >
+      <div style={{ maxWidth: '840px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+          <button
+            type="button"
+            onClick={() => setFilterUnread(false)}
+            className={`evoq-tab-item ${!filterUnread ? 'active' : ''}`}
+          >
+            All Dispatch ({notifications.length})
           </button>
           <button
+            type="button"
             onClick={() => setFilterUnread(true)}
-            className={`nebula-btn nebula-btn-sm ${filterUnread ? 'nebula-btn-primary' : 'nebula-btn-ghost'}`}
+            className={`evoq-tab-item ${filterUnread ? 'active' : ''}`}
           >
             Unread ({unreadCount})
           </button>
         </div>
 
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading alerts...</p>
-          </div>
-        ) : displayed.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>{filterUnread ? 'No unread notifications.' : 'Your inbox is clear.'}</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {displayed.map((n) => {
-              const isRead = isNotificationRead(n);
-              return (
-                <div
-                  key={n.id}
-                  className="nebula-card"
-                  style={{
-                    padding: '1.25rem',
-                    borderLeft: isRead ? '1px solid var(--nebula-border)' : '4px solid var(--nebula-violet)',
-                    backgroundColor: isRead ? 'var(--nebula-surface-primary)' : 'var(--nebula-surface-elevated)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: '1rem',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                      <span className="nebula-badge nebula-badge-violet">{n.type}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>
-                        {new Date(n.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: isRead ? 600 : 800, margin: '0 0 0.25rem 0' }}>
-                      {n.title}
-                    </h3>
-                    <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                      {n.message}
-                    </p>
-                  </div>
-
-                  {!isRead && (
-                    <button
-                      onClick={() => handleMarkRead(n.id)}
-                      className="nebula-btn nebula-btn-ghost nebula-btn-sm"
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      Mark Read
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+        {error && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="x" size={16} />
+            <span>{error}</span>
           </div>
         )}
-      </main>
-    </div>
+
+        {loading ? (
+          <SkeletonLoader type="text" count={4} height="70px" />
+        ) : displayed.length === 0 ? (
+          <EmptyState
+            icon="bell"
+            title={filterUnread ? 'No Unread Alerts' : 'No Notifications'}
+            description="You are caught up on all tournament schedules, roster invites, and bracket updates."
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {displayed.map((n) => (
+              <NotificationItem
+                key={n.id}
+                notification={n}
+                onMarkRead={handleMarkRead}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </GamerLayout>
   );
 }
-

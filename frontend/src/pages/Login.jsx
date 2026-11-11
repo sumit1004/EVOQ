@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import FormInput from '../components/FormInput.jsx';
-import '../styles/auth.css';
+import AuthLayout from '../layouts/AuthLayout.jsx';
+import { Input } from '../components/ui/FormControls.jsx';
+import { PrimaryButton } from '../components/ui/Buttons.jsx';
+import { Icon } from '../components/Icons.jsx';
 
 export default function Login() {
   const { login } = useAuth();
@@ -59,75 +61,92 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            EVOQ
-          </Link>
-          <h2 style={{ fontSize: '1.25rem', marginTop: '0.25rem' }}>Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to your competitive account</p>
+    <AuthLayout
+      badge="EVOQ ACCESS"
+      badgeType="lime"
+      title="Platform Sign In"
+      subtitle="Access your competitive profile, tournaments, and team operations."
+      quote="DOMINATE THE ARENA. VERIFY YOUR LEGACY."
+      quoteAuthor="EVOQ PRO NETWORK"
+      heroImage="/images/two2.png"
+    >
+      {serverError && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{serverError}</span>
         </div>
+      )}
 
-        {serverError && (
-          <div className="auth-alert error" role="alert">
-            {serverError}
-          </div>
-        )}
+      <form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Email Address"
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="player@example.com"
+          autoComplete="email"
+          required
+          disabled={submitting}
+          error={errors.email}
+          icon="user"
+        />
 
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          <FormInput
-            id="email"
-            label="Email Address"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            placeholder="player@example.com"
-            autoComplete="email"
-            required
-            disabled={submitting}
-          />
-
-          <FormInput
-            id="password"
-            label="Password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="••••••••••••"
-            autoComplete="current-password"
-            required
-            disabled={submitting}
-          />
-
-          <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label htmlFor="password" className="evoq-label" style={{ margin: 0 }}>
+              Password <span className="evoq-lime">*</span>
+            </label>
             <Link
               to="/forgot-password"
-              style={{ fontSize: '0.825rem', color: 'var(--muted)' }}
+              style={{ fontSize: '0.8rem', color: 'var(--evoq-lime)', textDecoration: 'none' }}
             >
               Forgot password?
             </Link>
           </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="••••••••••••"
+            autoComplete="current-password"
+            required
             disabled={submitting}
-          >
-            {submitting ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{' '}
-            <Link to="/register">Create an account</Link>
-          </p>
+            error={errors.password}
+          />
         </div>
+
+        <PrimaryButton
+          type="submit"
+          disabled={submitting}
+          loading={submitting}
+          fullWidth
+          iconRight="arrow-right"
+          size="lg"
+          style={{ marginTop: '8px' }}
+        >
+          {submitting ? 'Signing in...' : 'Sign In'}
+        </PrimaryButton>
+      </form>
+
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid var(--evoq-border)',
+        }}
+      >
+        <p style={{ fontSize: '0.9rem', color: 'var(--evoq-text-secondary)', margin: '0' }}>
+          Don't have an account?{' '}
+          <Link to="/gamer/register" style={{ color: 'var(--evoq-lime)', fontWeight: 700 }}>
+            Create an account
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
-

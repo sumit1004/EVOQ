@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
-import PublicNavbar from '../../components/PublicNavbar.jsx';
-import '../../styles/nebula.css';
+import AuthLayout from '../../layouts/AuthLayout.jsx';
+import { Input } from '../../components/ui/FormControls.jsx';
+import { PrimaryButton } from '../../components/ui/Buttons.jsx';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerRegister() {
   const { registerGamer } = useAuth();
@@ -13,7 +15,6 @@ export default function GamerRegister() {
     password: '',
     confirmPassword: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +39,7 @@ export default function GamerRegister() {
     if (!formData.username.trim()) {
       newErrors.username = 'Gamer username is required';
     } else if (formData.username.length < 3 || formData.username.length > 30) {
-      newErrors.username = 'Gamer username must be 3-30 characters';
+      newErrors.username = 'Gamer username must be between 3 and 30 characters';
     } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
       newErrors.username = 'Alphanumeric, underscores, and hyphens only';
     }
@@ -85,7 +86,10 @@ export default function GamerRegister() {
       });
       setSuccessData(res);
     } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || 'Registration failed';
+      const msg =
+        err.response?.data?.error?.message ||
+        err.message ||
+        'Registration failed. Please check your credentials.';
       setServerError(msg);
     } finally {
       setSubmitting(false);
@@ -94,168 +98,163 @@ export default function GamerRegister() {
 
   if (successData) {
     return (
-      <div className="nebula-shell">
-        <PublicNavbar />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
-          <div className="nebula-card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
-            <span className="nebula-badge nebula-badge-lime" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
-              ACCOUNT CREATED
-            </span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-              Welcome, {formData.username}!
-            </h2>
-            <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              We've dispatched a verification link to <strong>{formData.email}</strong>. Activate your account to start competing.
-            </p>
-            <Link to="/gamer/login" className="nebula-btn nebula-btn-primary" style={{ width: '100%' }}>
-              Proceed to Gamer Sign In →
+      <AuthLayout
+        badge="REGISTRATION CONFIRMED"
+        badgeType="lime"
+        title="Check Your Inbox"
+        subtitle="We sent a verification link to confirm your competitive passport."
+        quote="YOUR COMPETITIVE JOURNEY BEGINS HERE."
+        quoteAuthor="EVOQ SYSTEM IDENTITY"
+        heroImage="/images/two2.png"
+      >
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--evoq-lime-subtle)',
+              border: '1px solid var(--evoq-border-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'var(--evoq-lime)',
+            }}
+          >
+            <Icon name="check" size={32} />
+          </div>
+
+          <h3 className="evoq-section-title" style={{ marginBottom: '10px' }}>
+            Account Created
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '24px' }}>
+            A confirmation email was dispatched to{' '}
+            <strong style={{ color: 'var(--evoq-text-primary)' }}>{formData.email}</strong>.
+            Please verify your email address to unlock official match operations.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link to="/gamer/login" className="evoq-btn evoq-btn-primary evoq-btn-lg" style={{ justifyContent: 'center' }}>
+              <span>Proceed to Sign In</span>
+              <Icon name="arrow-right" size={16} />
             </Link>
           </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="nebula-shell">
-      <PublicNavbar />
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
-        <div className="nebula-card" style={{ maxWidth: '460px', width: '100%', borderTop: '4px solid var(--nebula-violet)' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.75rem' }}>
-              GAMER PORTAL
-            </span>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em', margin: '0.25rem 0' }}>
-              Create Gamer Identity
-            </h1>
-            <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem' }}>
-              Join the esports network where your match results build verified career credentials.
-            </p>
-          </div>
+    <AuthLayout
+      badge="GAMER PASSPORT"
+      badgeType="lime"
+      title="Create Gamer Account"
+      subtitle="Register your unique handle to enter tournaments, join teams, and build verified stats."
+      quote="DOMINATE THE ARENA. VERIFY YOUR LEGACY."
+      quoteAuthor="EVOQ PRO COMPETITIVE NETWORK"
+      heroImage="/images/two2.png"
+    >
+      {serverError && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{serverError}</span>
+        </div>
+      )}
 
-          {serverError && (
-            <div className="nebula-alert nebula-alert-danger" role="alert">
-              {serverError}
-            </div>
-          )}
+      <form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Email Address"
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="player@example.com"
+          autoComplete="email"
+          required
+          disabled={submitting}
+          error={errors.email}
+          icon="user"
+        />
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="email">Email Address *</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="player@example.com"
-                autoComplete="email"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.email && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.email}</span>}
-            </div>
+        <Input
+          label="Gamer Username"
+          id="username"
+          name="username"
+          type="text"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="e.g. ShadowStrike_99"
+          autoComplete="username"
+          required
+          disabled={submitting}
+          error={errors.username}
+          helperText="Unique identifier shown across tournaments and teams (3-30 chars)."
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="username">Gamer Username / Tag *</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="ApexSniper"
-                autoComplete="username"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.username && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.username}</span>}
-            </div>
+        <Input
+          label="Password"
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Min 12 chars, upper, lower, number, special"
+          autoComplete="new-password"
+          required
+          disabled={submitting}
+          error={errors.password}
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="password">Password (min. 12 chars, Aa1!) *</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••••••"
-                  autoComplete="new-password"
-                  required
-                  disabled={submitting}
-                  className="nebula-input"
-                  style={{ paddingRight: '2.5rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--nebula-text-muted)',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                  }}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}
-            </div>
+        <Input
+          label="Confirm Password"
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Re-enter your password"
+          autoComplete="new-password"
+          required
+          disabled={submitting}
+          error={errors.confirmPassword}
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="confirmPassword">Confirm Password *</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••••••"
-                autoComplete="new-password"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.confirmPassword && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.confirmPassword}</span>}
-            </div>
+        <PrimaryButton
+          type="submit"
+          disabled={submitting}
+          loading={submitting}
+          fullWidth
+          iconRight="arrow-right"
+          size="lg"
+          style={{ marginTop: '8px' }}
+        >
+          {submitting ? 'Creating Passport...' : 'Create Gamer Account'}
+        </PrimaryButton>
+      </form>
 
-            <button
-              type="submit"
-              className="nebula-btn nebula-btn-primary"
-              style={{ width: '100%', marginTop: '0.5rem' }}
-              disabled={submitting}
-            >
-              {submitting ? 'Creating Profile...' : 'Claim Gamer Tag & Register →'}
-            </button>
-          </form>
-
-          <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--nebula-border)' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--nebula-text-secondary)' }}>
-              Already registered?{' '}
-              <Link to="/gamer/login" style={{ color: 'var(--nebula-violet)', fontWeight: 700 }}>
-                Sign In
-              </Link>
-            </p>
-            <div style={{ marginTop: '0.75rem' }}>
-              <Link to="/organizer/register" style={{ fontSize: '0.82rem', color: 'var(--nebula-cyan)' }}>
-                Represent an Organization? Create Organizer Account ↗
-              </Link>
-            </div>
-          </div>
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid var(--evoq-border)',
+        }}
+      >
+        <p style={{ fontSize: '0.9rem', color: 'var(--evoq-text-secondary)', margin: '0 0 10px 0' }}>
+          Already registered?{' '}
+          <Link to="/gamer/login" style={{ color: 'var(--evoq-lime)', fontWeight: 700 }}>
+            Sign In to Gamer Arena
+          </Link>
+        </p>
+        <div style={{ fontSize: '0.82rem', color: 'var(--evoq-text-muted)' }}>
+          Looking to host tournaments?{' '}
+          <Link to="/organizer/register" style={{ color: 'var(--evoq-text-primary)', fontWeight: 600 }}>
+            Register as Organizer ↗
+          </Link>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
-

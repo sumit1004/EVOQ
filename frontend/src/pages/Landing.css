@@ -687,31 +687,33 @@ body {
 
 @media (max-width: 480px) {
   .hero-bg-wordmark {
-    font-size: clamp(7.4rem, 21.5vw, 5.5rem);
-    top: 12%;
+    font-size: clamp(3.8rem, 16vw, 5.2rem);
+    top: 14%;
     left: 4%;
     -webkit-text-stroke: 1.3px rgba(244, 245, 239, 0.88);
   }
 
   .hero-fg-wordmark {
-    font-size: clamp(3.0rem, 15vw, 5.0rem);
-    bottom: 24%;
+    font-size: clamp(2.8rem, 14vw, 4.2rem);
+    bottom: 10%;
     right: 4%;
+    z-index: 2;
   }
 }
 
 @media (max-width: 360px) {
   .hero-bg-wordmark {
-    font-size: clamp(5.9rem, 15vw, 4.4rem);
-    top: 15.5%;
+    font-size: clamp(3.2rem, 15vw, 4.2rem);
+    top: 14%;
     left: 3%;
     -webkit-text-stroke: 1.2px rgba(244, 245, 239, 0.85);
   }
 
   .hero-fg-wordmark {
-    font-size: clamp(2.5rem, 14vw, 4.0rem);
-    bottom: 9%;
+    font-size: clamp(2.4rem, 13vw, 3.6rem);
+    bottom: 8%;
     right: 3%;
+    z-index: 2;
   }
 }
 
@@ -744,28 +746,34 @@ body {
 @media (max-width: 768px) {
   .hero-character-stage {
     width: min(340px, 78vw);
-    height: min(520px, 62vh);
-    top: 47%;
-    transform: translate(-50%, -43%);
+    height: min(460px, 54vh);
+    top: 42%;
+    transform: translate(-50%, -44%);
     --char-radius: 180px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%);
   }
 }
 
 @media (max-width: 480px) {
   .hero-character-stage {
     width: min(280px, 80vw);
-    height: min(440px, 54vh);
-    top: 46%;
+    height: min(400px, 48vh);
+    top: 40%;
     transform: translate(-50%, -44%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   }
 }
 
 @media (max-width: 360px) {
   .hero-character-stage {
     width: min(240px, 82vw);
-    height: min(380px, 50vh);
-    top: 45.5%;
+    height: min(350px, 45vh);
+    top: 39%;
     transform: translate(-50%, -44%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
   }
 }
 
@@ -1046,13 +1054,14 @@ body {
   .hud-desc-box {
     max-width: 100%;
     min-height: 5.2em;
-    background: rgba(8, 10, 8, 0.76);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(201, 255, 82, 0.18);
-    border-radius: 8px;
+    background: rgba(16, 19, 15, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(201, 255, 82, 0.22);
+    border-left: 3px solid #C9FF52;
+    border-radius: 6px;
     padding: 10px 14px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85);
   }
 
   .hud-desc-text {

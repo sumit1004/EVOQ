@@ -47,6 +47,7 @@ import OrganizerNotifications from '../pages/organizer/OrganizerNotifications.js
 import OrganizerSettings from '../pages/organizer/OrganizerSettings.jsx';
 
 import '../styles/nebula.css';
+import '../styles/evoq-design-system.css';
 
 function LegacyDashboardRedirect() {
   const { user, loading } = useAuth();

@@ -1,8 +1,20 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
+import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  PrimaryButton,
+  SecondaryButton,
+  Select,
+  Input,
+  Badge,
+  EmptyState,
+  SkeletonLoader,
+  PageHeader,
+  SectionHeader,
+  DataTable,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function OrganizerStaff() {
   const [organizations, setOrganizations] = useState([]);
@@ -73,7 +85,7 @@ export default function OrganizerStaff() {
   };
 
   const handleRemoveStaff = async (userId) => {
-    if (!selectedOrg || !confirm('Remove this staff member from the organization?')) return;
+    if (!selectedOrg || !window.confirm('Remove this staff member from the organization?')) return;
     try {
       await evoqService.removeOrgStaff(selectedOrg.id, userId);
       setSuccess('Staff member removed.');
@@ -84,52 +96,130 @@ export default function OrganizerStaff() {
     }
   };
 
-  return (
-    <div className="nebula-shell">
-      <OrganizerNavbar />
-      <main className="nebula-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-cyan" style={{ marginBottom: '0.4rem' }}>
-              ROLE-BASED ACCESS CONTROL (RBAC)
-            </span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Organization Staff &amp; Referees</h1>
-            <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-              Assign tournament directors, operations managers, and authoritative referees.
-            </p>
+  const staffColumns = [
+    {
+      header: 'Staff Member',
+      accessor: (m) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+            {m.user?.username || m.user?.email}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            {m.user?.email}
           </div>
         </div>
+      ),
+    },
+    {
+      header: 'Role',
+      accessor: (m) => (
+        <Badge
+          variant={
+            m.role === 'OWNER'
+              ? 'brand'
+              : m.role === 'ADMIN'
+              ? 'ops'
+              : m.role === 'REFEREE'
+              ? 'warning'
+              : 'neutral'
+          }
+        >
+          {m.role}
+        </Badge>
+      ),
+    },
+    {
+      header: 'Title / Designation',
+      accessor: (m) => (
+        <span style={{ color: m.title ? 'var(--evoq-text-secondary)' : 'var(--evoq-text-muted)' }}>
+          {m.title || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Date Appointed',
+      accessor: (m) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--evoq-text-muted)' }}>
+          {new Date(m.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: 'Action',
+      align: 'right',
+      accessor: (m) =>
+        m.role !== 'OWNER' ? (
+          <SecondaryButton
+            size="sm"
+            onClick={() => handleRemoveStaff(m.userId)}
+            style={{ color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+          >
+            Revoke
+          </SecondaryButton>
+        ) : (
+          <span style={{ fontSize: '0.75rem', color: 'var(--evoq-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            IMMUTABLE
+          </span>
+        ),
+    },
+  ];
 
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-        {success && <div className="nebula-alert nebula-alert-success">{success}</div>}
+  return (
+    <OrganizerLayout>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <PageHeader
+          badge="ACCESS &amp; PERMISSIONS"
+          title="STAFF ROSTER &amp; REFEREES"
+          subtitle="Assign tournament directors, operations managers, and authoritative referees."
+        />
+
+        {error && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="alert" size={18} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="evoq-alert evoq-alert-success" role="alert">
+            <Icon name="check" size={18} />
+            <span>{success}</span>
+          </div>
+        )}
 
         {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading staff rosters...</p>
-          </div>
+          <SkeletonLoader height={280} />
         ) : organizations.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <h3>No Organization Found</h3>
-            <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1rem' }}>
-              Create an organization first to assign staff and referee roles.
-            </p>
-            <Link to="/organizer/organization" className="nebula-btn nebula-btn-cyan">
-              Create Organization
-            </Link>
-          </div>
+          <EmptyState
+            icon="teams"
+            title="No Organization Found"
+            description="Create an organization first to assign staff, referee roles, and tournament permissions."
+            actionLabel="Create Organization"
+            onAction={() => {}}
+            actionHref="/organizer/organization"
+          />
         ) : (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             {/* Org Selector */}
             {organizations.length > 1 && (
-              <div className="nebula-card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
-                <label className="nebula-label" style={{ marginRight: '1rem' }}>Active Organization:</label>
+              <div
+                className="evoq-panel"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1rem 1.25rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--evoq-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Target Organization:
+                </span>
                 <select
                   value={selectedOrg?.slug || ''}
                   onChange={(e) => handleOrgChange(e.target.value)}
-                  className="nebula-select"
-                  style={{ display: 'inline-block', width: 'auto', minWidth: '240px' }}
+                  className="evoq-select"
+                  style={{ width: 'auto', minWidth: '260px' }}
                 >
                   {organizations.map((item) => {
                     const org = item.organization || item;
@@ -144,119 +234,83 @@ export default function OrganizerStaff() {
             )}
 
             {selectedOrg && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-                {/* Add Staff Card */}
-                <div className="nebula-card">
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>
-                     Grant Staff or Referee Role
-                  </h2>
-                  <form onSubmit={handleAddStaff} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr auto', gap: '0.85rem', alignItems: 'flex-end' }}>
-                    <div>
-                      <label className="nebula-label">User Email or Username *</label>
-                      <input
-                        type="text"
-                        value={staffIdentifier}
-                        onChange={(e) => setStaffIdentifier(e.target.value)}
-                        placeholder="referee@example.com"
-                        required
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="nebula-label">Role Assignment *</label>
-                      <select
-                        value={staffRole}
-                        onChange={(e) => setStaffRole(e.target.value)}
-                        className="nebula-select"
-                      >
-                        <option value="ADMIN">ADMIN (Full Operations Access)</option>
-                        <option value="TOURNAMENT_ADMIN">TOURNAMENT_ADMIN (Tournament Manager)</option>
-                        <option value="REFEREE">REFEREE (Result Entry &amp; Approval)</option>
-                        <option value="MEMBER">MEMBER (Staff)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="nebula-label">Official Title</label>
-                      <input
-                        type="text"
-                        value={staffTitle}
-                        onChange={(e) => setStaffTitle(e.target.value)}
-                        placeholder="e.g. Lead Referee"
-                        className="nebula-input"
-                      />
-                    </div>
-                    <button
+              <>
+                {/* Add Staff Panel */}
+                <div className="evoq-panel">
+                  <SectionHeader
+                    title="Grant Staff or Referee Role"
+                    badge="INVITE OPERATOR"
+                    subtitle={`Appoint credentialed operations staff to ${selectedOrg.name}`}
+                  />
+                  <form
+                    onSubmit={handleAddStaff}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr)) auto',
+                      gap: '1rem',
+                      alignItems: 'flex-end',
+                      marginTop: '1.25rem',
+                    }}
+                  >
+                    <Input
+                      label="User Email or Username *"
+                      value={staffIdentifier}
+                      onChange={(e) => setStaffIdentifier(e.target.value)}
+                      placeholder="referee@example.com"
+                      required
+                    />
+
+                    <Select
+                      label="Role Assignment *"
+                      value={staffRole}
+                      onChange={(e) => setStaffRole(e.target.value)}
+                      options={[
+                        { value: 'ADMIN', label: 'ADMIN (Full Operations Access)' },
+                        { value: 'TOURNAMENT_ADMIN', label: 'TOURNAMENT_ADMIN (Tournament Manager)' },
+                        { value: 'REFEREE', label: 'REFEREE (Result Entry & Approval)' },
+                        { value: 'MEMBER', label: 'MEMBER (Staff Observer)' },
+                      ]}
+                    />
+
+                    <Input
+                      label="Official Title / Position"
+                      value={staffTitle}
+                      onChange={(e) => setStaffTitle(e.target.value)}
+                      placeholder="e.g. Lead Referee"
+                    />
+
+                    <PrimaryButton
                       type="submit"
-                      className="nebula-btn nebula-btn-cyan"
+                      variant="ops"
                       disabled={submittingStaff}
+                      style={{ height: '44px', whiteSpace: 'nowrap' }}
                     >
                       {submittingStaff ? 'Granting...' : 'Assign Role'}
-                    </button>
+                    </PrimaryButton>
                   </form>
                 </div>
 
                 {/* Staff Table */}
-                <div className="nebula-card">
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                     Active Staff Roster — {selectedOrg.name}
-                  </h2>
-
-                  <div className="nebula-table-wrapper">
-                    <table className="nebula-table">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Role</th>
-                          <th>Title</th>
-                          <th>Assigned Date</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedOrg.memberships?.map((m) => (
-                          <tr key={m.id}>
-                            <td>
-                              <strong>{m.user?.username || m.user?.email}</strong>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--nebula-text-muted)' }}>{m.user?.email}</div>
-                            </td>
-                            <td>
-                              <span
-                                className={`nebula-badge ${
-                                  m.role === 'OWNER'
-                                    ? 'nebula-badge-violet'
-                                    : m.role === 'ADMIN'
-                                    ? 'nebula-badge-cyan'
-                                    : 'nebula-badge-lime'
-                                }`}
-                              >
-                                {m.role}
-                              </span>
-                            </td>
-                            <td>{m.title || '—'}</td>
-                            <td>{new Date(m.createdAt).toLocaleDateString()}</td>
-                            <td>
-                              {m.role !== 'OWNER' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveStaff(m.userId)}
-                                  className="nebula-btn nebula-btn-coral nebula-btn-sm"
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="evoq-panel">
+                  <SectionHeader
+                    title={`Active Staff Roster — ${selectedOrg.name}`}
+                    badge={`${selectedOrg.memberships?.length || 0} APPOINTED`}
+                    subtitle="Credentialed operators with administrative privileges over sanctioned tournaments"
+                  />
+                  <div style={{ marginTop: '1rem' }}>
+                    <DataTable
+                      columns={staffColumns}
+                      data={selectedOrg.memberships || []}
+                      keyField="id"
+                      emptyMessage="No staff members appointed to this organization yet."
+                    />
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </OrganizerLayout>
   );
 }
-

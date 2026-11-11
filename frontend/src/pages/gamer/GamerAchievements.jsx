@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import GamerNavbar from '../../components/GamerNavbar.jsx';
+import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  Badge,
+  EmptyState,
+  SkeletonLoader,
+  SectionHeader,
+  PrimaryButton,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerAchievements() {
   const [profile, setProfile] = useState(null);
@@ -17,7 +24,7 @@ export default function GamerAchievements() {
         const prof = await evoqService.getMyProfile();
         setProfile(prof);
       } catch (err) {
-        setError('Failed to load achievements.');
+        setError('Failed to load verified achievements.');
       } finally {
         setLoading(false);
       }
@@ -28,87 +35,105 @@ export default function GamerAchievements() {
   const achievements = profile?.achievements || [];
 
   return (
-    <div className="nebula-shell">
-      <GamerNavbar />
-      <main className="nebula-container">
-        <div style={{ marginBottom: '2rem' }}>
-          <span className="nebula-badge nebula-badge-lime" style={{ marginBottom: '0.4rem' }}>
-            VERIFIED PROOF &amp; RECOGNITION
-          </span>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Gamer Achievements &amp; Trophies</h1>
-          <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Every tournament result approved by referees produces an immutable, cryptographically verifiable achievement on your record.
-          </p>
+    <GamerLayout
+      title="Verified Achievements"
+      actions={
+        <Link to="/gamer/tournaments" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+          <Icon name="trophy" size={14} />
+          <span>Compete for Trophies</span>
+        </Link>
+      }
+    >
+      <div style={{ marginBottom: '24px' }}>
+        <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', margin: 0 }}>
+          Every tournament result approved by referees produces an immutable, verifiable achievement on your permanent gamer record.
+        </p>
+      </div>
+
+      {error && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{error}</span>
         </div>
+      )}
 
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading trophy cabinet...</p>
-          </div>
-        ) : achievements.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <h3>No Verified Achievements Yet</h3>
-            <p style={{ color: 'var(--nebula-text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
-              Compete in EVOQ verified tournaments. Podium finishes and championship runs generate permanent credentials on your public player profile.
-            </p>
-            <Link to="/gamer/tournaments" className="nebula-btn nebula-btn-primary">
-              Find Tournaments to Compete
+      {loading ? (
+        <SkeletonLoader type="card" count={3} height="150px" />
+      ) : achievements.length === 0 ? (
+        <EmptyState
+          icon="trophy"
+          title="No Verified Achievements Yet"
+          description="Compete in EVOQ verified tournaments. Podium finishes and championship runs generate permanent credentials on your public player profile."
+          action={
+            <Link to="/gamer/tournaments" className="evoq-btn evoq-btn-primary evoq-btn-sm">
+              Explore Tournaments
             </Link>
-          </div>
-        ) : (
-          <div className="nebula-grid-cards">
-            {achievements.map((ach) => (
+          }
+        />
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {achievements.map((ach) => (
+            <div
+              key={ach.id}
+              className="evoq-card evoq-card-hover"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                borderColor: 'var(--evoq-border-accent)',
+                backgroundColor: '#111710',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <Badge variant="lime">{ach.type || 'CHAMPIONSHIP'}</Badge>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)', fontFamily: 'var(--evoq-font-mono)' }}>
+                    {new Date(ach.awardedAt || ach.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--evoq-text-primary)' }}>
+                  {ach.title}
+                </h3>
+
+                <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.88rem', margin: '0 0 16px 0' }}>
+                  Game Title: <strong style={{ color: 'var(--evoq-lime)' }}>{ach.game?.name || 'Competitive Title'}</strong>
+                </p>
+              </div>
+
               <div
-                key={ach.id}
-                className="nebula-card"
                 style={{
-                  borderTop: '4px solid var(--nebula-lime)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
+                  backgroundColor: 'var(--evoq-bg)',
+                  padding: '12px 14px',
+                  borderRadius: 'var(--evoq-radius-sm)',
+                  fontSize: '0.76rem',
+                  color: 'var(--evoq-text-muted)',
+                  border: '1px solid var(--evoq-border-subtle)',
                 }}
               >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <span className="nebula-badge nebula-badge-lime">{ach.type || 'ACHIEVEMENT'}</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>
-                      {new Date(ach.awardedAt || ach.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 0.4rem 0' }}>{ach.title}</h3>
-
-                  <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.88rem', margin: '0 0 1rem 0' }}>
-                    Game Title: <strong style={{ color: 'var(--nebula-cyan)' }}>{ach.game?.name || 'Competitive Title'}</strong>
-                  </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>STATUS</span>
+                  <strong style={{ color: 'var(--evoq-lime)' }}>VERIFIED IMMUTABLE</strong>
                 </div>
-
-                <div
-                  style={{
-                    backgroundColor: 'var(--nebula-surface-elevated)',
-                    padding: '0.75rem',
-                    borderRadius: 'var(--nebula-radius-sm)',
-                    fontSize: '0.75rem',
-                    color: 'var(--nebula-text-muted)',
-                    border: '1px solid var(--nebula-border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                    <span>PROOF STATUS:</span>
-                    <strong style={{ color: 'var(--nebula-lime)' }}>VERIFIED &amp; IMMUTABLE</strong>
+                {ach.tournament && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>EVENT</span>
+                    <strong style={{ color: 'var(--evoq-text-secondary)' }}>
+                      {ach.tournament.name || ach.tournament.title}
+                    </strong>
                   </div>
-                  <div>HASH ID: <code>{ach.id.slice(0, 18)}...</code></div>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </GamerLayout>
   );
 }
-

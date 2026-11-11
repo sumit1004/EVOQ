@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
-import PublicNavbar from '../../components/PublicNavbar.jsx';
-import '../../styles/nebula.css';
+import AuthLayout from '../../layouts/AuthLayout.jsx';
+import { Input } from '../../components/ui/FormControls.jsx';
+import { PrimaryButton } from '../../components/ui/Buttons.jsx';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function OrganizerRegister() {
   const { registerOrganizer } = useAuth();
@@ -14,7 +16,6 @@ export default function OrganizerRegister() {
     password: '',
     confirmPassword: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +95,10 @@ export default function OrganizerRegister() {
       });
       setSuccessData(res);
     } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || 'Organizer registration failed';
+      const msg =
+        err.response?.data?.error?.message ||
+        err.message ||
+        'Organizer registration failed. Please verify submitted details.';
       setServerError(msg);
     } finally {
       setSubmitting(false);
@@ -103,185 +107,174 @@ export default function OrganizerRegister() {
 
   if (successData) {
     return (
-      <div className="nebula-shell">
-        <PublicNavbar />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
-          <div className="nebula-card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
-            <span className="nebula-badge nebula-badge-lime" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
-              ONBOARDING INITIATED
-            </span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-              Welcome, Director {formData.username}!
-            </h2>
-            <p style={{ color: 'var(--nebula-text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              A verification link was dispatched to <strong>{formData.email}</strong>. Once confirmed, you can launch tournaments and build your organization.
-            </p>
-            <Link to="/organizer/login" className="nebula-btn nebula-btn-cyan" style={{ width: '100%' }}>
-              Proceed to Organizer Sign In →
-            </Link>
+      <AuthLayout
+        badge="ORGANIZATION REGISTERED"
+        badgeType="cyan"
+        title="Verify Staff Credentials"
+        subtitle="A verification link was dispatched to your organization email."
+        quote="EMPOWERING ESPORTS COMMUNITIES AT SCALE."
+        quoteAuthor="EVOQ OPERATIONS NETWORK"
+        heroImage="/images/two2.png"
+      >
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--evoq-lime-subtle)',
+              border: '1px solid var(--evoq-border-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'var(--evoq-lime)',
+            }}
+          >
+            <Icon name="check" size={32} />
           </div>
+
+          <h3 className="evoq-section-title" style={{ marginBottom: '10px' }}>
+            Organization Enrolled
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '24px' }}>
+            We sent a confirmation link to{' '}
+            <strong style={{ color: 'var(--evoq-text-primary)' }}>{formData.email}</strong>.
+            Confirm your address to start hosting official esports tournaments and brackets.
+          </p>
+
+          <Link to="/organizer/login" className="evoq-btn evoq-btn-primary evoq-btn-lg" style={{ justifyContent: 'center' }}>
+            <span>Sign In to Operations Hub</span>
+            <Icon name="arrow-right" size={16} />
+          </Link>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="nebula-shell">
-      <PublicNavbar />
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
-        <div className="nebula-card" style={{ maxWidth: '460px', width: '100%', borderTop: '4px solid var(--nebula-cyan)' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <span className="nebula-badge nebula-badge-cyan" style={{ marginBottom: '0.75rem' }}>
-              OPERATIONS &amp; TOURNAMENT HUB
-            </span>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em', margin: '0.25rem 0' }}>
-              Organizer Onboarding
-            </h1>
-            <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem' }}>
-              Host competitive events, orchestrate automated brackets, and earn verified organization credibility.
-            </p>
-          </div>
+    <AuthLayout
+      badge="ORGANIZER NETWORK"
+      badgeType="cyan"
+      title="Register Organization"
+      subtitle="Create an official organizer account to host events, run brackets, and approve verified results."
+      quote="PROFESSIONAL BRACKETS. REPUTABLE COMPETITIONS."
+      quoteAuthor="EVOQ TOURNAMENT OPERATIONS"
+      heroImage="/images/two2.png"
+    >
+      {serverError && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{serverError}</span>
+        </div>
+      )}
 
-          {serverError && (
-            <div className="nebula-alert nebula-alert-danger" role="alert">
-              {serverError}
-            </div>
-          )}
+      <form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Organization / Club Name"
+          id="organizationName"
+          name="organizationName"
+          type="text"
+          value={formData.organizationName}
+          onChange={handleChange}
+          placeholder="e.g. Apex Esports League"
+          required
+          disabled={submitting}
+          error={errors.organizationName}
+          helperText="Public entity name displayed on official tournament badges."
+        />
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="organizationName">Esports Organization / Club Name *</label>
-              <input
-                id="organizationName"
-                name="organizationName"
-                type="text"
-                value={formData.organizationName}
-                onChange={handleChange}
-                placeholder="Cloud9, Team Liquid, VCT Circuit"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.organizationName && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.organizationName}</span>}
-            </div>
+        <Input
+          label="Director / Staff Identifier"
+          id="username"
+          name="username"
+          type="text"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="e.g. director_john"
+          autoComplete="username"
+          required
+          disabled={submitting}
+          error={errors.username}
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="email">Official Organization Email *</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="director@organization.gg"
-                autoComplete="email"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.email && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.email}</span>}
-            </div>
+        <Input
+          label="Official Email Address"
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="director@organization.gg"
+          autoComplete="email"
+          required
+          disabled={submitting}
+          error={errors.email}
+          icon="shield"
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="username">Organizer / Brand Handle *</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="ApexLeagueDirector"
-                autoComplete="username"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.username && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.username}</span>}
-            </div>
+        <Input
+          label="Password"
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Min 12 chars, upper, lower, number, special"
+          autoComplete="new-password"
+          required
+          disabled={submitting}
+          error={errors.password}
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="password">Password (min. 12 chars, Aa1!) *</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••••••"
-                  autoComplete="new-password"
-                  required
-                  disabled={submitting}
-                  className="nebula-input"
-                  style={{ paddingRight: '2.5rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--nebula-text-muted)',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                  }}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              {errors.password && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.password}</span>}
-            </div>
+        <Input
+          label="Confirm Password"
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Re-enter your password"
+          autoComplete="new-password"
+          required
+          disabled={submitting}
+          error={errors.confirmPassword}
+        />
 
-            <div className="nebula-form-group">
-              <label className="nebula-label" htmlFor="confirmPassword">Confirm Password *</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••••••"
-                autoComplete="new-password"
-                required
-                disabled={submitting}
-                className="nebula-input"
-              />
-              {errors.confirmPassword && <span style={{ color: 'var(--nebula-coral)', fontSize: '0.8rem' }}>{errors.confirmPassword}</span>}
-            </div>
+        <PrimaryButton
+          type="submit"
+          disabled={submitting}
+          loading={submitting}
+          fullWidth
+          iconRight="arrow-right"
+          size="lg"
+          style={{ marginTop: '8px' }}
+        >
+          {submitting ? 'Registering Organization...' : 'Enlist as Tournament Organizer'}
+        </PrimaryButton>
+      </form>
 
-            <button
-              type="submit"
-              className="nebula-btn nebula-btn-cyan"
-              style={{ width: '100%', marginTop: '0.5rem' }}
-              disabled={submitting}
-            >
-              {submitting ? 'Registering Organization...' : 'Register Organizer Account →'}
-            </button>
-          </form>
-
-          <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--nebula-border)' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--nebula-text-secondary)', margin: '0 0 0.5rem 0' }}>
-              Already registered?{' '}
-              <Link to="/organizer/login" style={{ color: 'var(--nebula-cyan)', fontWeight: 700 }}>
-                Sign In
-              </Link>
-            </p>
-            <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', color: 'var(--nebula-text-muted)' }}>
-              Are you a competitive gamer?{' '}
-              <Link to="/gamer/register" style={{ color: 'var(--nebula-violet)', fontWeight: 600 }}>
-                Create Gamer Account ↗
-              </Link>
-            </div>
-          </div>
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid var(--evoq-border)',
+        }}
+      >
+        <p style={{ fontSize: '0.9rem', color: 'var(--evoq-text-secondary)', margin: '0 0 10px 0' }}>
+          Already an organizer?{' '}
+          <Link to="/organizer/login" style={{ color: 'var(--evoq-lime)', fontWeight: 700 }}>
+            Sign In to Operations Hub
+          </Link>
+        </p>
+        <div style={{ fontSize: '0.82rem', color: 'var(--evoq-text-muted)' }}>
+          Player looking to compete?{' '}
+          <Link to="/gamer/register" style={{ color: 'var(--evoq-text-primary)', fontWeight: 600 }}>
+            Create Gamer Account ↗
+          </Link>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
-

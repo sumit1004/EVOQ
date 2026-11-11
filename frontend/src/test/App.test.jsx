@@ -23,7 +23,7 @@ describe('Landing page', () => {
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Features')).toBeInTheDocument();
     expect(screen.getByText('Games')).toBeInTheDocument();
-    expect(screen.getByText('Sponsors')).toBeInTheDocument();
+    expect(screen.getAllByText('Tournaments')[0]).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getAllByText('Login')[0]).toBeInTheDocument();
     expect(

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import FormInput from '../components/FormInput.jsx';
-import '../styles/auth.css';
+import AuthLayout from '../layouts/AuthLayout.jsx';
+import { Input } from '../components/ui/FormControls.jsx';
+import { PrimaryButton } from '../components/ui/Buttons.jsx';
+import { Icon } from '../components/Icons.jsx';
 
 export default function Register() {
   const { register } = useAuth();
@@ -34,12 +36,11 @@ export default function Register() {
     }
 
     if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = 'Gamer username is required';
     } else if (formData.username.length < 3 || formData.username.length > 30) {
       newErrors.username = 'Username must be between 3 and 30 characters';
     } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      newErrors.username =
-        'Username can only contain alphanumeric characters, hyphens, and underscores';
+      newErrors.username = 'Username can only contain alphanumeric characters, hyphens, and underscores';
     }
 
     if (!formData.password) {
@@ -88,101 +89,138 @@ export default function Register() {
 
   if (successData) {
     return (
-      <div className="auth-container">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <div className="auth-header">
-            <span className="auth-logo">EVOQ</span>
-            <h2 style={{ fontSize: '1.5rem', marginTop: '0.5rem', color: 'var(--success)' }}>
-              Account Created!
-            </h2>
+      <AuthLayout
+        badge="REGISTRATION CONFIRMED"
+        badgeType="lime"
+        title="Check Your Email"
+        subtitle="We sent a verification link to activate your account."
+        quote="YOUR COMPETITIVE JOURNEY BEGINS HERE."
+        quoteAuthor="EVOQ SYSTEM IDENTITY"
+        heroImage="/images/two2.png"
+      >
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--evoq-lime-subtle)',
+              border: '1px solid var(--evoq-border-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'var(--evoq-lime)',
+            }}
+          >
+            <Icon name="check" size={32} />
           </div>
-          <p style={{ color: 'var(--text)', marginBottom: '1rem' }}>
-            We've sent a verification link to <strong>{formData.email}</strong>.
+
+          <h3 className="evoq-section-title" style={{ marginBottom: '10px' }}>
+            Account Created
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '24px' }}>
+            Please check your inbox at <strong style={{ color: 'var(--evoq-text-primary)' }}>{formData.email}</strong> to verify your account.
           </p>
-          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-            Please check your inbox to activate your account.
-          </p>
-          <Link to="/login" className="btn-primary">
-            Proceed to Sign In
+
+          <Link to="/login" className="evoq-btn evoq-btn-primary evoq-btn-lg" style={{ justifyContent: 'center' }}>
+            <span>Go to Login</span>
+            <Icon name="arrow-right" size={16} />
           </Link>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            EVOQ
+    <AuthLayout
+      badge="CREATE ACCOUNT"
+      badgeType="lime"
+      title="Join the EVOQ Arena"
+      subtitle="Create your competitive profile to compete in official tournaments."
+      quote="DOMINATE THE ARENA. VERIFY YOUR LEGACY."
+      quoteAuthor="EVOQ PRO NETWORK"
+      heroImage="/images/two2.png"
+    >
+      {serverError && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{serverError}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Email Address"
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="player@example.com"
+          autoComplete="email"
+          required
+          disabled={submitting}
+          error={errors.email}
+          icon="user"
+        />
+
+        <Input
+          label="Gamer Username"
+          id="username"
+          name="username"
+          type="text"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="e.g. ProGamer99"
+          autoComplete="username"
+          required
+          disabled={submitting}
+          error={errors.username}
+        />
+
+        <Input
+          label="Password"
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Min 12 chars, upper, lower, number, special"
+          autoComplete="new-password"
+          required
+          disabled={submitting}
+          error={errors.password}
+        />
+
+        <PrimaryButton
+          type="submit"
+          disabled={submitting}
+          loading={submitting}
+          fullWidth
+          iconRight="arrow-right"
+          size="lg"
+          style={{ marginTop: '8px' }}
+        >
+          {submitting ? 'Creating account...' : 'Create Account'}
+        </PrimaryButton>
+      </form>
+
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid var(--evoq-border)',
+        }}
+      >
+        <p style={{ fontSize: '0.9rem', color: 'var(--evoq-text-secondary)', margin: '0' }}>
+          Already have an account?{' '}
+          <Link to="/login" style={{ color: 'var(--evoq-lime)', fontWeight: 700 }}>
+            Sign In
           </Link>
-          <h2 style={{ fontSize: '1.25rem', marginTop: '0.25rem' }}>Create Account</h2>
-          <p className="auth-subtitle">Join the professional network for esports</p>
-        </div>
-
-        {serverError && (
-          <div className="auth-alert error" role="alert">
-            {serverError}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          <FormInput
-            id="email"
-            label="Email Address"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            placeholder="player@example.com"
-            autoComplete="email"
-            required
-            disabled={submitting}
-          />
-
-          <FormInput
-            id="username"
-            label="Gamer Username"
-            type="text"
-            value={formData.username}
-            onChange={handleChange}
-            error={errors.username}
-            placeholder="ApexSniper"
-            autoComplete="username"
-            required
-            disabled={submitting}
-          />
-
-          <FormInput
-            id="password"
-            label="Password (min. 12 characters, Aa1!)"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="••••••••••••"
-            autoComplete="new-password"
-            required
-            disabled={submitting}
-          />
-
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={submitting}
-          >
-            {submitting ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Already have an account? <Link to="/login">Sign in</Link>
-          </p>
-        </div>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
-

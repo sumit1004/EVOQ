@@ -1,9 +1,22 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import PublicNavbar from '../components/PublicNavbar.jsx';
+import PublicLayout from '../layouts/PublicLayout.jsx';
 import { useAuth } from '../features/auth/AuthContext.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/nebula.css';
+import {
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  StatusIndicator,
+  Tabs,
+  Modal,
+  Select,
+  DataTable,
+  EmptyState,
+  SkeletonLoader,
+  SectionHeader,
+} from '../components/ui/index.js';
+import { Icon } from '../components/Icons.jsx';
 
 export default function TournamentDetail() {
   const { slug } = useParams();
@@ -44,7 +57,7 @@ export default function TournamentDetail() {
         loadSubData(data.id);
       }
     } catch (err) {
-      setError('Tournament not found.');
+      setError('Tournament not found or unavailable.');
     } finally {
       setLoading(false);
     }
@@ -109,7 +122,7 @@ export default function TournamentDetail() {
         payload.teamId = selectedTeamId;
       }
       await evoqService.registerTournament(tournament.id, payload);
-      setRegSuccess('Registration submitted! Awaiting review.');
+      setRegSuccess('Registration confirmed! Awaiting organizer verification.');
       await loadTournament();
       setTimeout(() => setShowRegisterModal(false), 1500);
     } catch (err) {
@@ -120,7 +133,7 @@ export default function TournamentDetail() {
   };
 
   const handleWithdraw = async () => {
-    if (!confirm('Withdraw tournament registration?')) return;
+    if (!window.confirm('Withdraw tournament registration?')) return;
     try {
       await evoqService.withdrawRegistration(tournament.id);
       setMyRegistration(null);
@@ -132,65 +145,105 @@ export default function TournamentDetail() {
 
   if (loading) {
     return (
-      <div className="nebula-shell">
-        <PublicNavbar />
-        <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">—</div>
-          <p>Loading tournament...</p>
+      <PublicLayout>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '3rem 1.5rem' }}>
+          <SkeletonLoader height={320} />
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
   if (error || !tournament) {
     return (
-      <div className="nebula-shell">
-        <PublicNavbar />
-        <div className="nebula-container nebula-empty-state">
-          <div className="nebula-empty-icon">—</div>
-          <h2>Tournament Not Found</h2>
-          <p style={{ color: 'var(--nebula-text-secondary)' }}>{error}</p>
-          <Link to="/tournaments" className="nebula-btn nebula-btn-primary" style={{ marginTop: '1.5rem' }}>
-            Browse Tournaments
-          </Link>
+      <PublicLayout>
+        <div style={{ maxWidth: '800px', margin: '4rem auto', padding: '0 1.5rem' }}>
+          <EmptyState
+            icon="tournament"
+            title="Tournament Not Found"
+            description={error || 'The requested tournament does not exist or has been removed.'}
+            actionLabel="Browse Tournaments"
+            actionHref="/tournaments"
+          />
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
+  const approvedRegistrations = registrations.filter((r) => r.status === 'APPROVED');
+  const tournamentTitle = tournament.name || tournament.title || 'Tournament Event';
+  const organizerName =
+    tournament.organization?.name ||
+    tournament.organizerUser?.username ||
+    'EVOQ Sanctioned Organizer';
+
+  const tabs = [
+    { id: 'overview', label: 'Overview & Rules' },
+    { id: 'participants', label: 'Competitors', count: approvedRegistrations.length },
+    { id: 'bracket', label: 'Bracket Fixtures', count: matches.length },
+    { id: 'standings', label: 'Stage Standings' },
+  ];
+
+  const participantColumns = [
+    {
+      header: 'Seed',
+      accessor: (r, index) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--evoq-accent)' }}>
+          #{r.seed || index + 1}
+        </span>
+      ),
+    },
+    {
+      header: 'Competitor',
+      accessor: (r) => (
+        <div style={{ fontWeight: 800, color: 'var(--evoq-text-primary)' }}>
+          {r.team?.name || r.gamerProfile?.inGameName || 'Solo Competitor'}
+        </div>
+      ),
+    },
+    {
+      header: 'Mode',
+      accessor: () => <Badge variant="neutral">{tournament.participationType}</Badge>,
+    },
+    {
+      header: 'Registered Date',
+      accessor: (r) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--evoq-text-muted)' }}>
+          {new Date(r.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="nebula-shell">
-      <PublicNavbar />
-      <main className="nebula-container">
-        {/* Tournament Hero */}
-        <div
-          className="nebula-card"
-          style={{
-            padding: 0,
-            overflow: 'hidden',
-            marginBottom: '2rem',
-            border: '1px solid var(--nebula-border)',
-          }}
-        >
+    <PublicLayout>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        {/* Hero Banner Panel */}
+        <div className="evoq-panel" style={{ padding: 0, overflow: 'hidden' }}>
           {tournament.bannerUrl ? (
             <img
               src={tournament.bannerUrl}
-              alt={tournament.name || tournament.title}
-              style={{ width: '100%', height: '240px', objectFit: 'cover' }}
+              alt={tournamentTitle}
+              style={{ width: '100%', height: '260px', objectFit: 'cover' }}
             />
           ) : (
             <div
               style={{
                 width: '100%',
                 height: '180px',
-                background: 'linear-gradient(135deg, #1b1738 0%, #0d1020 100%)',
+                background: 'linear-gradient(135deg, rgba(201, 255, 82, 0.08) 0%, rgba(34, 211, 238, 0.08) 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderBottom: '1px solid var(--evoq-border-subtle)',
               }}
-            />
+            >
+              <Icon name="tournament" size={54} color="var(--evoq-accent)" />
+            </div>
           )}
 
           <div
             style={{
-              padding: '1.75rem 2rem',
+              padding: '2rem',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
@@ -199,79 +252,89 @@ export default function TournamentDetail() {
             }}
           >
             <div>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-                <span className="nebula-badge nebula-badge-violet">{tournament.game?.name || 'Esports'}</span>
-                <span className="nebula-badge nebula-badge-neutral">{tournament.format?.replace(/_/g, ' ')}</span>
-                <span className="nebula-badge nebula-badge-neutral">{tournament.participationType}</span>
-                <span className="nebula-badge nebula-badge-lime">{tournament.status?.replace(/_/g, ' ')}</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                <Badge variant="brand">{tournament.game?.name || 'Esports Title'}</Badge>
+                <Badge variant="neutral">{tournament.format?.replace(/_/g, ' ')}</Badge>
+                <Badge variant="neutral">{tournament.participationType}</Badge>
+                <StatusIndicator status={tournament.status} />
               </div>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: 900, margin: '0 0 0.4rem 0' }}>
-                {tournament.name || tournament.title}
+
+              <h1 style={{ fontSize: '2.4rem', fontWeight: 900, margin: '0 0 0.5rem 0', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+                {tournamentTitle}
               </h1>
-              <p style={{ color: 'var(--nebula-text-secondary)', margin: 0 }}>
-                Hosted by{' '}
-                <strong style={{ color: 'var(--nebula-text-primary)' }}>
-                  {tournament.organization?.name || tournament.organizerUser?.username || 'Verified Organizer'}
-                </strong>
+
+              <p style={{ color: 'var(--evoq-text-secondary)', margin: 0, fontSize: '0.95rem' }}>
+                Sanctioned by{' '}
+                <strong style={{ color: 'var(--evoq-text-primary)' }}>{organizerName}</strong>
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
               {user ? (
                 myRegistration ? (
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span className="nebula-badge nebula-badge-lime">
-                      Registered ({myRegistration.status})
-                    </span>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <Badge variant="brand">Registered ({myRegistration.status})</Badge>
                     {['PENDING', 'APPROVED'].includes(myRegistration.status) && (
-                      <button onClick={handleWithdraw} className="nebula-btn nebula-btn-coral nebula-btn-sm">
-                        Withdraw
-                      </button>
+                      <SecondaryButton
+                        size="sm"
+                        onClick={handleWithdraw}
+                        style={{ color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      >
+                        Withdraw Entry
+                      </SecondaryButton>
                     )}
                   </div>
                 ) : tournament.status === 'REGISTRATION_OPEN' ? (
-                  <button onClick={handleOpenRegister} className="nebula-btn nebula-btn-primary">
+                  <PrimaryButton onClick={handleOpenRegister} icon="sword">
                     Register Competitor
-                  </button>
+                  </PrimaryButton>
                 ) : (
-                  <span className="nebula-badge nebula-badge-neutral">Registration Closed</span>
+                  <Badge variant="neutral">Registration Closed</Badge>
                 )
               ) : (
-                <Link to="/gamer/login" className="nebula-btn nebula-btn-primary">
-                  Sign In to Register
-                </Link>
+                <PrimaryButton as={Link} to="/gamer/login" icon="shield">
+                  Sign In to Compete
+                </PrimaryButton>
               )}
             </div>
           </div>
         </div>
 
-        {/* Released Match Lobby Credentials Box */}
+        {/* Released Match Lobby Credentials */}
         {credentialInfo && (
           <div
-            className="nebula-card"
+            className="evoq-panel"
             style={{
-              marginBottom: '2rem',
-              borderLeft: '4px solid var(--nebula-lime)',
-              backgroundColor: 'var(--nebula-surface-elevated)',
+              borderColor: 'var(--evoq-accent)',
+              background: 'rgba(201, 255, 82, 0.05)',
             }}
           >
-            <span className="nebula-badge nebula-badge-lime" style={{ marginBottom: '0.5rem' }}>
-              MATCH LOBBY CREDENTIALS RELEASED
-            </span>
-            <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Lobby credentials have been released by the tournament referee for your fixture.
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+              <Icon name="key" size={20} color="var(--evoq-accent)" />
+              <span className="evoq-mono-label" style={{ color: 'var(--evoq-accent)' }}>
+                MATCH LOBBY CREDENTIALS RELEASED
+              </span>
+            </div>
+            <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+              Authoritative credentials have been released by the tournament referee for your match room fixture.
             </p>
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
               {credentialInfo.lobbyName && (
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>ROOM NAME / ID</span>
-                  <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>{credentialInfo.lobbyName}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--evoq-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    ROOM ID / NAME
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--evoq-text-primary)', marginTop: '0.2rem' }}>
+                    {credentialInfo.lobbyName}
+                  </div>
                 </div>
               )}
               {credentialInfo.password && (
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--nebula-text-muted)' }}>PASSWORD</span>
-                  <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--nebula-cyan)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--evoq-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    ROOM PASSWORD
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--evoq-accent)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
                     {credentialInfo.password}
                   </div>
                 </div>
@@ -280,57 +343,32 @@ export default function TournamentDetail() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="nebula-tabs">
-          <button
-            className={`nebula-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview &amp; Rules
-          </button>
-          <button
-            className={`nebula-tab-btn ${activeTab === 'participants' ? 'active' : ''}`}
-            onClick={() => setActiveTab('participants')}
-          >
-            Competitors ({registrations.filter((r) => r.status === 'APPROVED').length})
-          </button>
-          <button
-            className={`nebula-tab-btn ${activeTab === 'bracket' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bracket')}
-          >
-            Bracket ({matches.length})
-          </button>
-          <button
-            className={`nebula-tab-btn ${activeTab === 'standings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('standings')}
-          >
-            Standings
-          </button>
-        </div>
+        {/* Navigation Tabs */}
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
         {/* Tab 1: Overview */}
         {activeTab === 'overview' && (
-          <div className="nebula-grid-2col">
-            <div className="nebula-card">
-              <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>Event Details</h2>
-              <p style={{ color: 'var(--nebula-text-secondary)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                {tournament.description || 'No detailed description provided.'}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+            <div className="evoq-panel" style={{ gridColumn: 'span 2' }}>
+              <SectionHeader title="Event Details" badge="OVERVIEW" />
+              <p style={{ color: 'var(--evoq-text-secondary)', lineHeight: '1.7', whiteSpace: 'pre-wrap', marginTop: '1rem' }}>
+                {tournament.description || 'No detailed briefing published by the organizer.'}
               </p>
 
               {tournament.rules && (
-                <div style={{ marginTop: '2rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.75rem' }}>
-                    Rulebook &amp; Code of Conduct
-                  </h3>
+                <div style={{ marginTop: '2.5rem' }}>
+                  <SectionHeader title="Official Rulebook &amp; Code of Conduct" badge="RULES" />
                   <div
                     style={{
-                      backgroundColor: 'var(--nebula-surface-elevated)',
-                      padding: '1.25rem',
-                      borderRadius: 'var(--nebula-radius-md)',
-                      fontSize: '0.88rem',
-                      lineHeight: '1.6',
+                      background: 'rgba(0,0,0,0.3)',
+                      padding: '1.5rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--evoq-border-subtle)',
+                      fontSize: '0.9rem',
+                      lineHeight: '1.7',
                       whiteSpace: 'pre-wrap',
-                      color: 'var(--nebula-text-secondary)',
+                      color: 'var(--evoq-text-secondary)',
+                      marginTop: '1rem',
                     }}
                   >
                     {tournament.rules}
@@ -339,33 +377,33 @@ export default function TournamentDetail() {
               )}
             </div>
 
-            <div>
-              <div className="nebula-card" style={{ marginBottom: '1.5rem' }}>
-                <h2 className="nebula-card-title" style={{ marginBottom: '1rem' }}>Specifications</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--nebula-text-muted)' }}>Format:</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="evoq-panel">
+                <SectionHeader title="Specifications" badge="METRICS" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '1rem', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid var(--evoq-border-subtle)' }}>
+                    <span style={{ color: 'var(--evoq-text-muted)' }}>Format:</span>
                     <strong>{tournament.format?.replace(/_/g, ' ')}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--nebula-text-muted)' }}>Participation:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid var(--evoq-border-subtle)' }}>
+                    <span style={{ color: 'var(--evoq-text-muted)' }}>Participation:</span>
                     <strong>{tournament.participationType}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--nebula-text-muted)' }}>Capacity:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid var(--evoq-border-subtle)' }}>
+                    <span style={{ color: 'var(--evoq-text-muted)' }}>Capacity:</span>
                     <strong>{tournament.maxParticipants} Competitors</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--nebula-text-muted)' }}>Starts:</span>
+                    <span style={{ color: 'var(--evoq-text-muted)' }}>Starts:</span>
                     <strong>{tournament.startDate ? new Date(tournament.startDate).toLocaleDateString() : 'TBA'}</strong>
                   </div>
                 </div>
               </div>
 
               {tournament.prizePool && (
-                <div className="nebula-card">
-                  <h2 className="nebula-card-title" style={{ marginBottom: '0.5rem' }}>Prize Pool</h2>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--nebula-lime)' }}>
+                <div className="evoq-panel">
+                  <SectionHeader title="Prize Pool" badge="REWARD" />
+                  <div style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--evoq-accent)', fontFamily: 'var(--font-display)', marginTop: '0.75rem' }}>
                     {tournament.prizePool} {tournament.prizeCurrency || 'USD'}
                   </div>
                 </div>
@@ -376,76 +414,81 @@ export default function TournamentDetail() {
 
         {/* Tab 2: Participants */}
         {activeTab === 'participants' && (
-          <div className="nebula-card">
-            <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>Approved Competitors</h2>
-            {registrations.filter((r) => r.status === 'APPROVED').length === 0 ? (
-              <div className="nebula-empty-state">
-                <p>No competitors approved yet.</p>
-              </div>
-            ) : (
-              <div className="nebula-table-wrapper">
-                <table className="nebula-table">
-                  <thead>
-                    <tr>
-                      <th>Seed</th>
-                      <th>Competitor</th>
-                      <th>Type</th>
-                      <th>Registered On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registrations
-                      .filter((r) => r.status === 'APPROVED')
-                      .map((r, index) => (
-                        <tr key={r.id}>
-                          <td><strong>#{r.seed || index + 1}</strong></td>
-                          <td><strong>{r.team?.name || r.gamerProfile?.inGameName || 'Solo Competitor'}</strong></td>
-                          <td>{tournament.participationType}</td>
-                          <td>{new Date(r.createdAt).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div className="evoq-panel">
+            <SectionHeader
+              title="Approved Competitors"
+              badge={`${approvedRegistrations.length} SEEDED`}
+              subtitle="Registered and verified players/teams roster"
+            />
+            <div style={{ marginTop: '1.25rem' }}>
+              <DataTable
+                columns={participantColumns}
+                data={approvedRegistrations}
+                keyField="id"
+                emptyMessage="No competitors approved for this bracket yet."
+              />
+            </div>
           </div>
         )}
 
-        {/* Tab 3: Bracket */}
+        {/* Tab 3: Bracket / Matches */}
         {activeTab === 'bracket' && (
           <div>
             {matches.length === 0 ? (
-              <div className="nebula-card nebula-empty-state">
-                <div className="nebula-empty-icon">—</div>
-                <h3>Bracket Fixtures Pending</h3>
-                <p>Matches will populate once the organizer generates the tournament bracket.</p>
-              </div>
+              <EmptyState
+                icon="bracket"
+                title="Bracket Fixtures Pending"
+                description="Matches will populate once the tournament organizer publishes seeded pairings."
+              />
             ) : (
-              <div className="nebula-grid-cards">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
                 {matches.map((m) => {
                   const p1 = m.participants?.[0];
                   const p2 = m.participants?.[1];
                   const isCompleted = m.status === 'COMPLETED';
 
                   return (
-                    <div key={m.id} className="nebula-card">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--nebula-text-muted)' }}>
-                          Round {m.round?.sequence || 1} • Match #{m.matchNumber}
+                    <div key={m.id} className="evoq-panel" style={{ padding: '1.25rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <span className="evoq-mono-label">
+                          R{m.round?.sequence || 1} • MATCH #{m.matchNumber}
                         </span>
-                        <span className={`nebula-badge ${isCompleted ? 'nebula-badge-violet' : 'nebula-badge-neutral'}`}>
-                          {m.status}
-                        </span>
+                        <Badge variant={isCompleted ? 'brand' : 'neutral'}>{m.status}</Badge>
                       </div>
 
-                      <div className={`nebula-match-row ${p1?.isWinner ? 'winner' : ''}`} style={{ marginBottom: '0.4rem' }}>
-                        <span>{p1?.registration?.team?.name || p1?.registration?.gamerProfile?.inGameName || 'TBD'}</span>
-                        <span className="nebula-match-score">{p1?.score ?? '-'}</span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.6rem 0.85rem',
+                          borderRadius: '6px',
+                          background: p1?.isWinner ? 'rgba(201, 255, 82, 0.1)' : 'rgba(0,0,0,0.25)',
+                          border: p1?.isWinner ? '1px solid var(--evoq-accent)' : '1px solid var(--evoq-border-subtle)',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <span style={{ fontWeight: p1?.isWinner ? 800 : 500, color: p1?.isWinner ? 'var(--evoq-accent)' : 'var(--evoq-text-primary)' }}>
+                          {p1?.registration?.team?.name || p1?.registration?.gamerProfile?.inGameName || 'TBD'}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{p1?.score ?? '-'}</span>
                       </div>
 
-                      <div className={`nebula-match-row ${p2?.isWinner ? 'winner' : ''}`}>
-                        <span>{p2?.registration?.team?.name || p2?.registration?.gamerProfile?.inGameName || 'TBD'}</span>
-                        <span className="nebula-match-score">{p2?.score ?? '-'}</span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.6rem 0.85rem',
+                          borderRadius: '6px',
+                          background: p2?.isWinner ? 'rgba(201, 255, 82, 0.1)' : 'rgba(0,0,0,0.25)',
+                          border: p2?.isWinner ? '1px solid var(--evoq-accent)' : '1px solid var(--evoq-border-subtle)',
+                        }}
+                      >
+                        <span style={{ fontWeight: p2?.isWinner ? 800 : 500, color: p2?.isWinner ? 'var(--evoq-accent)' : 'var(--evoq-text-primary)' }}>
+                          {p2?.registration?.team?.name || p2?.registration?.gamerProfile?.inGameName || 'TBD'}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{p2?.score ?? '-'}</span>
                       </div>
                     </div>
                   );
@@ -457,15 +500,21 @@ export default function TournamentDetail() {
 
         {/* Tab 4: Standings */}
         {activeTab === 'standings' && (
-          <div className="nebula-card">
-            <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>Stage Standings</h2>
+          <div className="evoq-panel">
+            <SectionHeader
+              title="Official Stage Standings"
+              badge="AUDITED"
+              subtitle="Leaderboard points and records verified by referees"
+            />
             {standings.length === 0 ? (
-              <div className="nebula-empty-state">
-                <p>Standings will be updated as matches conclude.</p>
-              </div>
+              <EmptyState
+                icon="trophy"
+                title="Standings Not Yet Calculated"
+                description="Standings will update automatically as completed match scores are verified."
+              />
             ) : (
-              <div className="nebula-table-wrapper">
-                <table className="nebula-table">
+              <div style={{ marginTop: '1.25rem' }}>
+                <table className="evoq-table">
                   <thead>
                     <tr>
                       <th>Rank</th>
@@ -479,12 +528,24 @@ export default function TournamentDetail() {
                   <tbody>
                     {standings.map((s, idx) => (
                       <tr key={s.id || idx}>
-                        <td><strong>#{s.rank || idx + 1}</strong></td>
-                        <td><strong>{s.participantName || s.team?.name || 'Competitor'}</strong></td>
-                        <td>{s.points ?? 0}</td>
-                        <td style={{ color: 'var(--nebula-lime)' }}>{s.wins ?? 0}</td>
-                        <td style={{ color: 'var(--nebula-coral)' }}>{s.losses ?? 0}</td>
-                        <td>{s.ties ?? 0}</td>
+                        <td>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--evoq-accent)' }}>
+                            #{s.rank || idx + 1}
+                          </span>
+                        </td>
+                        <td>
+                          <strong>{s.participantName || s.team?.name || 'Competitor'}</strong>
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{s.points ?? 0}</td>
+                        <td style={{ color: 'var(--evoq-accent)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                          {s.wins ?? 0}
+                        </td>
+                        <td style={{ color: '#EF4444', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                          {s.losses ?? 0}
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--evoq-text-muted)' }}>
+                          {s.ties ?? 0}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -494,72 +555,75 @@ export default function TournamentDetail() {
           </div>
         )}
 
-        {/* Register Modal */}
-        {showRegisterModal && (
-          <div className="nebula-modal-overlay" onClick={() => setShowRegisterModal(false)}>
-            <div className="nebula-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="nebula-modal-header">
-                <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>Register for {tournament.name || tournament.title}</h2>
-                <button className="nebula-modal-close" onClick={() => setShowRegisterModal(false)}>×</button>
-              </div>
+        {/* Registration Modal */}
+        <Modal
+          isOpen={showRegisterModal}
+          onClose={() => setShowRegisterModal(false)}
+          title={`Register for ${tournamentTitle}`}
+          size="md"
+        >
+          {regError && (
+            <div className="evoq-alert evoq-alert-danger" role="alert" style={{ marginBottom: '1rem' }}>
+              <Icon name="alert" size={18} />
+              <span>{regError}</span>
+            </div>
+          )}
 
-              {regError && <div className="nebula-alert nebula-alert-danger">{regError}</div>}
-              {regSuccess && <div className="nebula-alert nebula-alert-success">{regSuccess}</div>}
+          {regSuccess && (
+            <div className="evoq-alert evoq-alert-success" role="alert" style={{ marginBottom: '1rem' }}>
+              <Icon name="check" size={18} />
+              <span>{regSuccess}</span>
+            </div>
+          )}
 
-              <form onSubmit={handleRegisterSubmit}>
-                {tournament.participationType === 'TEAM' ? (
-                  <div>
-                    {myTeams.length === 0 ? (
-                      <div className="nebula-empty-state" style={{ padding: '1rem' }}>
-                        <p style={{ marginBottom: '1rem' }}>This tournament requires team participation. You do not captain an active squad.</p>
-                        <Link to="/gamer/teams" className="nebula-btn nebula-btn-primary">
-                          Create Team Roster
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="nebula-form-group">
-                        <label className="nebula-label">Select Team *</label>
-                        <select
-                          value={selectedTeamId}
-                          onChange={(e) => setSelectedTeamId(e.target.value)}
-                          className="nebula-select"
-                          required
-                        >
-                          {myTeams.map((t) => {
-                            const teamObj = t.team || t;
-                            return (
-                              <option key={teamObj.id} value={teamObj.id}>
-                                {teamObj.name} [{teamObj.tag || 'TEAM'}]
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                    )}
+          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {tournament.participationType === 'TEAM' ? (
+              <div>
+                {myTeams.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--evoq-text-secondary)', marginBottom: '1.25rem' }}>
+                      This tournament requires team participation. You do not captain an active squad.
+                    </p>
+                    <PrimaryButton as={Link} to="/gamer/teams">
+                      Form Team Roster
+                    </PrimaryButton>
                   </div>
                 ) : (
-                  <p style={{ color: 'var(--nebula-text-secondary)', lineHeight: '1.5' }}>
-                    You are registering as an individual competitor. Your match results will be recorded directly into your Gamer Profile.
-                  </p>
+                  <Select
+                    label="Select Team Roster *"
+                    value={selectedTeamId}
+                    onChange={(e) => setSelectedTeamId(e.target.value)}
+                    options={myTeams.map((t) => {
+                      const teamObj = t.team || t;
+                      return {
+                        value: teamObj.id,
+                        label: `${teamObj.name} [${teamObj.tag || 'TEAM'}]`,
+                      };
+                    })}
+                    required
+                  />
                 )}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--evoq-text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                You are entering as an individual competitor. Your match results and tournament placements will be permanently verified into your Gamer Profile.
+              </p>
+            )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" className="nebula-btn nebula-btn-ghost" onClick={() => setShowRegisterModal(false)}>
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="nebula-btn nebula-btn-primary"
-                    disabled={submittingReg || (tournament.participationType === 'TEAM' && myTeams.length === 0)}
-                  >
-                    {submittingReg ? 'Submitting...' : 'Confirm Registration'}
-                  </button>
-                </div>
-              </form>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <SecondaryButton type="button" onClick={() => setShowRegisterModal(false)}>
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton
+                type="submit"
+                disabled={submittingReg || (tournament.participationType === 'TEAM' && myTeams.length === 0)}
+              >
+                {submittingReg ? 'Submitting...' : 'Confirm Registration'}
+              </PrimaryButton>
             </div>
-          </div>
-        )}
-      </main>
-    </div>
+          </form>
+        </Modal>
+      </div>
+    </PublicLayout>
   );
 }

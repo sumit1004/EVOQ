@@ -1,8 +1,19 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import PublicNavbar from '../components/PublicNavbar.jsx';
+import PublicLayout from '../layouts/PublicLayout.jsx';
 import { evoqService } from '../services/evoq.service.js';
-import '../styles/nebula.css';
+import {
+  PrimaryButton,
+  SecondaryButton,
+  SearchInput,
+  Select,
+  TournamentCard,
+  EmptyState,
+  SkeletonLoader,
+  PageHeader,
+  Badge,
+} from '../components/ui/index.js';
+import { Icon } from '../components/Icons.jsx';
 
 export default function TournamentsList() {
   const [tournaments, setTournaments] = useState([]);
@@ -42,7 +53,7 @@ export default function TournamentsList() {
         const res = await evoqService.getTournaments(params);
         setTournaments(res?.tournaments || res?.data || []);
       } catch (err) {
-        setError('Failed to load tournaments.');
+        setError('Failed to load tournaments catalog.');
       } finally {
         setLoading(false);
       }
@@ -50,201 +61,147 @@ export default function TournamentsList() {
     fetchTournaments();
   }, [search, selectedGame, selectedStatus, selectedFormat]);
 
+  const hasActiveFilters = Boolean(search || selectedGame || selectedStatus || selectedFormat);
+
+  const resetFilters = () => {
+    setSearch('');
+    setSelectedGame('');
+    setSelectedStatus('');
+    setSelectedFormat('');
+  };
+
   return (
-    <div className="nebula-shell">
-      <PublicNavbar />
-      <main className="nebula-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.4rem' }}>
-              ESPORTS DISCOVERY
-            </span>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: 900, margin: 0 }}>Active Tournaments</h1>
-            <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
-              Explore official tournaments. Approved match results permanently contribute to gamer career records and achievements.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <Link to="/gamer/login" className="nebula-btn nebula-btn-primary">
-              Join as Competitor
-            </Link>
-            <Link to="/organizer/login" className="nebula-btn nebula-btn-cyan">
-              Host Tournament
-            </Link>
-          </div>
+    <PublicLayout>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <PageHeader
+          badge="ESPORTS DISCOVERY"
+          title="ACTIVE TOURNAMENTS &amp; CIRCUITS"
+          subtitle="Explore official esports tournaments. Approved match results permanently contribute to gamer career records and verified achievements."
+          actions={
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <PrimaryButton as={Link} to="/gamer/login" icon="sword">
+                Compete
+              </PrimaryButton>
+              <SecondaryButton as={Link} to="/organizer/login">
+                Host Tournament
+              </SecondaryButton>
+            </div>
+          }
+        />
+
+        {/* Filter Controls Bar */}
+        <div
+          className="evoq-panel"
+          style={{
+            padding: '1.25rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+            alignItems: 'flex-end',
+          }}
+        >
+          <SearchInput
+            label="Search Tournament"
+            placeholder="Search by title, brand, or circuit..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+          />
+
+          <Select
+            label="Game Title"
+            value={selectedGame}
+            onChange={(e) => setSelectedGame(e.target.value)}
+            options={[
+              { value: '', label: 'All Esports Titles' },
+              ...games.map((g) => ({ value: g.id, label: g.name })),
+            ]}
+          />
+
+          <Select
+            label="Status"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'REGISTRATION_OPEN', label: 'Registration Open' },
+              { value: 'ONGOING', label: 'Live / In Progress' },
+              { value: 'COMPLETED', label: 'Concluded' },
+            ]}
+          />
+
+          <Select
+            label="Format"
+            value={selectedFormat}
+            onChange={(e) => setSelectedFormat(e.target.value)}
+            options={[
+              { value: '', label: 'All Bracket Formats' },
+              { value: 'SINGLE_ELIMINATION', label: 'Single Elimination' },
+              { value: 'DOUBLE_ELIMINATION', label: 'Double Elimination' },
+              { value: 'ROUND_ROBIN', label: 'Round Robin' },
+              { value: 'BATTLE_ROYALE', label: 'Battle Royale' },
+            ]}
+          />
         </div>
 
-        {/* Filter controls */}
-        <div className="nebula-card" style={{ marginBottom: '2rem', padding: '1.25rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label className="nebula-label">Search Tournament</label>
-              <input
-                type="text"
-                placeholder="Search by title..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="nebula-input"
-              />
-            </div>
-
-            <div>
-              <label className="nebula-label">Game Title</label>
-              <select
-                value={selectedGame}
-                onChange={(e) => setSelectedGame(e.target.value)}
-                className="nebula-select"
-              >
-                <option value="">All Esports Titles</option>
-                {games.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="nebula-label">Status</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="nebula-select"
-              >
-                <option value="">All Statuses</option>
-                <option value="REGISTRATION_OPEN">Registration Open</option>
-                <option value="ONGOING">Live / Ongoing</option>
-                <option value="COMPLETED">Completed</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="nebula-label">Bracket Format</label>
-              <select
-                value={selectedFormat}
-                onChange={(e) => setSelectedFormat(e.target.value)}
-                className="nebula-select"
-              >
-                <option value="">All Formats</option>
-                <option value="SINGLE_ELIMINATION">Single Elimination</option>
-                <option value="DOUBLE_ELIMINATION">Double Elimination</option>
-                <option value="ROUND_ROBIN">Round Robin</option>
-                <option value="BATTLE_ROYALE">Battle Royale</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading tournaments...</p>
-          </div>
-        ) : tournaments.length === 0 ? (
-          <div className="nebula-card nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <h3>No Tournaments Found</h3>
-            <p style={{ color: 'var(--nebula-text-secondary)' }}>Try adjusting your search criteria or game filters.</p>
-          </div>
-        ) : (
-          <div className="nebula-grid-cards">
-            {tournaments.map((t) => (
-              <div key={t.id} className="nebula-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                {t.bannerUrl ? (
-                  <img
-                    src={t.bannerUrl}
-                    alt={t.name || t.title}
-                    style={{
-                      height: '140px',
-                      width: 'calc(100% + 3rem)',
-                      margin: '-1.5rem -1.5rem 1rem -1.5rem',
-                      objectFit: 'cover',
-                      borderBottom: '1px solid var(--nebula-border)',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      height: '110px',
-                      width: 'calc(100% + 3rem)',
-                      margin: '-1.5rem -1.5rem 1rem -1.5rem',
-                      background: 'linear-gradient(135deg, #18192a 0%, #11121d 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--nebula-violet)',
-                      fontSize: '1.6rem',
-                      fontWeight: 800,
-                      borderBottom: '1px solid var(--nebula-border)',
-                    }}
-                  >
-                    {t.game?.name || 'EVOQ'}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-                  <span className="nebula-badge nebula-badge-violet">{t.game?.name || 'Game'}</span>
-                  <span className="nebula-badge nebula-badge-neutral">{t.format?.replace(/_/g, ' ')}</span>
-                  <span
-                    className={`nebula-badge ${
-                      t.status === 'REGISTRATION_OPEN'
-                        ? 'nebula-badge-lime'
-                        : t.status === 'ONGOING'
-                        ? 'nebula-badge-cyan'
-                        : 'nebula-badge-neutral'
-                    }`}
-                  >
-                    {t.status?.replace(/_/g, ' ')}
-                  </span>
-                </div>
-
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
-                  {t.name || t.title}
-                </h2>
-
-                <p style={{ color: 'var(--nebula-text-muted)', fontSize: '0.85rem', margin: '0 0 1rem 0' }}>
-                  Organized by{' '}
-                  <strong style={{ color: 'var(--nebula-text-primary)' }}>
-                    {t.organization?.name || t.organizerUser?.username || 'Verified Organizer'}
-                  </strong>
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.82rem',
-                    color: 'var(--nebula-text-secondary)',
-                    borderTop: '1px solid var(--nebula-border)',
-                    paddingTop: '0.75rem',
-                    marginTop: 'auto',
-                    marginBottom: '1rem',
-                  }}
-                >
-                  <span>
-                    Roster: {t._count?.registrations || t.registrations?.length || 0} / {t.maxParticipants} {t.participationType}s
-                  </span>
-                  {t.prizePool && (
-                    <span style={{ color: 'var(--nebula-lime)', fontWeight: 700 }}>
-                      {t.prizePool} {t.prizeCurrency || 'USD'}
-                    </span>
-                  )}
-                </div>
-
-                <Link
-                  to={`/tournaments/${t.slug}`}
-                  className="nebula-btn nebula-btn-primary"
-                  style={{ width: '100%' }}
-                >
-                  View Details →
-                </Link>
-              </div>
-            ))}
+        {error && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="alert" size={18} />
+            <span>{error}</span>
           </div>
         )}
-      </main>
-    </div>
+
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <SkeletonLoader height={320} />
+            <SkeletonLoader height={320} />
+            <SkeletonLoader height={320} />
+          </div>
+        ) : tournaments.length === 0 ? (
+          <EmptyState
+            icon="tournament"
+            title="No Tournaments Match Your Search"
+            description="Adjust your search criteria, reset status filters, or browse other competitive game titles."
+            actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
+            onAction={hasActiveFilters ? resetFilters : undefined}
+          />
+        ) : (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <span className="evoq-mono-label">
+                SHOWING {tournaments.length} SANCTIONED {tournaments.length === 1 ? 'TOURNAMENT' : 'TOURNAMENTS'}
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--evoq-accent)',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '1.5rem',
+              }}
+            >
+              {tournaments.map((t) => (
+                <TournamentCard key={t.id} tournament={t} linkPrefix="/tournaments" />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </PublicLayout>
   );
 }

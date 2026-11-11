@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -28,9 +28,9 @@ if (typeof window !== 'undefined') {
 export function Navbar({
   links = [
     { label: 'About', href: '#about' },
+    { label: 'Features', href: '#features' },
     { label: 'Games', href: '#games' },
-    { label: 'Tournaments', href: '#tournaments' },
-    { label: 'Sponsors', href: '#sponsors' },
+    { label: 'Tournaments', href: '/tournaments' },
     { label: 'Contact', href: '#contact' },
   ],
   actionLabel = 'Login',
@@ -133,6 +133,10 @@ export function Navbar({
   }, [links.length]);
 
   const handleLinkClick = (e, href, idx) => {
+    if (href.startsWith('/')) {
+      setMobileMenuOpen(false);
+      return;
+    }
     e.preventDefault();
     if (onNavigate) {
       onNavigate(href, idx);
@@ -166,18 +170,27 @@ export function Navbar({
                 (link.href === '#about' && activeScene === 1) ||
                 (link.href === '#features' && activeScene === 2) ||
                 (link.href === '#games' && activeScene === 3) ||
-                (link.href === '#sponsors' && activeScene === 4) ||
                 (link.href === '#contact' && activeScene === 5);
 
               return (
                 <span key={link.label} className="evoq-nav-item">
-                  <a
-                    href={link.href}
-                    className={`evoq-nav-link ${isCurrent ? 'active' : ''}`}
-                    onClick={(e) => handleLinkClick(e, link.href, idx)}
-                  >
-                    {link.label}
-                  </a>
+                  {link.href.startsWith('/') ? (
+                    <Link
+                      to={link.href}
+                      className="evoq-nav-link"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className={`evoq-nav-link ${isCurrent ? 'active' : ''}`}
+                      onClick={(e) => handleLinkClick(e, link.href, idx)}
+                    >
+                      {link.label}
+                    </a>
+                  )}
                 </span>
               );
             })}
@@ -227,19 +240,33 @@ export function Navbar({
               aria-hidden="true"
             />
             <div className="evoq-mobile-menu" role="dialog" aria-label="Mobile Navigation">
-              {links.map((link, idx) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="evoq-mobile-link"
-                  onClick={(e) => handleLinkClick(e, link.href, idx)}
-                >
-                  <span>{link.label}</span>
-                  <span style={{ color: '#C9FF52', fontSize: '11px', fontFamily: 'Space Mono, monospace' }}>
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                </a>
-              ))}
+              {links.map((link, idx) =>
+                link.href.startsWith('/') ? (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="evoq-mobile-link"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span>{link.label}</span>
+                    <span style={{ color: '#C9FF52', fontSize: '11px', fontFamily: 'Space Mono, monospace' }}>
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                  </Link>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="evoq-mobile-link"
+                    onClick={(e) => handleLinkClick(e, link.href, idx)}
+                  >
+                    <span>{link.label}</span>
+                    <span style={{ color: '#C9FF52', fontSize: '11px', fontFamily: 'Space Mono, monospace' }}>
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                  </a>
+                )
+              )}
             </div>
           </>
         )}
@@ -1440,7 +1467,7 @@ export default function Landing() {
           { label: 'About', href: '#about' },
           { label: 'Features', href: '#features' },
           { label: 'Games', href: '#games' },
-          { label: 'Sponsors', href: '#sponsors' },
+          { label: 'Tournaments', href: '/tournaments' },
           { label: 'Contact', href: '#contact' },
         ]}
         actionLabel="Login"

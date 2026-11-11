@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { authService } from '../services/auth.service.js';
-import FormInput from '../components/FormInput.jsx';
-import '../styles/auth.css';
+import AuthLayout from '../layouts/AuthLayout.jsx';
+import { Input } from '../components/ui/FormControls.jsx';
+import { PrimaryButton, SecondaryButton } from '../components/ui/Buttons.jsx';
+import { Icon } from '../components/Icons.jsx';
 
 export default function VerifyEmail() {
   const { token: paramToken } = useParams();
@@ -13,6 +15,7 @@ export default function VerifyEmail() {
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
   const [resendNotice, setResendNotice] = useState('');
+  const [resending, setResending] = useState(false);
 
   const executeVerification = useCallback(async (tokenToVerify) => {
     if (!tokenToVerify) return;
@@ -22,7 +25,9 @@ export default function VerifyEmail() {
       await authService.verifyEmail(tokenToVerify);
       setVerified(true);
     } catch (err) {
-      setError(err.message || 'Verification failed. Token may be expired or already used.');
+      setError(
+        err.message || 'Verification failed. Token may be expired or already utilized.'
+      );
     } finally {
       setVerifying(false);
     }
@@ -43,104 +48,148 @@ export default function VerifyEmail() {
     e.preventDefault();
     if (!resendEmail.trim()) return;
     try {
+      setResending(true);
+      setError('');
       await authService.resendVerification(resendEmail);
-      setResendNotice('If your account is pending verification, a new link has been dispatched.');
+      setResendNotice('If an account is pending verification, a new confirmation token was dispatched.');
     } catch (err) {
       setError(err.message || 'Could not send verification email.');
+    } finally {
+      setResending(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            EVOQ
-          </Link>
-          <h2 style={{ fontSize: '1.25rem', marginTop: '0.25rem' }}>Email Verification</h2>
-          <p className="auth-subtitle">Confirm your competitive identity</p>
+    <AuthLayout
+      badge="PASSPORT ACTIVATION"
+      badgeType="lime"
+      title="Verify Account Email"
+      subtitle="Confirm your identity to unlock sanctioned tournament rosters, bracket seedings, and match rooms."
+      quote="IDENTITY VERIFICATION GUARANTEES FAIR COMPETITION."
+      quoteAuthor="EVOQ ANTI-CHEAT PROTOCOL"
+      heroImage="/images/two2.png"
+    >
+      {verifying && (
+        <div style={{ textAlign: 'center', padding: '36px 0' }}>
+          <span className="evoq-spinner" style={{ width: '32px', height: '32px', borderWidth: '3px' }} />
+          <p style={{ color: 'var(--evoq-text-secondary)', marginTop: '16px', fontSize: '0.92rem' }}>
+            Authenticating cryptographic token with EVOQ Network...
+          </p>
         </div>
+      )}
 
-        {verifying && (
-          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <div className="spinner" style={{ margin: '0 auto 1rem auto' }}></div>
-            <p style={{ color: 'var(--muted)' }}>Verifying token...</p>
+      {verified ? (
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--evoq-lime-subtle)',
+              border: '1px solid var(--evoq-border-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'var(--evoq-lime)',
+            }}
+          >
+            <Icon name="check" size={32} />
           </div>
-        )}
 
-        {verified ? (
-          <div style={{ textAlign: 'center' }}>
-            <div className="auth-alert success" role="alert">
-              Your email has been successfully verified!
+          <h3 className="evoq-section-title" style={{ marginBottom: '10px' }}>
+            Identity Verified
+          </h3>
+          <p style={{ color: 'var(--evoq-text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '24px' }}>
+            Your account is now officially activated. You have full access to tournament registrations, team creation, and verified competitive achievements.
+          </p>
+
+          <Link to="/gamer/login" className="evoq-btn evoq-btn-primary evoq-btn-lg" style={{ justifyContent: 'center' }}>
+            <span>Sign In to EVOQ</span>
+            <Icon name="arrow-right" size={16} />
+          </Link>
+        </div>
+      ) : (
+        !verifying && (
+          <div>
+            {error && (
+              <div className="evoq-alert evoq-alert-danger" role="alert">
+                <Icon name="x" size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {resendNotice && (
+              <div className="evoq-alert evoq-alert-success" role="alert">
+                <Icon name="check" size={16} />
+                <span>{resendNotice}</span>
+              </div>
+            )}
+
+            {!paramToken && (
+              <form onSubmit={handleSubmit} noValidate style={{ marginBottom: '28px' }}>
+                <Input
+                  id="token"
+                  name="token"
+                  label="Verification Token"
+                  type="text"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  placeholder="Paste verification token here"
+                  required
+                  icon="shield"
+                  helperText="Found inside your confirmation email link."
+                />
+
+                <PrimaryButton
+                  type="submit"
+                  fullWidth
+                  size="lg"
+                  iconRight="arrow-right"
+                  disabled={!token.trim()}
+                >
+                  Verify Passport
+                </PrimaryButton>
+              </form>
+            )}
+
+            <div
+              style={{
+                paddingTop: '20px',
+                borderTop: '1px solid var(--evoq-border)',
+              }}
+            >
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--evoq-text-primary)' }}>
+                Need a new verification link?
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--evoq-text-muted)', margin: '0 0 14px 0' }}>
+                Enter your registered email address to dispatch a fresh activation token.
+              </p>
+
+              <form onSubmit={handleResend} noValidate>
+                <Input
+                  id="resendEmail"
+                  name="resendEmail"
+                  type="email"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  placeholder="player@example.com"
+                  required
+                  disabled={resending}
+                />
+                <SecondaryButton
+                  type="submit"
+                  fullWidth
+                  disabled={resending || !resendEmail.trim()}
+                  loading={resending}
+                >
+                  {resending ? 'Sending...' : 'Resend Verification Email'}
+                </SecondaryButton>
+              </form>
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Your account is fully activated. You can now access all competitive features.
-            </p>
-            <Link to="/login" className="btn-primary">
-              Sign In to EVOQ
-            </Link>
           </div>
-        ) : (
-          !verifying && (
-            <div>
-              {error && (
-                <div className="auth-alert error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {resendNotice && (
-                <div className="auth-alert success" role="alert">
-                  {resendNotice}
-                </div>
-              )}
-
-              {!paramToken && (
-                <form onSubmit={handleSubmit} className="auth-form" noValidate>
-                  <FormInput
-                    id="token"
-                    label="Verification Token"
-                    type="text"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    placeholder="Paste your verification token"
-                    required
-                  />
-
-                  <button type="submit" className="btn-primary">
-                    Verify Account
-                  </button>
-                </form>
-              )}
-
-              <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-                  Need a new verification link?
-                </p>
-                <form onSubmit={handleResend} style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="email"
-                    value={resendEmail}
-                    onChange={(e) => setResendEmail(e.target.value)}
-                    placeholder="Your account email"
-                    className="form-input"
-                    style={{ flex: 1 }}
-                    required
-                  />
-                  <button type="submit" className="btn-secondary">
-                    Resend
-                  </button>
-                </form>
-              </div>
-
-              <div className="auth-footer">
-                <Link to="/login">Return to Sign In</Link>
-              </div>
-            </div>
-          )
-        )}
-      </div>
-    </div>
+        )
+      )}
+    </AuthLayout>
   );
 }
-

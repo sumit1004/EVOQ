@@ -1,8 +1,18 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import OrganizerNavbar from '../../components/OrganizerNavbar.jsx';
+import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  Input,
+  Select,
+  Textarea,
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  SectionHeader,
+  SkeletonLoader,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function OrganizerTournamentWizard() {
   const navigate = useNavigate();
@@ -14,33 +24,24 @@ export default function OrganizerTournamentWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // 9-Step Comprehensive Form
   const [form, setForm] = useState({
-    // Step 1: Basic
     name: '',
     slug: '',
     description: '',
-    // Step 2: Game
     gameId: '',
     organizationId: '',
-    // Step 3: Registration
     participationType: 'TEAM',
     teamSize: 5,
     minParticipants: 4,
     maxParticipants: 16,
-    // Step 4: Format
     format: 'SINGLE_ELIMINATION',
-    // Step 5: Groups & Stages
     groupCount: 2,
     advancePerGroup: 2,
-    // Step 6: Schedule
     registrationStart: '',
     registrationDeadline: '',
     startDate: '',
     endDate: '',
-    // Step 7: Rules
     rules: '',
-    // Step 8: Media & Prizes
     bannerUrl: '',
     prizePool: '',
     prizeCurrency: 'USD',
@@ -99,42 +100,46 @@ export default function OrganizerTournamentWizard() {
         return false;
       }
     } else if (s === 3) {
+      if (form.participationType === 'TEAM' && (!form.teamSize || form.teamSize < 1)) {
+        setError('Team size must be at least 1 player.');
+        return false;
+      }
       if (!form.maxParticipants || form.maxParticipants < 2) {
-        setError('Max capacity must be at least 2 competitors.');
+        setError('Maximum participants must be at least 2.');
         return false;
       }
     }
     return true;
   };
 
-  const nextStep = () => {
+  const handleNext = () => {
     if (validateStep(step)) {
       setStep((prev) => Math.min(prev + 1, 9));
     }
   };
 
-  const prevStep = () => {
+  const handlePrev = () => {
     setError('');
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateStep(step)) return;
+  const handlePublish = async () => {
     setSubmitting(true);
     setError('');
     try {
       const payload = {
-        name: form.name,
-        slug: form.slug,
+        name: form.name.trim(),
+        slug: form.slug.trim(),
         description: form.description || undefined,
         gameId: form.gameId,
         organizationId: form.organizationId || undefined,
-        format: form.format,
         participationType: form.participationType,
-        teamSize: form.participationType === 'TEAM' ? Number(form.teamSize) : undefined,
-        minParticipants: Number(form.minParticipants) || 2,
+        teamSize: form.participationType === 'TEAM' ? Number(form.teamSize) : 1,
+        minParticipants: Number(form.minParticipants) || 4,
         maxParticipants: Number(form.maxParticipants) || 16,
+        format: form.format,
+        groupCount: ['ROUND_ROBIN', 'GROUP_STAGE_TO_KNOCKOUT'].includes(form.format) ? Number(form.groupCount) : undefined,
+        advancePerGroup: ['ROUND_ROBIN', 'GROUP_STAGE_TO_KNOCKOUT'].includes(form.format) ? Number(form.advancePerGroup) : undefined,
         registrationStart: form.registrationStart ? new Date(form.registrationStart).toISOString() : new Date().toISOString(),
         registrationDeadline: form.registrationDeadline ? new Date(form.registrationDeadline).toISOString() : new Date(Date.now() + 86400000 * 7).toISOString(),
         startDate: form.startDate ? new Date(form.startDate).toISOString() : new Date(Date.now() + 86400000 * 8).toISOString(),
@@ -146,9 +151,9 @@ export default function OrganizerTournamentWizard() {
       };
 
       const created = await evoqService.createTournament(payload);
-      navigate(`/organizer/tournaments/${created.id}`);
+      navigate(`/organizer/tournaments/${created.slug || created.id}`);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to create tournament.');
+      setError(err.response?.data?.error?.message || err.message || 'Failed to create tournament.');
     } finally {
       setSubmitting(false);
     }
@@ -167,416 +172,408 @@ export default function OrganizerTournamentWizard() {
   ];
 
   return (
-    <div className="nebula-shell">
-      <OrganizerNavbar />
-      <main className="nebula-container" style={{ maxWidth: '860px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-cyan" style={{ marginBottom: '0.4rem' }}>
-              TOURNAMENT CREATION ENGINE
+    <OrganizerLayout
+      title="Tournament Creation Wizard"
+      actions={
+        <Link to="/organizer/tournaments" className="evoq-btn evoq-btn-secondary evoq-btn-sm">
+          Cancel
+        </Link>
+      }
+    >
+      <div style={{ maxWidth: '840px', margin: '0 auto' }}>
+        {/* ── Progress Indicators ── */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
+              STAGE {step} OF 9: {stepsList[step - 1].toUpperCase()}
             </span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Step {step} of 9: {stepsList[step - 1]}</h1>
+            <span className="evoq-mono-label">
+              {Math.round((step / 9) * 100)}% COMPLETE
+            </span>
           </div>
-          <Link to="/organizer/tournaments" className="nebula-btn nebula-btn-secondary nebula-btn-sm">
-            Cancel
-          </Link>
+
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {stepsList.map((label, idx) => {
+              const stepNum = idx + 1;
+              const isCompleted = stepNum < step;
+              const isCurrent = stepNum === step;
+
+              return (
+                <div
+                  key={label}
+                  title={`${stepNum}. ${label}`}
+                  style={{
+                    flex: 1,
+                    height: '4px',
+                    borderRadius: '2px',
+                    backgroundColor: isCurrent ? 'var(--evoq-lime)' : isCompleted ? '#22D3EE' : 'var(--evoq-border)',
+                    transition: 'background-color 0.2s',
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
 
-        {/* 9-step progress dots */}
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '2rem' }}>
-          {stepsList.map((label, idx) => {
-            const stepNum = idx + 1;
-            const isCompleted = stepNum < step;
-            const isCurrent = stepNum === step;
+        {error && (
+          <div className="evoq-alert evoq-alert-danger" role="alert">
+            <Icon name="x" size={16} />
+            <span>{error}</span>
+          </div>
+        )}
 
-            return (
-              <div
-                key={label}
-                style={{
-                  flex: 1,
-                  height: '4px',
-                  borderRadius: '2px',
-                  backgroundColor: isCurrent ? 'var(--nebula-cyan)' : isCompleted ? 'var(--nebula-violet)' : 'var(--nebula-border)',
-                  transition: 'background-color 0.2s',
-                }}
-                title={`Step ${stepNum}: ${label}`}
+        {/* ── Wizard Form Container ── */}
+        <div className="evoq-card" style={{ marginBottom: '24px' }}>
+          {/* STEP 1: BASIC INFO */}
+          {step === 1 && (
+            <div>
+              <SectionHeader
+                title="Tournament Overview"
+                subtitle="Event title, public slug identifier, and brief description"
               />
-            );
-          })}
-        </div>
-
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-
-        <div className="nebula-card">
-          {loading ? (
-            <div className="nebula-empty-state">
-              <div className="nebula-empty-icon">—</div>
-              <p>Loading wizard...</p>
+              <Input
+                label="Tournament Event Title"
+                id="name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="e.g. EVOQ Champions Invitational 2026"
+                required
+              />
+              <Input
+                label="Custom URL Slug Identifier"
+                id="slug"
+                name="slug"
+                value={form.slug}
+                onChange={handleChange}
+                placeholder="e.g. evoq-champions-2026"
+                required
+                helperText="Permanent public URL: evoq.gg/tournaments/{slug}"
+              />
+              <Textarea
+                label="Event Description"
+                id="description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Describe your tournament, competitive atmosphere, and broadcast details..."
+              />
             </div>
-          ) : (
-            <form onSubmit={step === 9 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-              {/* Step 1: Basic */}
-              {step === 1 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>1. Basic Tournament Information</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Tournament Title *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g. EVOQ Masters: Valorant Invitational"
-                      className="nebula-input"
-                    />
-                  </div>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">URL Slug *</label>
-                    <input
-                      type="text"
-                      name="slug"
-                      value={form.slug}
-                      onChange={handleChange}
-                      required
-                      placeholder="evoq-masters-valorant-invitational"
-                      className="nebula-input"
-                    />
-                  </div>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Description &amp; Highlights</label>
-                    <textarea
-                      name="description"
-                      value={form.description}
-                      onChange={handleChange}
-                      rows="3"
-                      placeholder="Broadcast details, sponsor acknowledgments, map pool..."
-                      className="nebula-textarea"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Game */}
-              {step === 2 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>2. Game Title &amp; Organization</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Esports Title *</label>
-                    <select
-                      name="gameId"
-                      value={form.gameId}
-                      onChange={handleChange}
-                      required
-                      className="nebula-select"
-                    >
-                      {games.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name} ({g.genre})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Hosting Organization (Optional)</label>
-                    <select
-                      name="organizationId"
-                      value={form.organizationId}
-                      onChange={handleChange}
-                      className="nebula-select"
-                    >
-                      <option value="">Host as Verified Independent Organizer</option>
-                      {organizations.map((item) => {
-                        const org = item.organization || item;
-                        return (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Registration */}
-              {step === 3 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>3. Registration &amp; Capacity Constraints</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Participation Type</label>
-                    <select
-                      name="participationType"
-                      value={form.participationType}
-                      onChange={handleChange}
-                      className="nebula-select"
-                    >
-                      <option value="TEAM">Team (Rosters)</option>
-                      <option value="SOLO">Solo (1v1 or Individual)</option>
-                    </select>
-                  </div>
-
-                  {form.participationType === 'TEAM' && (
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Roster Size (Starting Players)</label>
-                      <input
-                        type="number"
-                        name="teamSize"
-                        min="2"
-                        max="10"
-                        value={form.teamSize}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                  )}
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Min Participants</label>
-                      <input
-                        type="number"
-                        name="minParticipants"
-                        min="2"
-                        value={form.minParticipants}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Max Participants *</label>
-                      <input
-                        type="number"
-                        name="maxParticipants"
-                        min="2"
-                        max="256"
-                        value={form.maxParticipants}
-                        onChange={handleChange}
-                        required
-                        className="nebula-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Format */}
-              {step === 4 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>4. Competition Bracket Format</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Bracket Type</label>
-                    <select
-                      name="format"
-                      value={form.format}
-                      onChange={handleChange}
-                      className="nebula-select"
-                    >
-                      <option value="SINGLE_ELIMINATION">Single Elimination (Knockout Bracket)</option>
-                      <option value="DOUBLE_ELIMINATION">Double Elimination (Winners &amp; Losers)</option>
-                      <option value="ROUND_ROBIN">Round Robin (All-Play-All)</option>
-                      <option value="BATTLE_ROYALE">Battle Royale (Multi-Team Point Lobbies)</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Groups & Stages */}
-              {step === 5 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>5. Groups &amp; Stage Structure</h2>
-                  <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.88rem', marginBottom: '1rem' }}>
-                    Accommodates group stages with up to 12 teams per group, qualification criteria, and playoff bracket seeding.
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Number of Groups</label>
-                      <input
-                        type="number"
-                        name="groupCount"
-                        min="1"
-                        max="8"
-                        value={form.groupCount}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Teams Advancing Per Group</label>
-                      <input
-                        type="number"
-                        name="advancePerGroup"
-                        min="1"
-                        max="4"
-                        value={form.advancePerGroup}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 6: Schedule */}
-              {step === 6 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>6. Schedule &amp; Match Timing</h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Registration Opens</label>
-                      <input
-                        type="datetime-local"
-                        name="registrationStart"
-                        value={form.registrationStart}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Registration Deadline</label>
-                      <input
-                        type="datetime-local"
-                        name="registrationDeadline"
-                        value={form.registrationDeadline}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Tournament Start Date</label>
-                      <input
-                        type="datetime-local"
-                        name="startDate"
-                        value={form.startDate}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Tournament End Date</label>
-                      <input
-                        type="datetime-local"
-                        name="endDate"
-                        value={form.endDate}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 7: Rules */}
-              {step === 7 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>7. Competition Rules &amp; Anti-Cheat</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Rulebook &amp; Code of Conduct</label>
-                    <textarea
-                      name="rules"
-                      value={form.rules}
-                      onChange={handleChange}
-                      rows="6"
-                      placeholder="Map pool, pause allowances, check-in requirements, tiebreak criteria..."
-                      className="nebula-textarea"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 8: Media & Prizes */}
-              {step === 8 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>8. Media, Branding &amp; Prizes</h2>
-                  <div className="nebula-form-group">
-                    <label className="nebula-label">Banner Image URL</label>
-                    <input
-                      type="url"
-                      name="bannerUrl"
-                      value={form.bannerUrl}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="nebula-input"
-                    />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Prize Pool (optional)</label>
-                      <input
-                        type="number"
-                        name="prizePool"
-                        value={form.prizePool}
-                        onChange={handleChange}
-                        placeholder="e.g. 5000"
-                        className="nebula-input"
-                      />
-                    </div>
-                    <div className="nebula-form-group">
-                      <label className="nebula-label">Currency</label>
-                      <input
-                        type="text"
-                        name="prizeCurrency"
-                        value={form.prizeCurrency}
-                        onChange={handleChange}
-                        className="nebula-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 9: Review */}
-              {step === 9 && (
-                <div>
-                  <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>9. Review &amp; Deploy Event</h2>
-                  <div
-                    style={{
-                      backgroundColor: 'var(--nebula-surface-elevated)',
-                      padding: '1.25rem',
-                      borderRadius: 'var(--nebula-radius-md)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.65rem',
-                      fontSize: '0.92rem',
-                      marginBottom: '1.5rem',
-                    }}
-                  >
-                    <div><strong>Title:</strong> {form.name}</div>
-                    <div><strong>Slug:</strong> /tournaments/{form.slug}</div>
-                    <div><strong>Game:</strong> {games.find((g) => g.id === form.gameId)?.name || 'Selected Title'}</div>
-                    <div><strong>Format:</strong> {form.format.replace(/_/g, ' ')}</div>
-                    <div><strong>Type:</strong> {form.participationType} {form.participationType === 'TEAM' ? `(${form.teamSize} players/squad)` : ''}</div>
-                    <div><strong>Capacity:</strong> {form.minParticipants} – {form.maxParticipants} Competitors</div>
-                    {form.prizePool && <div><strong>Prize Pool:</strong> {form.prizePool} {form.prizeCurrency}</div>}
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Actions */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', borderTop: '1px solid var(--nebula-border)', paddingTop: '1.25rem' }}>
-                {step > 1 ? (
-                  <button type="button" onClick={prevStep} className="nebula-btn nebula-btn-secondary">
-                    ← Previous Step
-                  </button>
-                ) : <div />}
-
-                {step < 9 ? (
-                  <button type="button" onClick={nextStep} className="nebula-btn nebula-btn-cyan">
-                    Next: {stepsList[step]} →
-                  </button>
-                ) : (
-                  <button type="submit" className="nebula-btn nebula-btn-cyan" disabled={submitting}>
-                    {submitting ? 'Deploying Event...' : 'Deploy Tournament Control Room'}
-                  </button>
-                )}
-              </div>
-            </form>
           )}
+
+          {/* STEP 2: GAME & ORG */}
+          {step === 2 && (
+            <div>
+              <SectionHeader
+                title="Game Title & Host Organization"
+                subtitle="Select the title and hosting club entity"
+              />
+              <Select
+                label="Esports Game Title"
+                id="gameId"
+                name="gameId"
+                value={form.gameId}
+                onChange={handleChange}
+                required
+              >
+                {games.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Select>
+
+              {organizations.length > 0 && (
+                <Select
+                  label="Host Organization (Optional)"
+                  id="organizationId"
+                  name="organizationId"
+                  value={form.organizationId}
+                  onChange={handleChange}
+                  placeholder="Personal Organizer Account"
+                >
+                  {organizations.map((org) => {
+                    const orgObj = org.organization || org;
+                    return (
+                      <option key={orgObj.id} value={orgObj.id}>
+                        {orgObj.name}
+                      </option>
+                    );
+                  })}
+                </Select>
+              )}
+            </div>
+          )}
+
+          {/* STEP 3: REGISTRATION */}
+          {step === 3 && (
+            <div>
+              <SectionHeader
+                title="Registration & Roster Settings"
+                subtitle="Solo or Squad entry, team roster sizes, and capacity"
+              />
+              <Select
+                label="Participation Type"
+                id="participationType"
+                name="participationType"
+                value={form.participationType}
+                onChange={handleChange}
+              >
+                <option value="TEAM">Team / Squad Tournament</option>
+                <option value="SOLO">Solo Competitor Tournament</option>
+              </Select>
+
+              {form.participationType === 'TEAM' && (
+                <Input
+                  label="Starters Per Team Roster"
+                  id="teamSize"
+                  name="teamSize"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={form.teamSize}
+                  onChange={handleChange}
+                  helperText="Standard starting players per squad (e.g. 5 for tactical FPS)."
+                />
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Input
+                  label="Min Participants"
+                  id="minParticipants"
+                  name="minParticipants"
+                  type="number"
+                  min="2"
+                  value={form.minParticipants}
+                  onChange={handleChange}
+                />
+                <Input
+                  label="Max Tournament Slots"
+                  id="maxParticipants"
+                  name="maxParticipants"
+                  type="number"
+                  min="2"
+                  max="128"
+                  value={form.maxParticipants}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: FORMAT */}
+          {step === 4 && (
+            <div>
+              <SectionHeader
+                title="Competition Bracket Format"
+                subtitle="Choose the mathematical bracket elimination algorithm"
+              />
+              <Select
+                label="Tournament Format"
+                id="format"
+                name="format"
+                value={form.format}
+                onChange={handleChange}
+              >
+                <option value="SINGLE_ELIMINATION">Single Elimination (Knockout)</option>
+                <option value="DOUBLE_ELIMINATION">Double Elimination (Upper & Lower Brackets)</option>
+                <option value="ROUND_ROBIN">Round Robin</option>
+                <option value="SWISS">Swiss System</option>
+              </Select>
+            </div>
+          )}
+
+          {/* STEP 5: GROUPS & STAGES */}
+          {step === 5 && (
+            <div>
+              <SectionHeader
+                title="Groups & Advancements"
+                subtitle="Configure multi-group qualifiers if applicable"
+              />
+              {['ROUND_ROBIN', 'GROUP_STAGE_TO_KNOCKOUT'].includes(form.format) ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <Input
+                    label="Number of Groups"
+                    id="groupCount"
+                    name="groupCount"
+                    type="number"
+                    min="1"
+                    max="16"
+                    value={form.groupCount}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    label="Advance Per Group"
+                    id="advancePerGroup"
+                    name="advancePerGroup"
+                    type="number"
+                    min="1"
+                    max="8"
+                    value={form.advancePerGroup}
+                    onChange={handleChange}
+                  />
+                </div>
+              ) : (
+                <p style={{ color: 'var(--evoq-text-muted)', fontSize: '0.9rem', margin: '8px 0' }}>
+                  No group stage configuration is needed for <strong>{form.format.replace(/_/g, ' ')}</strong>. You can proceed to schedule settings.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* STEP 6: SCHEDULE */}
+          {step === 6 && (
+            <div>
+              <SectionHeader
+                title="Tournament Schedule & Windows"
+                subtitle="Set registration deadlines and match execution dates"
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Input
+                  label="Registration Deadline"
+                  id="registrationDeadline"
+                  name="registrationDeadline"
+                  type="datetime-local"
+                  value={form.registrationDeadline}
+                  onChange={handleChange}
+                />
+                <Input
+                  label="Competition Start Date"
+                  id="startDate"
+                  name="startDate"
+                  type="datetime-local"
+                  value={form.startDate}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 7: RULES */}
+          {step === 7 && (
+            <div>
+              <SectionHeader
+                title="Tournament Rules & Integrity Code"
+                subtitle="Authoritative player rules, anti-cheat policy, and dispute guidelines"
+              />
+              <Textarea
+                label="Official Rules Text"
+                id="rules"
+                name="rules"
+                value={form.rules}
+                onChange={handleChange}
+                rows={6}
+                placeholder="Include match settings, pause rules, map veto procedure, and disconnection policies..."
+              />
+            </div>
+          )}
+
+          {/* STEP 8: MEDIA & PRIZES */}
+          {step === 8 && (
+            <div>
+              <SectionHeader
+                title="Media Banner & Prize Purse"
+                subtitle="Add high-impact visual banners and prize pool disclosure"
+              />
+              <Input
+                label="Tournament Header Banner URL"
+                id="bannerUrl"
+                name="bannerUrl"
+                value={form.bannerUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/banner.png"
+                helperText="Recommended dimension: 1920x600px."
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+                <Input
+                  label="Prize Pool Amount (Optional)"
+                  id="prizePool"
+                  name="prizePool"
+                  type="number"
+                  value={form.prizePool}
+                  onChange={handleChange}
+                  placeholder="e.g. 5000"
+                />
+                <Select
+                  label="Currency"
+                  id="prizeCurrency"
+                  name="prizeCurrency"
+                  value={form.prizeCurrency}
+                  onChange={handleChange}
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="INR">INR (₹)</option>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 9: REVIEW & DEPLOY */}
+          {step === 9 && (
+            <div>
+              <SectionHeader
+                title="Review & Deploy Event"
+                subtitle="Verify all parameters before launching to the EVOQ network"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                <div style={{ backgroundColor: 'var(--evoq-surface-elevated)', padding: '12px 14px', borderRadius: 'var(--evoq-radius-sm)' }}>
+                  <span className="evoq-mono-label">EVENT TITLE</span>
+                  <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', marginTop: '3px' }}>{form.name}</div>
+                </div>
+
+                <div style={{ backgroundColor: 'var(--evoq-surface-elevated)', padding: '12px 14px', borderRadius: 'var(--evoq-radius-sm)' }}>
+                  <span className="evoq-mono-label">SLUG IDENTIFIER</span>
+                  <div style={{ fontWeight: 700, color: 'var(--evoq-lime)', marginTop: '3px' }}>/{form.slug}</div>
+                </div>
+
+                <div style={{ backgroundColor: 'var(--evoq-surface-elevated)', padding: '12px 14px', borderRadius: 'var(--evoq-radius-sm)' }}>
+                  <span className="evoq-mono-label">FORMAT</span>
+                  <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', marginTop: '3px' }}>{form.format.replace(/_/g, ' ')}</div>
+                </div>
+
+                <div style={{ backgroundColor: 'var(--evoq-surface-elevated)', padding: '12px 14px', borderRadius: 'var(--evoq-radius-sm)' }}>
+                  <span className="evoq-mono-label">CAPACITY</span>
+                  <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', marginTop: '3px' }}>
+                    {form.maxParticipants} {form.participationType === 'TEAM' ? 'Teams' : 'Players'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Wizard Controls Bar ── */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--evoq-border-subtle)' }}>
+            {step > 1 ? (
+              <SecondaryButton onClick={handlePrev} icon="arrow-left">
+                Previous Stage
+              </SecondaryButton>
+            ) : (
+              <div />
+            )}
+
+            {step < 9 ? (
+              <PrimaryButton onClick={handleNext} iconRight="arrow-right">
+                Continue to Stage {step + 1}
+              </PrimaryButton>
+            ) : (
+              <PrimaryButton
+                onClick={handlePublish}
+                disabled={submitting}
+                loading={submitting}
+                iconRight="check"
+                size="lg"
+              >
+                {submitting ? 'Deploying Event...' : 'Deploy Tournament to Arena'}
+              </PrimaryButton>
+            )}
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </OrganizerLayout>
   );
 }
-

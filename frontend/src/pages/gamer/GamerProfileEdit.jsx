@@ -1,8 +1,18 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import GamerNavbar from '../../components/GamerNavbar.jsx';
+import GamerLayout from '../../layouts/GamerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
-import '../../styles/nebula.css';
+import {
+  Input,
+  Select,
+  Textarea,
+  PrimaryButton,
+  SecondaryButton,
+  Badge,
+  SectionHeader,
+  SkeletonLoader,
+} from '../../components/ui/index.js';
+import { Icon } from '../../components/Icons.jsx';
 
 export default function GamerProfileEdit() {
   const navigate = useNavigate();
@@ -81,7 +91,7 @@ export default function GamerProfileEdit() {
     setSuccess('');
     try {
       await evoqService.updateMyProfile(profileForm);
-      setSuccess('Player card updated successfully!');
+      setSuccess('Player passport updated successfully!');
       setTimeout(() => navigate('/gamer/profile'), 1200);
     } catch (err) {
       setError(err.response?.data?.error?.message || err.message || 'Failed to update profile.');
@@ -99,293 +109,245 @@ export default function GamerProfileEdit() {
       const added = await evoqService.addGameIdentity({
         gameId: newIdGameId,
         inGameIdentifier: newIdIdentifier.trim(),
-        region: newIdRegion.trim() || null,
+        region: newIdRegion.trim() || undefined,
       });
-      setIdentities((prev) => [...prev.filter((i) => i.gameId !== newIdGameId), added]);
+      setIdentities((prev) => [...prev, added]);
       setNewIdIdentifier('');
       setNewIdRegion('');
-      setSuccess('Game account identity linked!');
+      setSuccess('Game identity connected!');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to add game identity.');
+      setError(err.response?.data?.error?.message || err.message || 'Failed to link game ID.');
     } finally {
       setAddingId(false);
     }
   };
 
-  const handleRemoveIdentity = async (gameId) => {
-    if (!confirm('Remove this game identity from your player card?')) return;
-    try {
-      await evoqService.removeGameIdentity(gameId);
-      setIdentities((prev) => prev.filter((i) => i.gameId !== gameId));
-      setSuccess('Game identity removed.');
-    } catch (err) {
-      setError('Failed to remove identity.');
-    }
-  };
-
   return (
-    <div className="nebula-shell">
-      <GamerNavbar />
-      <main className="nebula-container" style={{ maxWidth: '860px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <span className="nebula-badge nebula-badge-violet" style={{ marginBottom: '0.4rem' }}>
-              ESPORTS PLAYER CARD
-            </span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Edit Gamer Profile</h1>
-          </div>
-          <Link to="/gamer/profile" className="nebula-btn nebula-btn-secondary nebula-btn-sm">
-            ← Cancel &amp; Return
-          </Link>
+    <GamerLayout
+      title="Edit Gamer Passport"
+      actions={
+        <Link to="/gamer/profile" className="evoq-btn evoq-btn-secondary evoq-btn-sm">
+          <Icon name="arrow-left" size={14} />
+          <span>View Passport</span>
+        </Link>
+      }
+    >
+      {error && (
+        <div className="evoq-alert evoq-alert-danger" role="alert">
+          <Icon name="x" size={16} />
+          <span>{error}</span>
         </div>
+      )}
 
-        {error && <div className="nebula-alert nebula-alert-danger">{error}</div>}
-        {success && <div className="nebula-alert nebula-alert-success">{success}</div>}
+      {success && (
+        <div className="evoq-alert evoq-alert-success" role="alert">
+          <Icon name="check" size={16} />
+          <span>{success}</span>
+        </div>
+      )}
 
-        {loading ? (
-          <div className="nebula-empty-state">
-            <div className="nebula-empty-icon">—</div>
-            <p>Loading editor...</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Identity Details Form */}
-            <form onSubmit={handleSaveProfile} className="nebula-card">
-              <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                Core Gamer Details
-              </h2>
+      {loading ? (
+        <SkeletonLoader type="card" count={2} height="200px" />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          {/* ── Left Column: Core Gamer Profile ── */}
+          <div className="evoq-card">
+            <SectionHeader
+              title="Identity & Passport Details"
+              subtitle="Shown on tournament rosters, match cards, and player profiles"
+            />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="displayName">Display Name</label>
-                  <input
-                    id="displayName"
-                    name="displayName"
-                    type="text"
-                    value={profileForm.displayName}
-                    onChange={handleChange}
-                    placeholder="e.g. Alex 'Shroud' Rivera"
-                    className="nebula-input"
-                  />
-                </div>
+            <form onSubmit={handleSaveProfile} noValidate>
+              <Input
+                label="Display Name"
+                id="displayName"
+                name="displayName"
+                value={profileForm.displayName}
+                onChange={handleChange}
+                placeholder="e.g. Alex Hunter"
+                helperText="Your competitive stage name or preferred alias."
+              />
 
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="inGameName">Primary In-Game Name *</label>
-                  <input
-                    id="inGameName"
-                    name="inGameName"
-                    type="text"
-                    value={profileForm.inGameName}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. TenZ#1337"
-                    className="nebula-input"
-                  />
-                </div>
-              </div>
+              <Input
+                label="Primary In-Game Handle"
+                id="inGameName"
+                name="inGameName"
+                value={profileForm.inGameName}
+                onChange={handleChange}
+                placeholder="e.g. ShadowStrike#NA1"
+              />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="slug">Custom URL Slug *</label>
-                  <input
-                    id="slug"
-                    name="slug"
-                    type="text"
-                    value={profileForm.slug}
-                    onChange={handleChange}
-                    required
-                    placeholder="my-unique-handle"
-                    className="nebula-input"
-                  />
-                </div>
+              <Input
+                label="Country / Region"
+                id="country"
+                name="country"
+                value={profileForm.country}
+                onChange={handleChange}
+                placeholder="e.g. United States, Germany, Japan"
+              />
 
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="country">Country / Region</label>
-                  <input
-                    id="country"
-                    name="country"
-                    type="text"
-                    value={profileForm.country}
-                    onChange={handleChange}
-                    placeholder="e.g. United States, Germany, India"
-                    className="nebula-input"
-                  />
-                </div>
-              </div>
+              <Select
+                label="Primary Esports Title"
+                id="primaryGameId"
+                name="primaryGameId"
+                value={profileForm.primaryGameId}
+                onChange={handleChange}
+                placeholder="Select Primary Game"
+              >
+                {games.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Select>
 
-              <div className="nebula-form-group">
-                <label className="nebula-label" htmlFor="primaryGameId">Primary Focus Game</label>
-                <select
-                  id="primaryGameId"
-                  name="primaryGameId"
-                  value={profileForm.primaryGameId}
-                  onChange={handleChange}
-                  className="nebula-select"
-                >
-                  <option value="">Select Primary Title</option>
-                  {games.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name} ({g.genre})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Textarea
+                label="Player Biography"
+                id="bio"
+                name="bio"
+                value={profileForm.bio}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Detail your competitive background, roles played, and team ambitions..."
+              />
 
-              <div className="nebula-form-group">
-                <label className="nebula-label" htmlFor="bio">Player Bio &amp; Achievements Summary</label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={profileForm.bio}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Tell tournament organizers and squad scouts about your competitive history..."
-                  className="nebula-textarea"
-                />
-              </div>
+              <Input
+                label="Avatar Image URL"
+                id="avatarUrl"
+                name="avatarUrl"
+                value={profileForm.avatarUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/avatar.jpg"
+                helperText="Direct link to your competitive profile picture."
+              />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="avatarUrl">Avatar Image URL</label>
-                  <input
-                    id="avatarUrl"
-                    name="avatarUrl"
-                    type="url"
-                    value={profileForm.avatarUrl}
-                    onChange={handleChange}
-                    placeholder="https://..."
-                    className="nebula-input"
-                  />
-                </div>
+              <Input
+                label="Banner Image URL"
+                id="bannerUrl"
+                name="bannerUrl"
+                value={profileForm.bannerUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/banner.jpg"
+                helperText="Wide header image for your player passport."
+              />
 
-                <div className="nebula-form-group">
-                  <label className="nebula-label" htmlFor="bannerUrl">Banner Image URL</label>
-                  <input
-                    id="bannerUrl"
-                    name="bannerUrl"
-                    type="url"
-                    value={profileForm.bannerUrl}
-                    onChange={handleChange}
-                    placeholder="https://..."
-                    className="nebula-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                <button
-                  type="submit"
-                  className="nebula-btn nebula-btn-primary"
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save Player Card'}
-                </button>
-              </div>
+              <PrimaryButton
+                type="submit"
+                disabled={saving}
+                loading={saving}
+                size="lg"
+                fullWidth
+                style={{ marginTop: '12px' }}
+              >
+                {saving ? 'Saving Changes...' : 'Save Player Passport'}
+              </PrimaryButton>
             </form>
+          </div>
 
-            {/* Link Game Identities Card */}
-            <div className="nebula-card">
-              <h2 className="nebula-card-title" style={{ marginBottom: '1.25rem' }}>
-                 Connect Game Accounts
-              </h2>
-              <p style={{ color: 'var(--nebula-text-secondary)', fontSize: '0.88rem', marginBottom: '1.25rem' }}>
-                Linking your publisher accounts (Riot ID, Steam ID, Epic Games) enables automatic roster verification in title-specific brackets.
-              </p>
+          {/* ── Right Column: Connected Games ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Connected Game Accounts */}
+            <div className="evoq-card">
+              <SectionHeader
+                title="Connected Game Accounts"
+                subtitle="Link Riot, Steam, and Epic IDs for automatic tournament lobby access"
+              />
 
-              {/* Add Identity form */}
-              <form onSubmit={handleAddIdentity} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.5fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
-                <div>
-                  <label className="nebula-label">Game Title</label>
-                  <select
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                {identities.length === 0 ? (
+                  <p style={{ color: 'var(--evoq-text-muted)', fontSize: '0.88rem', margin: 0 }}>
+                    No publisher handles connected yet. Add one below to enter title-specific tournaments.
+                  </p>
+                ) : (
+                  identities.map((id) => (
+                    <div
+                      key={id.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px 14px',
+                        backgroundColor: 'var(--evoq-surface-elevated)',
+                        borderRadius: 'var(--evoq-radius-sm)',
+                        border: '1px solid var(--evoq-border)',
+                      }}
+                    >
+                      <div>
+                        <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
+                          {id.game?.name || 'Game Title'}
+                        </span>
+                        <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--evoq-text-primary)' }}>
+                          {id.inGameIdentifier || id.inGameName}
+                        </div>
+                        {id.region && (
+                          <div style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>
+                            Region: {id.region}
+                          </div>
+                        )}
+                      </div>
+                      {id.isVerified ? (
+                        <Badge variant="lime" size="sm">VERIFIED</Badge>
+                      ) : (
+                        <Badge variant="neutral" size="sm">CONNECTED</Badge>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add New Game ID Form */}
+              <div style={{ paddingTop: '20px', borderTop: '1px solid var(--evoq-border)' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 12px 0', color: 'var(--evoq-text-primary)' }}>
+                  Connect Publisher Handle
+                </h4>
+
+                <form onSubmit={handleAddIdentity} noValidate>
+                  <Select
+                    label="Select Esports Title"
+                    id="newIdGameId"
                     value={newIdGameId}
                     onChange={(e) => setNewIdGameId(e.target.value)}
-                    className="nebula-select"
+                    required
                   >
                     {games.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="nebula-label">In-Game Identifier *</label>
-                  <input
-                    type="text"
+                  </Select>
+
+                  <Input
+                    label="In-Game Handle / Riot ID / Steam ID"
+                    id="newIdIdentifier"
                     value={newIdIdentifier}
                     onChange={(e) => setNewIdIdentifier(e.target.value)}
-                    placeholder="e.g. Player#NA1 or SteamID64"
+                    placeholder="e.g. PlayerOne#EUW"
                     required
-                    className="nebula-input"
                   />
-                </div>
-                <div>
-                  <label className="nebula-label">Region (optional)</label>
-                  <input
-                    type="text"
+
+                  <Input
+                    label="Server Region (Optional)"
+                    id="newIdRegion"
                     value={newIdRegion}
                     onChange={(e) => setNewIdRegion(e.target.value)}
-                    placeholder="e.g. NA, EUW"
-                    className="nebula-input"
+                    placeholder="e.g. NA, EU-WEST, ASIA"
                   />
-                </div>
-                <button
-                  type="submit"
-                  className="nebula-btn nebula-btn-cyan"
-                  disabled={addingId}
-                >
-                  {addingId ? 'Adding...' : '+ Link'}
-                </button>
-              </form>
 
-              {/* Existing connected identities table */}
-              {identities.length === 0 ? (
-                <div className="nebula-empty-state" style={{ padding: '1.5rem' }}>
-                  <p>No game identities connected yet.</p>
-                </div>
-              ) : (
-                <div className="nebula-table-wrapper">
-                  <table className="nebula-table">
-                    <thead>
-                      <tr>
-                        <th>Game</th>
-                        <th>Identifier / Handle</th>
-                        <th>Region</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {identities.map((item) => (
-                        <tr key={item.id}>
-                          <td><strong>{item.game?.name || 'Game'}</strong></td>
-                          <td><code>{item.inGameIdentifier || item.inGameName}</code></td>
-                          <td>{item.region || 'Global'}</td>
-                          <td>
-                            <span className="nebula-badge nebula-badge-lime">
-                              {item.isVerified ? 'VERIFIED' : 'CONNECTED'}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveIdentity(item.gameId)}
-                              className="nebula-btn nebula-btn-coral nebula-btn-sm"
-                            >
-                              Disconnect
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                  <SecondaryButton
+                    type="submit"
+                    disabled={addingId || !newIdIdentifier.trim()}
+                    loading={addingId}
+                    icon="plus"
+                    fullWidth
+                  >
+                    {addingId ? 'Connecting...' : 'Link Game Handle'}
+                  </SecondaryButton>
+                </form>
+              </div>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      )}
+    </GamerLayout>
   );
 }
-

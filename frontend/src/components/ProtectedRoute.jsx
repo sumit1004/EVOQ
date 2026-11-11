@@ -1,3 +1,4 @@
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -7,10 +8,10 @@ export function GamerProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
-          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
+      <div className="evoq-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--evoq-text-secondary)' }}>
+          <div className="evoq-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
+          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem', color: 'var(--evoq-accent)' }}>
             Verifying Gamer Credentials...
           </p>
         </div>
@@ -19,6 +20,7 @@ export function GamerProtectedRoute({ children }) {
   }
 
   if (!user) {
+    if (location.pathname === '/gamer/login') return null;
     return <Navigate to="/gamer/login" state={{ from: location }} replace />;
   }
 
@@ -37,10 +39,10 @@ export function OrganizerProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
-          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
+      <div className="evoq-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--evoq-text-secondary)' }}>
+          <div className="evoq-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
+          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem', color: '#22D3EE' }}>
             Verifying Operations Credentials...
           </p>
         </div>
@@ -49,6 +51,7 @@ export function OrganizerProtectedRoute({ children }) {
   }
 
   if (!user) {
+    if (location.pathname === '/organizer/login') return null;
     return <Navigate to="/organizer/login" state={{ from: location }} replace />;
   }
 
@@ -69,16 +72,16 @@ export default function ProtectedRoute({ children, allowedAccountType = null }) 
     return <GamerProtectedRoute>{children}</GamerProtectedRoute>;
   }
 
-  // Fallback for legacy generic protected routes
+  // Fallback for generic protected routes
   const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return (
-      <div className="nebula-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'var(--nebula-text-secondary)' }}>
-          <div className="nebula-loading-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
-          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
+      <div className="evoq-shell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--evoq-text-secondary)' }}>
+          <div className="evoq-spinner" style={{ margin: '0 auto 1.5rem auto' }} />
+          <p style={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.9rem', color: 'var(--evoq-accent)' }}>
             Authenticating Session...
           </p>
         </div>
@@ -87,6 +90,7 @@ export default function ProtectedRoute({ children, allowedAccountType = null }) 
   }
 
   if (!user) {
+    if (location.pathname === '/gamer/login' || location.pathname === '/login') return null;
     return <Navigate to="/gamer/login" state={{ from: location }} replace />;
   }
 
