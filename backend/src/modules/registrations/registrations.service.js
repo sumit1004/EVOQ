@@ -39,13 +39,28 @@ export class RegistrationsService {
     const isFull = tournament._count.registrations >= tournament.maxParticipants;
     const initialStatus = isFull ? 'WAITLISTED' : 'PENDING';
 
+    const resolvedEntrantType = entrantType || tournament.participationType || (teamId ? 'TEAM' : 'INDIVIDUAL');
+
     // 1. INDIVIDUAL REGISTRATION
-    if (entrantType === 'INDIVIDUAL') {
-      const gamerProfile = await prisma.gamerProfile.findUnique({
+    if (resolvedEntrantType === 'INDIVIDUAL') {
+      let gamerProfile = await prisma.gamerProfile.findUnique({
         where: { userId },
       });
       if (!gamerProfile) {
-        throw new ValidationError('You must create a gamer profile before registering for tournaments.');
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user) {
+          gamerProfile = await prisma.gamerProfile.create({
+            data: {
+              id: generateUuid(),
+              userId,
+              slug: user.username.toLowerCase(),
+              displayName: user.username,
+              evoqId: `EVOQ-${user.username.toUpperCase().slice(0, 4)}-${Math.floor(1000 + Math.random() * 9000)}`,
+            },
+          });
+        } else {
+          throw new ValidationError('You must create a gamer profile before registering for tournaments.');
+        }
       }
 
       // Check duplicate

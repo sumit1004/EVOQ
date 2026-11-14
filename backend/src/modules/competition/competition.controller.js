@@ -148,6 +148,54 @@ export class CompetitionController {
       next(err);
     }
   }
+
+  async deleteMatch(req, res, next) {
+    try {
+      const result = await competitionService.deleteMatch(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteGroup(req, res, next) {
+    try {
+      const result = await competitionService.deleteGroup(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteRound(req, res, next) {
+    try {
+      const result = await competitionService.deleteRound(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteStage(req, res, next) {
+    try {
+      const result = await competitionService.deleteStage(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const competitionController = new CompetitionController();

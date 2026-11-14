@@ -48,4 +48,16 @@ router.post('/matches/:id/credentials', authenticate, requireOrganizer, validate
 router.post('/matches/:id/credentials/revoke', authenticate, requireOrganizer, competitionController.revokeCredentials);
 router.get('/matches/:id/credentials', authenticate, competitionController.getCredentials);
 
+// Delete operations (ORGANIZER ONLY)
+router.delete('/matches/:id', authenticate, requireOrganizer, competitionController.deleteMatch);
+router.delete('/groups/:id', authenticate, requireOrganizer, competitionController.deleteGroup);
+router.delete('/rounds/:id', authenticate, requireOrganizer, competitionController.deleteRound);
+router.delete('/stages/:id', authenticate, requireOrganizer, competitionController.deleteStage);
+
+// Route aliases under /competition/*
+router.delete('/competition/matches/:id', authenticate, requireOrganizer, competitionController.deleteMatch);
+router.delete('/competition/groups/:id', authenticate, requireOrganizer, competitionController.deleteGroup);
+router.delete('/competition/rounds/:id', authenticate, requireOrganizer, competitionController.deleteRound);
+router.delete('/competition/stages/:id', authenticate, requireOrganizer, competitionController.deleteStage);
+
 export default router;

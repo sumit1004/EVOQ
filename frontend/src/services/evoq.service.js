@@ -88,6 +88,26 @@ export const evoqService = {
     return res.data.data;
   },
 
+  async cancelTeamInvitation(teamId, invitationId) {
+    const res = await api.delete(`/teams/${teamId}/invitations/${invitationId}`);
+    return res.data.data;
+  },
+
+  async leaveTeam(teamId) {
+    const res = await api.post(`/teams/${teamId}/leave`);
+    return res.data.data;
+  },
+
+  async transferTeamOwnership(teamId, newOwnerUserId) {
+    const res = await api.post(`/teams/${teamId}/transfer-ownership`, { newOwnerUserId });
+    return res.data.data;
+  },
+
+  async deleteTeam(teamId) {
+    const res = await api.delete(`/teams/${teamId}`);
+    return res.data.data;
+  },
+
   // ── Organizations ──
   async getOrganizations() {
     const res = await api.get('/organizations');
@@ -168,6 +188,11 @@ export const evoqService = {
 
   async updateTournamentStatus(id, status) {
     const res = await api.post(`/tournaments/${id}/status`, { status });
+    return res.data.data;
+  },
+
+  async deleteTournament(id) {
+    const res = await api.delete(`/tournaments/${id}`);
     return res.data.data;
   },
 
@@ -262,6 +287,26 @@ export const evoqService = {
 
   async advanceTournamentStage(tournamentId, data) {
     const res = await api.post(`/tournaments/${tournamentId}/stages/advance`, data);
+    return res.data.data;
+  },
+
+  async deleteMatch(matchId) {
+    const res = await api.delete(`/matches/${matchId}`);
+    return res.data.data;
+  },
+
+  async deleteCompetitionGroup(groupId) {
+    const res = await api.delete(`/groups/${groupId}`);
+    return res.data.data;
+  },
+
+  async deleteTournamentRound(roundId) {
+    const res = await api.delete(`/rounds/${roundId}`);
+    return res.data.data;
+  },
+
+  async deleteTournamentStage(stageId) {
+    const res = await api.delete(`/stages/${stageId}`);
     return res.data.data;
   },
 

@@ -122,10 +122,10 @@ export default function OrganizerDashboard() {
           icon="tournament"
         />
         <StatCard
-          label="Active / Live Events"
+          label="Registration Open"
           value={metrics.activeTournaments || 0}
-          subtext="Brackets in progress"
-          icon="matches"
+          subtext="Accepting squad entries"
+          icon="tournament"
           lime
         />
         <StatCard
@@ -201,7 +201,7 @@ export default function OrganizerDashboard() {
                       {t.name || t.title}
                     </strong>
                     <div style={{ fontSize: '0.76rem', color: 'var(--evoq-text-muted)' }}>
-                      Format: {t.format?.replace(/_/g, ' ')} • {t._count?.registrations || 0} Entries
+                      {t._count?.registrations || 0} Entries
                     </div>
                   </div>
 
@@ -218,49 +218,8 @@ export default function OrganizerDashboard() {
           )}
         </div>
 
-        {/* Right Column: Upcoming Matches & Quick Actions */}
+        {/* Right Column: Operations Shortcuts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Upcoming Matches */}
-          <div className="evoq-card">
-            <SectionHeader
-              title="Scheduled Match Fixtures"
-              subtitle="Rounds waiting for lobby credentials or score validation"
-            />
-
-            {upcomingMatches.length === 0 ? (
-              <EmptyState
-                icon="matches"
-                title="No Pending Fixtures"
-                description="When tournament brackets generate match fixtures, they will queue here for referee review."
-              />
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {upcomingMatches.slice(0, 4).map((m) => (
-                  <div
-                    key={m.id}
-                    style={{
-                      padding: '12px 14px',
-                      backgroundColor: 'var(--evoq-surface-elevated)',
-                      borderRadius: 'var(--evoq-radius-sm)',
-                      border: '1px solid var(--evoq-border)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div>
-                      <span className="evoq-mono-label">{m.roundName || 'MATCH ROUND'}</span>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--evoq-text-primary)', marginTop: '2px' }}>
-                        {m.teamA?.name || 'TBD'} vs {m.teamB?.name || 'TBD'}
-                      </div>
-                    </div>
-                    <StatusIndicator status={m.status} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Quick Operations Actions */}
           <div className="evoq-card">
             <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 12px 0', color: 'var(--evoq-text-primary)' }}>

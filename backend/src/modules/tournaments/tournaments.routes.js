@@ -36,6 +36,7 @@ router.get('/:slug', (req, res, next) => {
 // Management by ID (ORGANIZER ONLY + ownership/staff check)
 router.patch('/:id', authenticate, requireOrganizer, validate(updateTournamentSchema), tournamentsController.update);
 router.post('/:id/status', authenticate, requireOrganizer, validate(updateTournamentStatusSchema), tournamentsController.updateStatus);
+router.delete('/:id', authenticate, requireOrganizer, tournamentsController.delete);
 
 export default router;
 

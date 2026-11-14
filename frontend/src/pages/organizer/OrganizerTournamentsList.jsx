@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import OrganizerLayout from '../../layouts/OrganizerLayout.jsx';
 import { evoqService } from '../../services/evoq.service.js';
 import {
+  Modal,
   PrimaryButton,
   SecondaryButton,
   Badge,
@@ -19,6 +20,9 @@ export default function OrganizerTournamentsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [activeTournamentForDelete, setActiveTournamentForDelete] = useState(null);
+  const [deletingTournament, setDeletingTournament] = useState(false);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadTournaments();
@@ -36,6 +40,24 @@ export default function OrganizerTournamentsList() {
       setLoading(false);
     }
   }
+
+  const handleDeleteTournament = async (e) => {
+    e.preventDefault();
+    if (!activeTournamentForDelete) return;
+    setDeletingTournament(true);
+    setError('');
+    setSuccess('');
+    try {
+      await evoqService.deleteTournament(activeTournamentForDelete.id);
+      setSuccess(`Tournament "${activeTournamentForDelete.name}" deleted successfully.`);
+      setActiveTournamentForDelete(null);
+      await loadTournaments();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to delete tournament.');
+    } finally {
+      setDeletingTournament(false);
+    }
+  };
 
   const filtered = statusFilter
     ? tournaments.filter((t) => t.status === statusFilter)
@@ -105,6 +127,14 @@ export default function OrganizerTournamentsList() {
           >
             <Icon name="external" size={13} />
           </Link>
+          <button
+            type="button"
+            className="evoq-btn evoq-btn-danger evoq-btn-sm"
+            onClick={() => setActiveTournamentForDelete(row)}
+            title="Delete Tournament"
+          >
+            <Icon name="trash" size={13} />
+          </button>
         </div>
       ),
     },
@@ -127,9 +157,16 @@ export default function OrganizerTournamentsList() {
       </div>
 
       {error && (
-        <div className="evoq-alert evoq-alert-danger" role="alert">
+        <div className="evoq-alert evoq-alert-danger" role="alert" style={{ marginBottom: '16px' }}>
           <Icon name="x" size={16} />
           <span>{error}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="evoq-alert evoq-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <Icon name="check" size={16} />
+          <span>{success}</span>
         </div>
       )}
 
@@ -195,6 +232,46 @@ export default function OrganizerTournamentsList() {
           />
         </div>
       )}
+
+      {/* ── DELETE TOURNAMENT MODAL ── */}
+      <Modal
+        isOpen={!!activeTournamentForDelete}
+        onClose={() => setActiveTournamentForDelete(null)}
+        title={`Delete Tournament: ${activeTournamentForDelete?.name}`}
+        subtitle="Permanent destruction of tournament, matches, stages and entries"
+        maxWidth="440px"
+      >
+        <form onSubmit={handleDeleteTournament} noValidate>
+          <div style={{ marginBottom: '16px' }}>
+            <div
+              style={{
+                padding: '12px 14px',
+                backgroundColor: 'rgba(255, 107, 107, 0.08)',
+                border: '1px solid rgba(255, 107, 107, 0.25)',
+                borderRadius: 'var(--evoq-radius-sm)',
+                marginBottom: '14px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b', fontWeight: 700, marginBottom: '6px' }}>
+                <Icon name="trash" size={16} />
+                <span>Permanent Destruction</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', lineHeight: 1.4 }}>
+                Are you sure you want to delete <strong>{activeTournamentForDelete?.name}</strong>? All stages, rounds, groups, matches, room credentials, and results will be permanently removed.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <SecondaryButton onClick={() => setActiveTournamentForDelete(null)} disabled={deletingTournament}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit" variant="danger" icon="trash" loading={deletingTournament} disabled={deletingTournament}>
+              {deletingTournament ? 'Deleting...' : 'Delete Tournament'}
+            </PrimaryButton>
+          </div>
+        </form>
+      </Modal>
     </OrganizerLayout>
   );
 }

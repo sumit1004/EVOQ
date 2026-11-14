@@ -31,9 +31,6 @@ export class HeadToHeadEngine {
           sequence: r,
           roundType: 'UPPER',
           status: r === 1 ? 'ACTIVE' : 'UPCOMING',
-          roundConfig: {
-            matchesCount: remainingMatches,
-          },
         },
       });
       createdRounds.push(round);
@@ -55,12 +52,6 @@ export class HeadToHeadEngine {
           matchNumber: m + 1,
           title: `${createdRounds[0].name} - Match ${m + 1}`,
           status: 'SCHEDULED',
-          seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-          matchData: {
-            engine: 'HEAD_TO_HEAD',
-            roundNumber: 1,
-            bracketSlot: m + 1,
-          },
         },
       });
       r1Matches.push(match);
@@ -109,12 +100,6 @@ export class HeadToHeadEngine {
             matchNumber: m + 1,
             title: `${round.name} - Match ${m + 1}`,
             status: 'SCHEDULED',
-            seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-            matchData: {
-              engine: 'HEAD_TO_HEAD',
-              roundNumber: r,
-              bracketSlot: m + 1,
-            },
           },
         });
       }
@@ -194,13 +179,6 @@ export class HeadToHeadEngine {
           matchNumber: m + 1,
           title: `Upper Round 1 - Match ${m + 1}`,
           status: 'SCHEDULED',
-          seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-          matchData: {
-            engine: 'HEAD_TO_HEAD',
-            bracket: 'UPPER',
-            roundNumber: 1,
-            bracketSlot: m + 1,
-          },
         },
       });
 
@@ -233,13 +211,6 @@ export class HeadToHeadEngine {
             matchNumber: m + 1,
             title: `${round.name} - Match ${m + 1}`,
             status: 'SCHEDULED',
-            seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-            matchData: {
-              engine: 'HEAD_TO_HEAD',
-              bracket: 'UPPER',
-              roundNumber: r,
-              bracketSlot: m + 1,
-            },
           },
         });
       }
@@ -259,13 +230,6 @@ export class HeadToHeadEngine {
             matchNumber: m + 1,
             title: `${round.name} - Match ${m + 1}`,
             status: 'SCHEDULED',
-            seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-            matchData: {
-              engine: 'HEAD_TO_HEAD',
-              bracket: 'LOWER',
-              roundNumber: r,
-              bracketSlot: m + 1,
-            },
           },
         });
       }
@@ -281,13 +245,6 @@ export class HeadToHeadEngine {
         matchNumber: 1,
         title: 'Grand Finals',
         status: 'SCHEDULED',
-        seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO5', mapsCount: 5 },
-        matchData: {
-          engine: 'HEAD_TO_HEAD',
-          bracket: 'GRAND_FINALS',
-          roundNumber: 1,
-          bracketSlot: 1,
-        },
       },
     });
 
@@ -329,11 +286,6 @@ export class HeadToHeadEngine {
             matchNumber: matchNum++,
             title: `Match ${matchNum - 1}: ${participants[i].team?.name || 'T1'} vs ${participants[j].team?.name || 'T2'}`,
             status: 'SCHEDULED',
-            seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-            matchData: {
-              engine: 'HEAD_TO_HEAD',
-              format: 'ROUND_ROBIN',
-            },
           },
         });
 
@@ -445,12 +397,6 @@ export class HeadToHeadEngine {
             matchNumber: matchNum++,
             title: `Swiss R${roundNumber} - Match ${matchNum - 1}`,
             status: 'SCHEDULED',
-            seriesConfig: tournament.formatConfig?.seriesConfig || { format: 'BO3', mapsCount: 3 },
-            matchData: {
-              engine: 'HEAD_TO_HEAD',
-              format: 'SWISS',
-              roundNumber,
-            },
           },
         });
 

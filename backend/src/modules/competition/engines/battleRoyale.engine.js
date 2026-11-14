@@ -37,13 +37,9 @@ export class BattleRoyaleEngine {
       const group = await tx.competitionGroup.create({
         data: {
           id: generateUuid(),
-          stageId: stage.id,
           name: numGroups === 1 ? 'Main Lobby' : `Group ${groupLetter}`,
           sequence: g + 1,
-          groupConfig: {
-            teamsPerLobby,
-            matchesPerGroup,
-          },
+          stage: { connect: { id: stage.id } },
         },
       });
       groups.push(group);
@@ -75,9 +71,6 @@ export class BattleRoyaleEngine {
             sequence: matchNumber,
             roundType: 'GROUP',
             status: 'UPCOMING',
-            roundConfig: {
-              mapName,
-            },
           },
         });
 
@@ -91,13 +84,7 @@ export class BattleRoyaleEngine {
             roundId: round.id,
             matchNumber: matchNumber,
             title: `${group.name} - Match ${matchNumber} (${mapName})`,
-            mapName: mapName,
             status: 'SCHEDULED',
-            matchData: {
-              engine: 'BATTLE_ROYALE',
-              mapName,
-              teamsCount: assignedTeams.length,
-            },
           },
         });
 

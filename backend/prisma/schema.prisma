@@ -206,6 +206,7 @@ model Team {
   primaryGameId   String?      @db.Char(36)
   country         String?      @db.VarChar(64)
   region          String?      @db.VarChar(64)
+  maxMembers      Int          @default(4)
   ownerId         String       @db.Char(36)
   captainId       String?      @db.Char(36)
   status          String       @default("ACTIVE") @db.VarChar(32)

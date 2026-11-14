@@ -33,7 +33,7 @@ export const createTournamentSchema = z.object({
   registrationDeadline: z.string().datetime(),
   startDate: z.string().datetime(),
   endDate: z.string().datetime().optional().nullable(),
-  timezone: z.string().default('UTC'),
+  timezone: z.string().default('UTC').optional(),
   locationMode: z.enum(['ONLINE', 'LAN', 'HYBRID']).default('ONLINE'),
   locationDetails: z.string().max(255).optional().nullable(),
   rules: z.string().max(10000).optional().nullable(),

@@ -39,7 +39,19 @@ export class TeamsController {
 
   async getBySlug(req, res, next) {
     try {
-      const team = await teamsService.getTeamBySlug(req.params.slug);
+      const team = await teamsService.getTeamBySlug(req.params.slug, req.user?.id || null);
+      res.status(200).json({
+        data: team,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getById(req, res, next) {
+    try {
+      const team = await teamsService.getTeamById(req.params.id, req.user?.id || null);
       res.status(200).json({
         data: team,
         meta: { requestId: req.requestId },
@@ -73,6 +85,18 @@ export class TeamsController {
     }
   }
 
+  async cancelInvitation(req, res, next) {
+    try {
+      await teamsService.cancelInvitation(req.params.id, req.user.id, req.params.invitationId);
+      res.status(200).json({
+        data: { success: true },
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getMyInvitations(req, res, next) {
     try {
       const invitations = await teamsService.getMyInvitations(req.user.id);
@@ -87,9 +111,9 @@ export class TeamsController {
 
   async respondInvitation(req, res, next) {
     try {
-      await teamsService.respondToInvitation(req.params.id, req.user.id, req.body.action);
+      const result = await teamsService.respondToInvitation(req.params.id, req.user.id, req.body.action);
       res.status(200).json({
-        data: { success: true },
+        data: result,
         meta: { requestId: req.requestId },
       });
     } catch (err) {
@@ -108,7 +132,42 @@ export class TeamsController {
       next(err);
     }
   }
+
+  async leaveTeam(req, res, next) {
+    try {
+      await teamsService.removeMember(req.params.id, req.user.id, req.user.id);
+      res.status(200).json({
+        data: { success: true },
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async transferOwnership(req, res, next) {
+    try {
+      await teamsService.transferOwnership(req.params.id, req.user.id, req.body.newOwnerUserId);
+      res.status(200).json({
+        data: { success: true },
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async delete(req, res, next) {
+    try {
+      const result = await teamsService.deleteTeam(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const teamsController = new TeamsController();
-

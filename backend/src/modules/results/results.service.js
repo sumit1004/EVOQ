@@ -162,11 +162,11 @@ export class ResultsService {
       await tx.auditLog.create({
         data: {
           id: generateUuid(),
-          userId: actorId,
+          actorId,
           action: 'RESULT_APPROVED',
           resourceType: 'MATCH_RESULT',
           resourceId: resultId,
-          payload: { matchId: match.id, tournamentId: match.tournamentId, revisionNumber: latestRevision.revisionNumber },
+          details: { matchId: match.id, tournamentId: match.tournamentId, revisionNumber: latestRevision.revisionNumber },
         },
       });
 
@@ -233,11 +233,11 @@ export class ResultsService {
       await tx.auditLog.create({
         data: {
           id: generateUuid(),
-          userId: actorId,
+          actorId,
           action: 'RESULT_CORRECTED',
           resourceType: 'MATCH_RESULT',
           resourceId: resultId,
-          payload: {
+          details: {
             matchId: match.id,
             revisionNumber: nextRevNum,
             reason,
@@ -475,7 +475,7 @@ export class ResultsService {
           include: {
             registration: {
               include: {
-                team: { select: { id: true, name: true, slug: true, logoUrl: true, tag: true } },
+                team: { select: { id: true, name: true, slug: true, logoUrl: true } },
                 gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
               },
             },

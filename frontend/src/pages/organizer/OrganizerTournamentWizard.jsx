@@ -15,6 +15,9 @@ import {
 } from '../../components/ui/index.js';
 import { Icon } from '../../components/Icons.jsx';
 
+/**
+ * Verified Official Publisher Scoring Presets
+ */
 const GAME_PRESETS = {
   'free-fire': {
     name: 'Free Fire',
@@ -25,9 +28,7 @@ const GAME_PRESETS = {
         matchEngine: 'BATTLE_ROYALE',
         defaultTeamSize: 4,
         teamsPerLobby: 12,
-        formats: ['GROUP_STAGE_FINALS', 'POINTS_TABLE', 'GROUP_STAGE', 'CUSTOM'],
         defaultFormat: 'GROUP_STAGE_FINALS',
-        defaultMaps: ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine'],
         placementPoints: { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 0, 12: 0 },
         eliminationPoints: 1,
       },
@@ -36,10 +37,8 @@ const GAME_PRESETS = {
         name: 'Clash Squad (4v4)',
         matchEngine: 'HEAD_TO_HEAD',
         defaultTeamSize: 4,
-        formats: ['SINGLE_ELIMINATION', 'DOUBLE_ELIMINATION', 'ROUND_ROBIN', 'CUSTOM'],
         defaultFormat: 'SINGLE_ELIMINATION',
-        defaultSeries: 'BO3',
-        defaultMaps: ['Bermuda CS', 'Kalahari CS', 'Purgatory CS'],
+        placementPoints: { 1: 10, 2: 6, 3: 4, 4: 2 },
       },
     ],
   },
@@ -52,9 +51,7 @@ const GAME_PRESETS = {
         matchEngine: 'BATTLE_ROYALE',
         defaultTeamSize: 4,
         teamsPerLobby: 16,
-        formats: ['GROUP_STAGE_FINALS', 'POINTS_TABLE', 'GROUP_STAGE', 'CUSTOM'],
         defaultFormat: 'GROUP_STAGE_FINALS',
-        defaultMaps: ['Erangel', 'Miramar', 'Sanhok', 'Vikendi'],
         placementPoints: { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0 },
         eliminationPoints: 1,
       },
@@ -68,10 +65,8 @@ const GAME_PRESETS = {
         name: '5v5 Competitive Mode',
         matchEngine: 'HEAD_TO_HEAD',
         defaultTeamSize: 5,
-        formats: ['DOUBLE_ELIMINATION', 'SINGLE_ELIMINATION', 'SWISS', 'ROUND_ROBIN', 'CUSTOM'],
         defaultFormat: 'DOUBLE_ELIMINATION',
-        defaultSeries: 'BO3',
-        defaultMaps: ['Ascent', 'Bind', 'Haven', 'Split', 'Lotus', 'Sunset', 'Abyss'],
+        placementPoints: { 1: 10, 2: 6, 3: 4, 4: 2 },
       },
     ],
   },
@@ -83,10 +78,8 @@ const GAME_PRESETS = {
         name: '5v5 Competitive Mode',
         matchEngine: 'HEAD_TO_HEAD',
         defaultTeamSize: 5,
-        formats: ['DOUBLE_ELIMINATION', 'SINGLE_ELIMINATION', 'SWISS', 'ROUND_ROBIN', 'CUSTOM'],
         defaultFormat: 'DOUBLE_ELIMINATION',
-        defaultSeries: 'BO3',
-        defaultMaps: ['Mirage', 'Inferno', 'Nuke', 'Dust II', 'Anubis', 'Ancient', 'Vertigo'],
+        placementPoints: { 1: 10, 2: 6, 3: 4, 4: 2 },
       },
     ],
   },
@@ -95,13 +88,11 @@ const GAME_PRESETS = {
     modes: [
       {
         id: 'multiplayer-5v5',
-        name: 'Multiplayer (5v5 Search & Destroy / Hardpoint)',
+        name: 'Multiplayer (5v5)',
         matchEngine: 'HEAD_TO_HEAD',
         defaultTeamSize: 5,
-        formats: ['SINGLE_ELIMINATION', 'DOUBLE_ELIMINATION', 'ROUND_ROBIN', 'CUSTOM'],
         defaultFormat: 'SINGLE_ELIMINATION',
-        defaultSeries: 'BO3',
-        defaultMaps: ['Firing Range', 'Summit', 'Raid', 'Standoff', 'Crash'],
+        placementPoints: { 1: 10, 2: 6, 3: 4, 4: 2 },
       },
       {
         id: 'battle-royale',
@@ -109,15 +100,33 @@ const GAME_PRESETS = {
         matchEngine: 'BATTLE_ROYALE',
         defaultTeamSize: 4,
         teamsPerLobby: 16,
-        formats: ['GROUP_STAGE_FINALS', 'POINTS_TABLE', 'CUSTOM'],
         defaultFormat: 'POINTS_TABLE',
-        defaultMaps: ['Isolated', 'Blackout'],
         placementPoints: { 1: 15, 2: 12, 3: 10, 4: 8, 5: 6, 6: 4, 7: 2, 8: 1, 9: 0, 10: 0 },
         eliminationPoints: 1,
       },
     ],
   },
 };
+
+/**
+ * Helper to convert integer placement to ordinal string (1 -> 1st, 2 -> 2nd, etc.)
+ */
+function getOrdinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+/**
+ * Convert placement points object { 1: 12, 2: 9 } to ordered table rows array
+ */
+function presetToRows(pointsObj = {}) {
+  const entries = Object.entries(pointsObj)
+    .map(([pl, pts]) => ({ placement: parseInt(pl, 10), points: Number(pts) }))
+    .filter((r) => !isNaN(r.placement) && !isNaN(r.points));
+  entries.sort((a, b) => a.placement - b.placement);
+  return entries;
+}
 
 export default function OrganizerTournamentWizard() {
   const navigate = useNavigate();
@@ -128,7 +137,7 @@ export default function OrganizerTournamentWizard() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
 
   // Form State
   const [form, setForm] = useState({
@@ -139,7 +148,6 @@ export default function OrganizerTournamentWizard() {
     bannerUrl: '',
     thumbnailUrl: '',
     organizationId: '',
-    rules: '',
     visibility: 'PUBLIC',
 
     // Step 2: Event Type
@@ -149,31 +157,17 @@ export default function OrganizerTournamentWizard() {
     gameId: '',
     gameSlug: '',
     gameMode: 'battle-royale',
-    matchEngine: 'BATTLE_ROYALE', // BATTLE_ROYALE or HEAD_TO_HEAD
 
-    // Step 4: Participation Configuration
-    participationType: 'TEAM',
-    teamSize: 4,
-    minParticipants: 4,
-    maxParticipants: 16,
+    // Step 4: Rules & Scoring — Placement Points Table
+    placementPointsTable: [],
 
-    // Step 5: Competition Format
-    format: 'GROUP_STAGE_FINALS',
-
-    // Step 6: Rules & Scoring Presets
-    teamsPerLobby: 12,
-    matchesPerGroup: 3,
-    eliminationPoints: 1,
-    seriesFormat: 'BO3',
-    selectedMaps: ['Map 1', 'Map 2', 'Map 3'],
-
-    // Step 7: Schedule & Prize
+    // Step 5: Schedule
     registrationStart: '',
     registrationDeadline: '',
     startDate: '',
     endDate: '',
-    timezone: 'UTC',
     prizePool: '',
+    rules: '',
   });
 
   useEffect(() => {
@@ -204,20 +198,14 @@ export default function OrganizerTournamentWizard() {
     const slug = gameSlug || games.find((g) => g.id === gameId)?.slug || 'free-fire';
     const preset = GAME_PRESETS[slug] || GAME_PRESETS['free-fire'];
     const mode = preset.modes[0];
+    const initialRows = presetToRows(mode.placementPoints || { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6 });
 
     setForm((prev) => ({
       ...prev,
       gameId,
       gameSlug: slug,
       gameMode: mode.id,
-      matchEngine: mode.matchEngine,
-      teamSize: mode.defaultTeamSize,
-      format: mode.defaultFormat,
-      teamsPerLobby: mode.teamsPerLobby || 12,
-      eliminationPoints: mode.eliminationPoints || 1,
-      seriesFormat: mode.defaultSeries || 'BO3',
-      selectedMaps: mode.defaultMaps || ['Map 1', 'Map 2', 'Map 3'],
-      maxParticipants: mode.matchEngine === 'BATTLE_ROYALE' ? (mode.teamsPerLobby ? mode.teamsPerLobby * 2 : 24) : 16,
+      placementPointsTable: initialRows,
     }));
   };
 
@@ -227,24 +215,15 @@ export default function OrganizerTournamentWizard() {
     applyGameDefaults(gameId, gameObj?.slug);
   };
 
-  const handleModeChange = (e) => {
-    const modeId = e.target.value;
-    const preset = GAME_PRESETS[form.gameSlug];
-    if (!preset) return;
-    const mode = preset.modes.find((m) => m.id === modeId);
-    if (!mode) return;
+  const handleModeChange = (modeId) => {
+    const preset = GAME_PRESETS[form.gameSlug] || GAME_PRESETS['free-fire'];
+    const mode = preset.modes.find((m) => m.id === modeId) || preset.modes[0];
+    const initialRows = presetToRows(mode.placementPoints || { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6 });
 
     setForm((prev) => ({
       ...prev,
       gameMode: mode.id,
-      matchEngine: mode.matchEngine,
-      teamSize: mode.defaultTeamSize,
-      format: mode.defaultFormat,
-      teamsPerLobby: mode.teamsPerLobby || 12,
-      eliminationPoints: mode.eliminationPoints || 1,
-      seriesFormat: mode.defaultSeries || 'BO3',
-      selectedMaps: mode.defaultMaps || ['Map 1', 'Map 2', 'Map 3'],
-      maxParticipants: mode.matchEngine === 'BATTLE_ROYALE' ? (mode.teamsPerLobby ? mode.teamsPerLobby * 2 : 24) : 16,
+      placementPointsTable: initialRows,
     }));
   };
 
@@ -288,6 +267,95 @@ export default function OrganizerTournamentWizard() {
     }
   };
 
+  // ── Placement Points Table Handlers ──
+  const handlePlacementRowChange = (index, field, value) => {
+    setSavedFeedback(false);
+    setForm((prev) => {
+      const nextTable = [...prev.placementPointsTable];
+      const parsed = value === '' ? '' : Number(value);
+      nextTable[index] = {
+        ...nextTable[index],
+        [field]: parsed,
+      };
+      return { ...prev, placementPointsTable: nextTable };
+    });
+  };
+
+  const handleAddPlacementRow = () => {
+    setSavedFeedback(false);
+    setForm((prev) => {
+      const nextTable = [...prev.placementPointsTable];
+      const maxPlacement = nextTable.reduce((max, r) => {
+        const val = Number(r.placement);
+        return !isNaN(val) && val > max ? val : max;
+      }, 0);
+      nextTable.push({
+        placement: maxPlacement + 1,
+        points: 0,
+      });
+      return { ...prev, placementPointsTable: nextTable };
+    });
+  };
+
+  const handleRemovePlacementRow = (index) => {
+    setSavedFeedback(false);
+    setForm((prev) => {
+      if (prev.placementPointsTable.length <= 1) {
+        setError('Tournament must configure at least one placement rank.');
+        return prev;
+      }
+      const nextTable = prev.placementPointsTable.filter((_, i) => i !== index);
+      return { ...prev, placementPointsTable: nextTable };
+    });
+  };
+
+  const handleResetToDefaultPreset = () => {
+    const preset = GAME_PRESETS[form.gameSlug] || GAME_PRESETS['free-fire'];
+    const mode = preset.modes.find((m) => m.id === form.gameMode) || preset.modes[0];
+    const defaultRows = presetToRows(mode.placementPoints || { 1: 12, 2: 9, 3: 8 });
+    setForm((prev) => ({
+      ...prev,
+      placementPointsTable: defaultRows,
+    }));
+    setSavedFeedback(true);
+    setTimeout(() => setSavedFeedback(false), 3000);
+  };
+
+  const handleSavePlacementConfiguration = () => {
+    setError('');
+    // Validation: Check rows
+    const rows = form.placementPointsTable;
+    if (!rows || rows.length === 0) {
+      setError('At least one placement row is required.');
+      return false;
+    }
+
+    const seenPlacements = new Set();
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.placement === '' || isNaN(r.placement) || r.placement < 1 || !Number.isInteger(Number(r.placement))) {
+        setError(`Row #${i + 1}: Placement must be a valid positive integer (e.g. 1, 2, 3...).`);
+        return false;
+      }
+      if (r.points === '' || isNaN(r.points) || r.points < 0) {
+        setError(`Row #${i + 1}: Points must be a valid non-negative number.`);
+        return false;
+      }
+      if (seenPlacements.has(r.placement)) {
+        setError(`Duplicate placement "${getOrdinal(r.placement)}" detected. Each placement rank must be unique.`);
+        return false;
+      }
+      seenPlacements.add(r.placement);
+    }
+
+    // Sort deterministically by placement ascending
+    const sorted = [...rows].sort((a, b) => Number(a.placement) - Number(b.placement));
+    setForm((prev) => ({ ...prev, placementPointsTable: sorted }));
+    setSavedFeedback(true);
+    setTimeout(() => setSavedFeedback(false), 3500);
+    return true;
+  };
+
   const validateStep = (s) => {
     setError('');
     if (s === 1) {
@@ -310,11 +378,10 @@ export default function OrganizerTournamentWizard() {
         return false;
       }
     } else if (s === 4) {
-      if (form.maxParticipants < 2) {
-        setError('Maximum participants must be at least 2.');
+      if (!handleSavePlacementConfiguration()) {
         return false;
       }
-    } else if (s === 7) {
+    } else if (s === 5) {
       if (!form.registrationStart || !form.registrationDeadline || !form.startDate) {
         setError('Registration start, deadline, and tournament start dates are required.');
         return false;
@@ -345,13 +412,19 @@ export default function OrganizerTournamentWizard() {
   };
 
   const handleSave = async (isPublish = false) => {
-    if (!validateStep(7)) return;
+    if (!validateStep(5)) return;
     setSubmitting(true);
     setError('');
 
     try {
-      const activePreset = GAME_PRESETS[form.gameSlug];
-      const activeMode = activePreset?.modes.find((m) => m.id === form.gameMode);
+      const activePreset = GAME_PRESETS[form.gameSlug] || GAME_PRESETS['free-fire'];
+      const activeMode = activePreset?.modes.find((m) => m.id === form.gameMode) || activePreset.modes[0];
+
+      // Convert table to placement points map: { 1: 12, 2: 9, ... }
+      const placementPointsMap = {};
+      form.placementPointsTable.forEach((row) => {
+        placementPointsMap[row.placement] = Number(row.points);
+      });
 
       const payload = {
         name: form.name.trim(),
@@ -361,35 +434,29 @@ export default function OrganizerTournamentWizard() {
         thumbnailUrl: form.thumbnailUrl || null,
         gameId: form.gameId,
         organizationId: form.organizationId || null,
-        format: form.format,
-        participationType: form.participationType,
-        teamSize: form.teamSize,
-        minParticipants: form.minParticipants || 2,
-        maxParticipants: form.maxParticipants || 16,
+        format: activeMode.defaultFormat || 'SINGLE_ELIMINATION',
+        participationType: activeMode.matchEngine === 'BATTLE_ROYALE' ? 'TEAM' : 'TEAM',
+        teamSize: activeMode.defaultTeamSize || 4,
+        minParticipants: 2,
+        maxParticipants: activeMode.matchEngine === 'BATTLE_ROYALE' ? 24 : 16,
         registrationStart: new Date(form.registrationStart).toISOString(),
         registrationDeadline: new Date(form.registrationDeadline).toISOString(),
         startDate: new Date(form.startDate).toISOString(),
         endDate: form.endDate ? new Date(form.endDate).toISOString() : null,
-        timezone: form.timezone || 'UTC',
+        timezone: 'UTC',
         locationMode: form.locationMode || 'ONLINE',
-        rules: form.rules || null,
-        prizePool: form.prizePool || null,
+        rules: form.rules?.trim() || null,
+        prizePool: form.prizePool?.trim() || null,
         visibility: form.visibility || 'PUBLIC',
         formatConfig: {
-          matchEngine: form.matchEngine,
+          matchEngine: activeMode.matchEngine,
           gameMode: form.gameMode,
-          teamsPerLobby: form.teamsPerLobby,
-          matchesPerGroup: form.matchesPerGroup,
-          maps: form.selectedMaps,
           scoringRuleset: {
-            placementPoints: activeMode?.placementPoints || { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 0, 12: 0 },
-            eliminationPointValue: form.eliminationPoints || 1,
+            placementPoints: placementPointsMap,
+            eliminationPointValue: activeMode.eliminationPoints || 1,
             tieBreakers: ['MOST_WINS', 'TOTAL_ELIMINATIONS', 'LAST_MATCH_PLACEMENT'],
           },
-          seriesConfig: {
-            format: form.seriesFormat,
-            mapsCount: form.seriesFormat === 'BO1' ? 1 : form.seriesFormat === 'BO5' ? 5 : 3,
-          },
+          placementPoints: placementPointsMap,
         },
       };
 
@@ -415,8 +482,6 @@ export default function OrganizerTournamentWizard() {
     'Basic Information',
     'Event Type',
     'Game & Mode',
-    'Participation',
-    'Format Engine',
     'Rules & Scoring',
     'Schedule',
     'Review & Deploy',
@@ -503,6 +568,13 @@ export default function OrganizerTournamentWizard() {
           <div className="evoq-alert evoq-alert-danger" role="alert" style={{ marginBottom: '20px' }}>
             <Icon name="x" size={16} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {savedFeedback && (
+          <div className="evoq-alert evoq-alert-success" style={{ marginBottom: '20px' }}>
+            <Icon name="check" size={16} />
+            <span>Placement Points Configuration Verified &amp; Saved.</span>
           </div>
         )}
 
@@ -688,7 +760,7 @@ export default function OrganizerTournamentWizard() {
                   {activeModes.map((m) => (
                     <div
                       key={m.id}
-                      onClick={() => handleModeChange({ target: { value: m.id } })}
+                      onClick={() => handleModeChange(m.id)}
                       style={{
                         padding: '16px',
                         borderRadius: 'var(--evoq-radius-sm)',
@@ -704,7 +776,7 @@ export default function OrganizerTournamentWizard() {
                         </Badge>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--evoq-text-muted)', marginTop: '6px' }}>
-                        Default format: {m.defaultFormat.replace(/_/g, ' ')}
+                        Publisher Preset: {Object.keys(m.placementPoints || {}).length} Placement Ranks
                       </div>
                     </div>
                   ))}
@@ -713,220 +785,178 @@ export default function OrganizerTournamentWizard() {
             </div>
           )}
 
-          {/* STEP 4: PARTICIPATION CONFIGURATION */}
+          {/* STEP 4: RULES & SCORING — PLACEMENT POINTS CONFIGURATION ONLY */}
           {step === 4 && (
             <div>
-              <SectionHeader
-                title="Step 4: Participation & Roster Policies"
-                subtitle="Individual or squad entries, roster sizing, and bracket capacity"
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                <SectionHeader
+                  title="Step 4: Rules & Scoring — Placement Points Configuration"
+                  subtitle="Configure official points awarded per final match placement rank"
+                />
+                <Badge variant="lime">
+                  {activePreset.name.toUpperCase()} • {currentMode.name.toUpperCase()}
+                </Badge>
+              </div>
 
-              <Select
-                label="Entry Type"
-                id="participationType"
-                name="participationType"
-                value={form.participationType}
-                onChange={handleChange}
+              {/* Placement Points Table Card */}
+              <div
+                style={{
+                  backgroundColor: 'var(--evoq-surface-elevated)',
+                  border: '1px solid var(--evoq-border)',
+                  borderRadius: 'var(--evoq-radius-sm)',
+                  padding: '20px',
+                }}
               >
-                <option value="TEAM">Competitive Team / Squad Entry</option>
-                <option value="INDIVIDUAL">Solo Individual Competitor Entry</option>
-              </Select>
-
-              {form.participationType === 'TEAM' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <Input
-                    label="Active Lineup Size"
-                    type="number"
-                    id="teamSize"
-                    name="teamSize"
-                    value={form.teamSize}
-                    onChange={handleChange}
-                    min={1}
-                    max={10}
-                    required
-                    helperText="Number of starters competing in match room."
-                  />
-
-                  <Input
-                    label="Maximum Roster Size"
-                    type="number"
-                    id="maxRosterSize"
-                    name="maxRosterSize"
-                    value={form.teamSize + 2}
-                    disabled
-                    helperText="Includes up to 2 reserve substitutes."
-                  />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+                      Placement Points Table
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--evoq-text-secondary)' }}>
+                      Verified official preset loaded. Adjust individual points or add custom ranks below.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={handleResetToDefaultPreset}
+                      className="evoq-btn evoq-btn-secondary evoq-btn-xs"
+                      title="Reset points back to official publisher default"
+                    >
+                      Reset Default Preset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddPlacementRow}
+                      className="evoq-btn evoq-btn-primary evoq-btn-xs"
+                    >
+                      <Icon name="plus" size={12} />
+                      <span>Add Placement</span>
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              <Input
-                label="Maximum Total Entrants (Capacity)"
-                type="number"
-                id="maxParticipants"
-                name="maxParticipants"
-                value={form.maxParticipants}
-                onChange={handleChange}
-                min={2}
-                max={256}
-                required
-                helperText={`Maximum ${form.participationType === 'TEAM' ? 'teams' : 'players'} accepted into tournament.`}
-              />
+                {/* Editable Table */}
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--evoq-border)', color: 'var(--evoq-text-muted)', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <th style={{ padding: '10px 12px', width: '180px' }}>Placement Rank</th>
+                        <th style={{ padding: '10px 12px' }}>Points Awarded</th>
+                        <th style={{ padding: '10px 12px', width: '90px', textAlign: 'right' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {form.placementPointsTable.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          style={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                            transition: 'background 0.15s ease',
+                          }}
+                        >
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Badge variant="lime" size="sm" style={{ minWidth: '40px', justifyContent: 'center' }}>
+                                {getOrdinal(row.placement || idx + 1)}
+                              </Badge>
+                              <input
+                                type="number"
+                                min={1}
+                                value={row.placement}
+                                onChange={(e) => handlePlacementRowChange(idx, 'placement', e.target.value)}
+                                style={{
+                                  width: '70px',
+                                  padding: '6px 8px',
+                                  backgroundColor: 'var(--evoq-surface)',
+                                  border: '1px solid var(--evoq-border)',
+                                  borderRadius: '4px',
+                                  color: 'var(--evoq-text-primary)',
+                                  fontFamily: 'var(--evoq-font-mono)',
+                                  fontSize: '0.88rem',
+                                  outline: 'none',
+                                }}
+                              />
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <input
+                                type="number"
+                                min={0}
+                                value={row.points}
+                                onChange={(e) => handlePlacementRowChange(idx, 'points', e.target.value)}
+                                style={{
+                                  width: '100px',
+                                  padding: '6px 10px',
+                                  backgroundColor: 'var(--evoq-surface)',
+                                  border: '1px solid var(--evoq-border)',
+                                  borderRadius: '4px',
+                                  color: 'var(--evoq-lime)',
+                                  fontWeight: 700,
+                                  fontFamily: 'var(--evoq-font-mono)',
+                                  fontSize: '0.92rem',
+                                  outline: 'none',
+                                }}
+                              />
+                              <span style={{ fontSize: '0.8rem', color: 'var(--evoq-text-muted)' }}>pts</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePlacementRow(idx)}
+                              disabled={form.placementPointsTable.length <= 1}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid var(--evoq-border)',
+                                color: form.placementPointsTable.length <= 1 ? 'var(--evoq-text-muted)' : '#ff6b6b',
+                                cursor: form.placementPointsTable.length <= 1 ? 'not-allowed' : 'pointer',
+                                borderRadius: '4px',
+                                padding: '6px 10px',
+                                fontSize: '0.78rem',
+                                transition: 'all 0.15s ease',
+                              }}
+                              title="Remove placement row"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Table Footer Controls */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--evoq-border)', flexWrap: 'wrap', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={handleAddPlacementRow}
+                    className="evoq-btn evoq-btn-secondary evoq-btn-sm"
+                  >
+                    <Icon name="plus" size={13} />
+                    <span>Add Placement Rank</span>
+                  </button>
+
+                  <PrimaryButton
+                    type="button"
+                    onClick={handleSavePlacementConfiguration}
+                    size="sm"
+                    icon="check"
+                  >
+                    Save Configuration
+                  </PrimaryButton>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* STEP 5: COMPETITION FORMAT */}
+          {/* STEP 5: REGISTRATION & SCHEDULE */}
           {step === 5 && (
             <div>
               <SectionHeader
-                title="Step 5: Competition Format & Match Engine"
-                subtitle="Elimination brackets, round robin, or multi-lobby group stages"
-              />
-
-              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span className="evoq-mono-label">ACTIVE ENGINE:</span>
-                <Badge variant="lime">{form.matchEngine}</Badge>
-              </div>
-
-              {form.matchEngine === 'BATTLE_ROYALE' ? (
-                <Select
-                  label="Battle Royale Tournament Format"
-                  id="format"
-                  name="format"
-                  value={form.format}
-                  onChange={handleChange}
-                >
-                  <option value="GROUP_STAGE_FINALS">Group Stage Qualifiers + Grand Finals</option>
-                  <option value="POINTS_TABLE">League Points Table (Cumulative Standings)</option>
-                  <option value="GROUP_STAGE">Single Group / Single Lobby Stage</option>
-                  <option value="CUSTOM">Custom Battle Royale Format</option>
-                </Select>
-              ) : (
-                <Select
-                  label="Head-to-Head Tournament Format"
-                  id="format"
-                  name="format"
-                  value={form.format}
-                  onChange={handleChange}
-                >
-                  <option value="DOUBLE_ELIMINATION">Double Elimination (Upper & Lower Brackets + Grand Finals)</option>
-                  <option value="SINGLE_ELIMINATION">Single Elimination (Knockout)</option>
-                  <option value="SWISS">Swiss System (Record-Based Pairings)</option>
-                  <option value="ROUND_ROBIN">Round Robin (All-Play-All)</option>
-                  <option value="CUSTOM">Custom Head-to-Head Format</option>
-                </Select>
-              )}
-            </div>
-          )}
-
-          {/* STEP 6: RULES & SCORING */}
-          {step === 6 && (
-            <div>
-              <SectionHeader
-                title="Step 6: Game-Specific Rules, Scoring & Maps"
-                subtitle="Preloaded with official game publisher rulesets"
-              />
-
-              {form.matchEngine === 'BATTLE_ROYALE' ? (
-                <div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                    <Input
-                      label="Teams Per Match Lobby"
-                      type="number"
-                      id="teamsPerLobby"
-                      name="teamsPerLobby"
-                      value={form.teamsPerLobby}
-                      onChange={handleChange}
-                      min={4}
-                      max={25}
-                      required
-                      helperText="Standard Free Fire: 12, BGMI: 16."
-                    />
-
-                    <Input
-                      label="Matches Per Stage"
-                      type="number"
-                      id="matchesPerGroup"
-                      name="matchesPerGroup"
-                      value={form.matchesPerGroup}
-                      onChange={handleChange}
-                      min={1}
-                      max={12}
-                      required
-                      helperText="Matches played per group/lobby."
-                    />
-
-                    <Input
-                      label="Points Per Elimination"
-                      type="number"
-                      id="eliminationPoints"
-                      name="eliminationPoints"
-                      value={form.eliminationPoints}
-                      onChange={handleChange}
-                      min={0}
-                      max={10}
-                      required
-                      helperText="Awarded for each confirmed finish/kill."
-                    />
-                  </div>
-
-                  <div style={{ marginTop: '16px', padding: '14px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span className="evoq-mono-label">PLACEMENT POINTS TABLE (OFFICIAL PRESET)</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        style={{ background: 'none', border: 'none', color: 'var(--evoq-lime)', fontSize: '0.8rem', cursor: 'pointer' }}
-                      >
-                        {showAdvanced ? 'Hide Table' : 'View Point System'}
-                      </button>
-                    </div>
-
-                    {showAdvanced && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginTop: '12px' }}>
-                        {Object.entries(currentMode?.placementPoints || {}).map(([place, pts]) => (
-                          <div key={place} style={{ padding: '6px', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '4px' }}>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--evoq-text-muted)' }}>#{place}</div>
-                            <strong style={{ color: 'var(--evoq-lime)' }}>{pts} pts</strong>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <Select
-                    label="Match Series Format"
-                    id="seriesFormat"
-                    name="seriesFormat"
-                    value={form.seriesFormat}
-                    onChange={handleChange}
-                  >
-                    <option value="BO1">Best of 1 (Single Map)</option>
-                    <option value="BO3">Best of 3 (First to 2 Map Wins)</option>
-                    <option value="BO5">Best of 5 (First to 3 Map Wins)</option>
-                  </Select>
-
-                  <div style={{ marginTop: '12px' }}>
-                    <span className="evoq-mono-label">OFFICIAL MAP ROTATION POOL</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
-                      {currentMode?.defaultMaps?.map((map) => (
-                        <Badge key={map} variant="neutral">
-                          {map}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 7: REGISTRATION & SCHEDULE */}
-          {step === 7 && (
-            <div>
-              <SectionHeader
-                title="Step 7: Schedule, Registration Windows & Prize"
+                title="Step 5: Schedule, Registration Windows & Prize"
                 subtitle="Dates must be chronological: Registration Start → Deadline → Tournament Start"
               />
 
@@ -971,47 +1001,36 @@ export default function OrganizerTournamentWizard() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginTop: '16px' }}>
+              <div style={{ marginTop: '16px' }}>
                 <Input
-                  label="Total Prize Purse / Awards"
+                  label="Total Prize Purse / Awards (Optional)"
                   id="prizePool"
                   name="prizePool"
                   value={form.prizePool}
                   onChange={handleChange}
                   placeholder="e.g. $1,500 USD or 25,000 INR"
                 />
-
-                <Select
-                  label="Tournament Timezone"
-                  id="timezone"
-                  name="timezone"
-                  value={form.timezone}
-                  onChange={handleChange}
-                >
-                  <option value="UTC">UTC (Universal Coordinated Time)</option>
-                  <option value="Asia/Kolkata">IST (Asia / Kolkata)</option>
-                  <option value="America/New_York">EST (America / New York)</option>
-                  <option value="Europe/London">GMT / BST (Europe / London)</option>
-                </Select>
               </div>
 
-              <Textarea
-                label="Player Rules & Code of Conduct (Optional)"
-                id="rules"
-                name="rules"
-                value={form.rules}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Fair play guidelines, disconnect policy, lobby check-in requirements..."
-              />
+              <div style={{ marginTop: '16px' }}>
+                <Textarea
+                  label="Player Rules & Code of Conduct (Optional)"
+                  id="rules"
+                  name="rules"
+                  value={form.rules}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Fair play guidelines, disconnect policy, lobby check-in requirements..."
+                />
+              </div>
             </div>
           )}
 
-          {/* STEP 8: REVIEW & PUBLISH */}
-          {step === 8 && (
+          {/* STEP 6: REVIEW & PUBLISH */}
+          {step === 6 && (
             <div>
               <SectionHeader
-                title="Step 8: Review & Deploy Tournament"
+                title="Step 6: Review & Deploy Tournament"
                 subtitle="Confirm configuration before publishing to the EVOQ arena"
               />
 
@@ -1029,17 +1048,44 @@ export default function OrganizerTournamentWizard() {
                 </div>
 
                 <div style={{ padding: '14px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)', border: '1px solid var(--evoq-border)' }}>
-                  <span className="evoq-mono-label">COMPETITION ENGINE</span>
-                  <div style={{ fontWeight: 700, color: 'var(--evoq-lime)', marginTop: '4px' }}>{form.matchEngine}</div>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>{form.format.replace(/_/g, ' ')}</span>
+                  <span className="evoq-mono-label">DELIVERY MODE</span>
+                  <div style={{ fontWeight: 700, color: 'var(--evoq-lime)', marginTop: '4px' }}>{form.locationMode}</div>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>{form.visibility}</span>
                 </div>
 
                 <div style={{ padding: '14px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)', border: '1px solid var(--evoq-border)' }}>
-                  <span className="evoq-mono-label">CAPACITY</span>
+                  <span className="evoq-mono-label">SCORING RANKS</span>
                   <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', marginTop: '4px' }}>
-                    {form.maxParticipants} {form.participationType === 'TEAM' ? 'Teams' : 'Players'}
+                    {form.placementPointsTable.length} Ranks Configured
                   </div>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--evoq-text-muted)' }}>Lineup: {form.teamSize}</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--evoq-lime)' }}>
+                    1st: {form.placementPointsTable.find((r) => r.placement === 1)?.points ?? 0} pts
+                  </span>
+                </div>
+              </div>
+
+              {/* Placement Points Summary */}
+              <div style={{ padding: '14px 16px', backgroundColor: 'var(--evoq-surface-elevated)', borderRadius: 'var(--evoq-radius-sm)', border: '1px solid var(--evoq-border)', marginBottom: '20px' }}>
+                <span className="evoq-mono-label" style={{ display: 'block', marginBottom: '8px' }}>
+                  PLACEMENT POINTS BREAKDOWN
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {form.placementPointsTable.map((row) => (
+                    <div
+                      key={row.placement}
+                      style={{
+                        padding: '4px 10px',
+                        backgroundColor: 'var(--evoq-surface)',
+                        border: '1px solid var(--evoq-border)',
+                        borderRadius: '4px',
+                        fontSize: '0.78rem',
+                        fontFamily: 'var(--evoq-font-mono)',
+                      }}
+                    >
+                      <span style={{ color: 'var(--evoq-text-muted)' }}>{getOrdinal(row.placement)}: </span>
+                      <strong style={{ color: 'var(--evoq-lime)' }}>{row.points} pts</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -1049,8 +1095,8 @@ export default function OrganizerTournamentWizard() {
                 <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <li>Event Title and custom slug are unique and valid</li>
                   <li>Title compatibility matches {activePreset.name} competitive requirements</li>
-                  <li>Schedule is chronologically synchronized across timezone {form.timezone}</li>
-                  <li>Competition ruleset and lobby structures are initialized</li>
+                  <li>Placement scoring points are validated with deterministic rank order</li>
+                  <li>Registration opening, deadline, and event start dates are verified</li>
                 </ul>
               </div>
             </div>
@@ -1066,7 +1112,7 @@ export default function OrganizerTournamentWizard() {
               <div />
             )}
 
-            {step < 8 ? (
+            {step < 6 ? (
               <PrimaryButton onClick={handleNext} icon="arrow-right">
                 Continue to Step {step + 1}
               </PrimaryButton>

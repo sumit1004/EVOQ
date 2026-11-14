@@ -28,7 +28,7 @@ export class CompetitionService {
                   include: {
                     registration: {
                       include: {
-                        team: { select: { id: true, name: true, slug: true, logoUrl: true, tag: true } },
+                        team: { select: { id: true, name: true, slug: true, logoUrl: true } },
                         gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
                       },
                     },
@@ -60,7 +60,7 @@ export class CompetitionService {
           include: {
             registration: {
               include: {
-                team: { select: { id: true, name: true, slug: true, logoUrl: true, tag: true } },
+                team: { select: { id: true, name: true, slug: true, logoUrl: true } },
                 gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
               },
             },
@@ -100,7 +100,7 @@ export class CompetitionService {
           include: {
             registration: {
               include: {
-                team: { select: { id: true, name: true, slug: true, logoUrl: true, tag: true } },
+                team: { select: { id: true, name: true, slug: true, logoUrl: true } },
                 gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
                 members: { include: { gamerProfile: true } },
               },
@@ -209,11 +209,11 @@ export class CompetitionService {
       await tx.auditLog.create({
         data: {
           id: generateUuid(),
-          userId: actorId,
+          actorId,
           action: 'MATCHES_GENERATED',
           resourceType: 'TOURNAMENT',
           resourceId: tournamentId,
-          payload: {
+          details: {
             format: tournament.format,
             matchEngine,
             participantsCount: participants.length,
@@ -517,6 +517,246 @@ export class CompetitionService {
 
     return prisma.$transaction(async (tx) => {
       return BattleRoyaleEngine.advanceToFinalsStage(tx, tournament, fromStageId, toStageId, advancePerGroup);
+    });
+  }
+
+  /**
+   * Delete an individual match and all associated results/credentials/participants
+   */
+  async deleteMatch(matchId, userId) {
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        tournament: {
+          include: { staffGrants: true },
+        },
+      },
+    });
+
+    if (!match) throw new NotFoundError('Match not found');
+
+    const isAuthorized =
+      match.tournament.organizerUserId === userId ||
+      match.tournament.staffGrants.some((s) => s.userId === userId && ['ADMIN', 'MANAGER'].includes(s.role));
+
+    if (!isAuthorized) {
+      throw new ForbiddenError('You do not have permission to delete this match');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const matchResult = await tx.matchResult.findUnique({
+        where: { matchId },
+        select: { id: true },
+      });
+
+      if (matchResult) {
+        await tx.resultRevision.deleteMany({ where: { resultId: matchResult.id } });
+        await tx.matchResult.delete({ where: { id: matchResult.id } });
+      }
+
+      await tx.matchCredential.deleteMany({ where: { matchId } });
+      await tx.matchParticipant.deleteMany({ where: { matchId } });
+      await tx.match.delete({ where: { id: matchId } });
+
+      return { success: true, deletedMatchId: matchId };
+    });
+  }
+
+  /**
+   * Delete a competition group and all matches within it
+   */
+  async deleteGroup(groupId, userId) {
+    const group = await prisma.competitionGroup.findUnique({
+      where: { id: groupId },
+      include: {
+        stage: {
+          include: {
+            tournament: {
+              include: { staffGrants: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!group) throw new NotFoundError('Group not found');
+
+    const tournament = group.stage?.tournament;
+    if (!tournament) throw new NotFoundError('Associated tournament not found');
+
+    const isAuthorized =
+      tournament.organizerUserId === userId ||
+      tournament.staffGrants.some((s) => s.userId === userId && ['ADMIN', 'MANAGER'].includes(s.role));
+
+    if (!isAuthorized) {
+      throw new ForbiddenError('You do not have permission to delete this group');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const groupMatches = await tx.match.findMany({
+        where: { groupId },
+        select: { id: true },
+      });
+      const matchIds = groupMatches.map((m) => m.id);
+
+      if (matchIds.length > 0) {
+        const results = await tx.matchResult.findMany({
+          where: { matchId: { in: matchIds } },
+          select: { id: true },
+        });
+        const resultIds = results.map((r) => r.id);
+
+        if (resultIds.length > 0) {
+          await tx.resultRevision.deleteMany({ where: { resultId: { in: resultIds } } });
+          await tx.matchResult.deleteMany({ where: { id: { in: resultIds } } });
+        }
+
+        await tx.matchCredential.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.matchParticipant.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.match.deleteMany({ where: { id: { in: matchIds } } });
+      }
+
+      const snapshots = await tx.standingSnapshot.findMany({
+        where: { groupId },
+        select: { id: true },
+      });
+      const snapshotIds = snapshots.map((s) => s.id);
+
+      if (snapshotIds.length > 0) {
+        await tx.standingRow.deleteMany({ where: { snapshotId: { in: snapshotIds } } });
+        await tx.standingSnapshot.deleteMany({ where: { id: { in: snapshotIds } } });
+      }
+
+      await tx.competitionGroup.delete({ where: { id: groupId } });
+
+      return { success: true, deletedGroupId: groupId };
+    });
+  }
+
+  /**
+   * Delete a tournament round and all groups/matches within it
+   */
+  async deleteRound(roundId, userId) {
+    const round = await prisma.tournamentRound.findUnique({
+      where: { id: roundId },
+      include: {
+        stage: {
+          include: {
+            tournament: {
+              include: { staffGrants: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!round) throw new NotFoundError('Round not found');
+
+    const tournament = round.stage?.tournament;
+    if (!tournament) throw new NotFoundError('Associated tournament not found');
+
+    const isAuthorized =
+      tournament.organizerUserId === userId ||
+      tournament.staffGrants.some((s) => s.userId === userId && ['ADMIN', 'MANAGER'].includes(s.role));
+
+    if (!isAuthorized) {
+      throw new ForbiddenError('You do not have permission to delete this round');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const roundMatches = await tx.match.findMany({
+        where: { roundId },
+        select: { id: true },
+      });
+      const matchIds = roundMatches.map((m) => m.id);
+
+      if (matchIds.length > 0) {
+        const results = await tx.matchResult.findMany({
+          where: { matchId: { in: matchIds } },
+          select: { id: true },
+        });
+        const resultIds = results.map((r) => r.id);
+
+        if (resultIds.length > 0) {
+          await tx.resultRevision.deleteMany({ where: { resultId: { in: resultIds } } });
+          await tx.matchResult.deleteMany({ where: { id: { in: resultIds } } });
+        }
+
+        await tx.matchCredential.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.matchParticipant.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.match.deleteMany({ where: { id: { in: matchIds } } });
+      }
+
+      await tx.competitionGroup.deleteMany({ where: { roundId } });
+      await tx.tournamentRound.delete({ where: { id: roundId } });
+
+      return { success: true, deletedRoundId: roundId };
+    });
+  }
+
+  /**
+   * Delete a tournament stage and all associated rounds/groups/matches
+   */
+  async deleteStage(stageId, userId) {
+    const stage = await prisma.tournamentStage.findUnique({
+      where: { id: stageId },
+      include: {
+        tournament: {
+          include: { staffGrants: true },
+        },
+      },
+    });
+
+    if (!stage) throw new NotFoundError('Stage not found');
+
+    const tournament = stage.tournament;
+    const isAuthorized =
+      tournament.organizerUserId === userId ||
+      tournament.staffGrants.some((s) => s.userId === userId && ['ADMIN', 'MANAGER'].includes(s.role));
+
+    if (!isAuthorized) {
+      throw new ForbiddenError('You do not have permission to delete this stage');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const stageMatches = await tx.match.findMany({
+        where: { stageId },
+        select: { id: true },
+      });
+      const matchIds = stageMatches.map((m) => m.id);
+
+      if (matchIds.length > 0) {
+        const results = await tx.matchResult.findMany({
+          where: { matchId: { in: matchIds } },
+          select: { id: true },
+        });
+        const resultIds = results.map((r) => r.id);
+
+        if (resultIds.length > 0) {
+          await tx.resultRevision.deleteMany({ where: { resultId: { in: resultIds } } });
+          await tx.matchResult.deleteMany({ where: { id: { in: resultIds } } });
+        }
+
+        await tx.matchCredential.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.matchParticipant.deleteMany({ where: { matchId: { in: matchIds } } });
+        await tx.match.deleteMany({ where: { id: { in: matchIds } } });
+      }
+
+      const snapshots = await tx.standingSnapshot.findMany({
+        where: { stageId },
+        select: { id: true },
+      });
+      const snapshotIds = snapshots.map((s) => s.id);
+      if (snapshotIds.length > 0) {
+        await tx.standingRow.deleteMany({ where: { snapshotId: { in: snapshotIds } } });
+        await tx.standingSnapshot.deleteMany({ where: { id: { in: snapshotIds } } });
+      }
+
+      await tx.competitionGroup.deleteMany({ where: { stageId } });
+      await tx.tournamentRound.deleteMany({ where: { stageId } });
+      await tx.tournamentStage.delete({ where: { id: stageId } });
+
+      return { success: true, deletedStageId: stageId };
     });
   }
 }

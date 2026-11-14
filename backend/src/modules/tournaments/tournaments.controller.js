@@ -88,6 +88,18 @@ export class TournamentsController {
       next(err);
     }
   }
+
+  async delete(req, res, next) {
+    try {
+      const result = await tournamentsService.deleteTournament(req.params.id, req.user.id);
+      res.status(200).json({
+        data: result,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const tournamentsController = new TournamentsController();

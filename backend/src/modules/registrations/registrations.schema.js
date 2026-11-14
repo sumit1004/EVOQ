@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const registerTournamentSchema = z.object({
-  entrantType: z.enum(['INDIVIDUAL', 'TEAM']).default('TEAM'),
+  entrantType: z.enum(['INDIVIDUAL', 'TEAM']).optional(),
   teamId: z.string().uuid().optional().nullable(),
   selectedRosterMemberIds: z.array(z.string().uuid()).optional(), // specific gamerProfileIds for team registration
 });

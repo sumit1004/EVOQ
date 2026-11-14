@@ -112,7 +112,9 @@ export default function TournamentDetail() {
     setRegError('');
     setRegSuccess('');
     try {
-      const payload = {};
+      const payload = {
+        entrantType: tournament.participationType || 'INDIVIDUAL',
+      };
       if (tournament.participationType === 'TEAM') {
         if (!selectedTeamId) {
           setRegError('Please select a team.');

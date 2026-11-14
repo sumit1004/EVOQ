@@ -123,7 +123,9 @@ export default function GamerTournamentDetail() {
     setRegError('');
     setRegSuccess('');
     try {
-      const payload = {};
+      const payload = {
+        entrantType: tournament.participationType || 'INDIVIDUAL',
+      };
       if (tournament.participationType === 'TEAM') {
         if (!selectedTeamId) {
           setRegError('Please select a team to register.');

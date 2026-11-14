@@ -1,6 +1,7 @@
 import env from '../../config/env.js';
 import prisma from '../../database/prisma.js';
 import { generateUuid } from '../../utils/uuid.js';
+import { generateUniqueEvoqId } from '../../utils/evoqId.js';
 import { hashPassword, verifyPassword } from '../../utils/argon2.js';
 import { generateSecureToken, hashToken } from '../../utils/tokens.js';
 import { emailService } from '../../services/email.service.js';
@@ -36,6 +37,7 @@ export class AuthService {
     const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const userId = generateUuid();
+    const evoqId = await generateUniqueEvoqId(prisma);
     const baseSlug = username.toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 50) || 'gamer';
     const existingProfile = await prisma.gamerProfile.findUnique({ where: { slug: baseSlug } });
     const profileSlug = existingProfile ? `${baseSlug}-${Date.now().toString(36).slice(-4)}` : baseSlug;
@@ -57,6 +59,7 @@ export class AuthService {
           userId,
           slug: profileSlug,
           displayName: username,
+          evoqId,
         },
       }),
       prisma.emailToken.create({

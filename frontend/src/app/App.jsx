@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext.jsx';
 import { ThemeProvider } from '../features/theme/ThemeContext.jsx';
 import { GamerProtectedRoute, OrganizerProtectedRoute } from '../components/ProtectedRoute.jsx';
@@ -59,6 +59,11 @@ function LegacyDashboardRedirect() {
   }
   const target = user.accountType === 'ORGANIZER' ? '/organizer/dashboard' : '/gamer/dashboard';
   return <Navigate to={target} replace />;
+}
+
+function LegacyTournamentSubrouteRedirect() {
+  const { id } = useParams();
+  return <Navigate to={id ? `/organizer/tournaments/${id}` : '/organizer/dashboard'} replace />;
 }
 
 export default function App() {
@@ -224,7 +229,7 @@ export default function App() {
               path="/organizer/tournaments/:id/competition"
               element={
                 <OrganizerProtectedRoute>
-                  <OrganizerTournamentWorkspace />
+                  <LegacyTournamentSubrouteRedirect />
                 </OrganizerProtectedRoute>
               }
             />
@@ -232,7 +237,7 @@ export default function App() {
               path="/organizer/tournaments/:id/schedule"
               element={
                 <OrganizerProtectedRoute>
-                  <OrganizerTournamentWorkspace />
+                  <LegacyTournamentSubrouteRedirect />
                 </OrganizerProtectedRoute>
               }
             />
@@ -240,7 +245,7 @@ export default function App() {
               path="/organizer/tournaments/:id/results"
               element={
                 <OrganizerProtectedRoute>
-                  <OrganizerTournamentWorkspace />
+                  <LegacyTournamentSubrouteRedirect />
                 </OrganizerProtectedRoute>
               }
             />
@@ -248,7 +253,7 @@ export default function App() {
               path="/organizer/tournaments/:id/standings"
               element={
                 <OrganizerProtectedRoute>
-                  <OrganizerTournamentWorkspace />
+                  <LegacyTournamentSubrouteRedirect />
                 </OrganizerProtectedRoute>
               }
             />

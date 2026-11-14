@@ -23,6 +23,9 @@ describe('Authentication & Session Integration Tests', () => {
     await prisma.emailToken.deleteMany({
       where: { user: { email: testUser.email } },
     });
+    await prisma.gamerProfile.deleteMany({
+      where: { user: { email: testUser.email } },
+    });
     await prisma.user.deleteMany({
       where: { email: testUser.email },
     });
@@ -34,6 +37,9 @@ describe('Authentication & Session Integration Tests', () => {
       where: { user: { email: testUser.email } },
     });
     await prisma.emailToken.deleteMany({
+      where: { user: { email: testUser.email } },
+    });
+    await prisma.gamerProfile.deleteMany({
       where: { user: { email: testUser.email } },
     });
     await prisma.user.deleteMany({
