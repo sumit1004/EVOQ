@@ -310,6 +310,82 @@ export const evoqService = {
     return res.data.data;
   },
 
+  // ── Manual Tournament Rounds & Competition (V1) ──
+  async getTournamentRounds(tournamentId) {
+    const res = await api.get(`/tournaments/${tournamentId}/rounds`);
+    return res.data.data;
+  },
+
+  async createTournamentRound(tournamentId, data) {
+    const res = await api.post(`/tournaments/${tournamentId}/rounds`, data);
+    return res.data.data;
+  },
+
+  async getRoundDetails(roundId) {
+    const res = await api.get(`/competition/rounds/${roundId}`);
+    return res.data.data;
+  },
+
+  async updateRoundStatus(roundId, status) {
+    const res = await api.patch(`/competition/rounds/${roundId}/status`, { status });
+    return res.data.data;
+  },
+
+  async getEligibleTeams(roundId) {
+    const res = await api.get(`/competition/rounds/${roundId}/eligible-teams`);
+    return res.data.data;
+  },
+
+  async createGroupsWithAllocation(roundId, data) {
+    const res = await api.post(`/competition/rounds/${roundId}/groups`, data);
+    return res.data.data;
+  },
+
+  async randomizeGroupAllocation(roundId, data) {
+    const res = await api.post(`/competition/rounds/${roundId}/groups/randomize`, data);
+    return res.data.data;
+  },
+
+  async getGroupDetails(groupId) {
+    const res = await api.get(`/competition/groups/${groupId}`);
+    return res.data.data;
+  },
+
+  async createGroupMatches(groupId, data) {
+    const res = await api.post(`/competition/groups/${groupId}/matches`, data);
+    return res.data.data;
+  },
+
+  async copyMatchCredentials(matchId) {
+    const res = await api.post(`/competition/matches/${matchId}/credentials/copy-previous`);
+    return res.data.data;
+  },
+
+  async getGroupStandings(groupId) {
+    const res = await api.get(`/competition/groups/${groupId}/standings`);
+    return res.data.data;
+  },
+
+  async getRoundStandings(roundId) {
+    const res = await api.get(`/competition/rounds/${roundId}/standings`);
+    return res.data.data;
+  },
+
+  async qualifyTeams(roundId, data) {
+    const res = await api.post(`/competition/rounds/${roundId}/qualify`, data);
+    return res.data.data;
+  },
+
+  async advanceToNextRound(roundId, data) {
+    const res = await api.post(`/competition/rounds/${roundId}/next-round`, data);
+    return res.data.data;
+  },
+
+  async uploadEvidence(dataUri, fileName = 'evidence') {
+    const res = await api.post('/media/upload', { dataUri, fileName });
+    return res.data.data;
+  },
+
   // ── Results & Standings ──
   async submitMatchResult(matchId, data) {
     const res = await api.post(`/matches/${matchId}/results`, data);

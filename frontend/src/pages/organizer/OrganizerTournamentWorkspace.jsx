@@ -18,6 +18,7 @@ import {
   DataTable,
 } from '../../components/ui/index.js';
 import { Icon } from '../../components/Icons.jsx';
+import OrganizerCompetitionManager from './OrganizerCompetitionManager.jsx';
 
 export default function OrganizerTournamentWorkspace() {
   const { id } = useParams();
@@ -133,6 +134,7 @@ export default function OrganizerTournamentWorkspace() {
 
   const navTabs = [
     { id: 'overview', label: 'Overview', icon: 'home' },
+    { id: 'competition', label: 'Competition & Rounds', icon: 'trophy' },
     { id: 'registrations', label: `Registrations (${pendingRegistrations.length})`, icon: 'users' },
     { id: 'participants', label: `Teams (${approvedRegistrations.length})`, icon: 'shield' },
     { id: 'settings', label: 'Settings', icon: 'settings' },
@@ -277,9 +279,20 @@ export default function OrganizerTournamentWorkspace() {
                   Conclude Tournament
                 </SecondaryButton>
               )}
+              <PrimaryButton onClick={() => setActiveTab('competition')} icon="trophy">
+                Manage Rounds &amp; Competition
+              </PrimaryButton>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── TAB: COMPETITION & ROUNDS ── */}
+      {activeTab === 'competition' && (
+        <OrganizerCompetitionManager
+          tournament={tournament}
+          onRefreshTournament={loadAllData}
+        />
       )}
 
       {/* ── TAB 2: REGISTRATIONS ── */}

@@ -72,13 +72,21 @@ export default function GamerTournamentDetail() {
       ]);
       setRegistrations(regs || []);
       setMatches(matchData || []);
-      setStandings(standingData || []);
+      setStandings(standingData?.rows || standingData || []);
 
       if (matchData && matchData.length > 0) {
         for (const m of matchData) {
-          if (m.credentials && m.credentials.isReleased) {
-            setCredentialInfo(m.credentials);
-            break;
+          try {
+            const cred = await evoqService.getMatchCredentials(m.id);
+            if (cred && cred.isReleased) {
+              setCredentialInfo({
+                ...cred,
+                matchTitle: m.title || `Match #${m.matchNumber}`,
+              });
+              break;
+            }
+          } catch {
+            // Not released or gamer not a participant in this match
           }
         }
       }
@@ -290,41 +298,68 @@ export default function GamerTournamentDetail() {
             backgroundColor: '#111910',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <Icon name="shield" size={18} color="#C9FF52" />
-            <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--evoq-lime)' }}>
-              MATCH ROOM CREDENTIALS RELEASED
-            </h4>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="shield" size={18} color="#C9FF52" />
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--evoq-lime)' }}>
+                MATCH ROOM CREDENTIALS RELEASED {credentialInfo.matchTitle ? `• ${credentialInfo.matchTitle}` : ''}
+              </h4>
+            </div>
+            <Badge variant="lime">LIVE ACCESS</Badge>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-            {credentialInfo.lobbyName && (
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+            {(credentialInfo.roomId || credentialInfo.lobbyName) && (
               <div>
                 <span className="evoq-mono-label">LOBBY / ROOM NAME</span>
-                <div style={{ fontWeight: 700, color: 'var(--evoq-text-primary)', fontFamily: 'var(--evoq-font-mono)' }}>
-                  {credentialInfo.lobbyName}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ fontWeight: 800, color: 'var(--evoq-text-primary)', fontFamily: 'var(--evoq-font-mono)', fontSize: '1.05rem' }}>
+                    {credentialInfo.roomId || credentialInfo.lobbyName}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(credentialInfo.roomId || credentialInfo.lobbyName)}
+                    style={{ background: 'none', border: 'none', color: 'var(--evoq-lime)', cursor: 'pointer', padding: '2px' }}
+                    title="Copy Room ID"
+                  >
+                    <Icon name="copy" size={14} />
+                  </button>
                 </div>
               </div>
             )}
-            {credentialInfo.password && (
+
+            {(credentialInfo.roomPassword || credentialInfo.password) && (
               <div>
                 <span className="evoq-mono-label">PASSWORD / PIN</span>
-                <div style={{ fontWeight: 700, color: 'var(--evoq-lime)', fontFamily: 'var(--evoq-font-mono)' }}>
-                  {credentialInfo.password}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ fontWeight: 800, color: 'var(--evoq-lime)', fontFamily: 'var(--evoq-font-mono)', fontSize: '1.05rem' }}>
+                    {credentialInfo.roomPassword || credentialInfo.password}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(credentialInfo.roomPassword || credentialInfo.password)}
+                    style={{ background: 'none', border: 'none', color: 'var(--evoq-lime)', cursor: 'pointer', padding: '2px' }}
+                    title="Copy Password"
+                  >
+                    <Icon name="copy" size={14} />
+                  </button>
                 </div>
               </div>
             )}
-            {credentialInfo.serverRegion && (
+
+            {(credentialInfo.lobbyDetails || credentialInfo.serverRegion) && (
               <div>
-                <span className="evoq-mono-label">SERVER REGION</span>
-                <div style={{ fontWeight: 600, color: 'var(--evoq-text-primary)' }}>
-                  {credentialInfo.serverRegion}
+                <span className="evoq-mono-label">SERVER REGION / DETAILS</span>
+                <div style={{ fontWeight: 600, color: 'var(--evoq-text-primary)', marginTop: '4px' }}>
+                  {credentialInfo.lobbyDetails || credentialInfo.serverRegion}
                 </div>
               </div>
             )}
           </div>
-          {credentialInfo.customInstructions && (
-            <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', borderTop: '1px solid var(--evoq-border-subtle)', paddingTop: '8px' }}>
-              Note: {credentialInfo.customInstructions}
+
+          {(credentialInfo.accessInstructions || credentialInfo.customInstructions) && (
+            <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--evoq-text-secondary)', borderTop: '1px solid var(--evoq-border-subtle)', paddingTop: '8px', margin: '12px 0 0 0' }}>
+              Instructions: {credentialInfo.accessInstructions || credentialInfo.customInstructions}
             </p>
           )}
         </div>
@@ -431,47 +466,101 @@ export default function GamerTournamentDetail() {
       {/* ── TAB 3: MATCHES & BRACKET ── */}
       {activeTab === 'matches' && (
         <div className="evoq-card">
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: 0 }}>Fixtures &amp; Scheduled Rounds</h3>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: 0 }}>Fixtures &amp; Scheduled Matches</h3>
           {matches.length === 0 ? (
             <EmptyState
               icon="matches"
-              title="Bracket Not Generated Yet"
-              description="Fixtures and match lobbies will be scheduled once registration closes."
+              title="Fixtures Not Scheduled Yet"
+              description="Match lobbies and fixtures will be scheduled once teams are allocated into groups."
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {matches.map((m) => (
-                <div
-                  key={m.id}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: 'var(--evoq-surface-elevated)',
-                    borderRadius: 'var(--evoq-radius-sm)',
-                    border: '1px solid var(--evoq-border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                  }}
-                >
-                  <div>
-                    <span className="evoq-mono-label">{m.roundName || `ROUND ${m.round || 1}`}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
-                        {m.teamA?.name || 'TBD'}
-                      </span>
-                      <span style={{ fontFamily: 'var(--evoq-font-display)', color: 'var(--evoq-lime)' }}>
-                        {m.scoreA ?? '-'} : {m.scoreB ?? '-'}
-                      </span>
-                      <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
-                        {m.teamB?.name || 'TBD'}
-                      </span>
+              {matches.map((m) => {
+                const isCompleted = m.status === 'COMPLETED';
+
+                return (
+                  <div
+                    key={m.id}
+                    style={{
+                      padding: '16px',
+                      backgroundColor: 'var(--evoq-surface-elevated)',
+                      borderRadius: 'var(--evoq-radius-sm)',
+                      border: isCompleted ? '1px solid rgba(201, 255, 82, 0.3)' : '1px solid var(--evoq-border)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="evoq-mono-label" style={{ color: 'var(--evoq-lime)' }}>
+                            {m.round?.name || m.stage?.name || `ROUND ${m.matchNumber || 1}`}
+                          </span>
+                          {m.group?.name && <Badge variant="neutral">{m.group.name}</Badge>}
+                        </div>
+                        <h4 style={{ margin: '4px 0 0 0', fontSize: '1rem', fontWeight: 800 }}>
+                          {m.title || `Match #${m.matchNumber}`}
+                        </h4>
+                      </div>
+                      <StatusIndicator status={m.status} />
                     </div>
+
+                    {/* Participants list / Lobby */}
+                    {m.participants && m.participants.length > 0 ? (
+                      <div>
+                        <span className="evoq-mono-label" style={{ fontSize: '0.72rem', marginBottom: '6px', display: 'block' }}>
+                          LOBBY COMPETITORS ({m.participants.length})
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {m.participants.map((p, pIdx) => {
+                            const team = p.registration?.team;
+                            const profile = p.registration?.gamerProfile;
+                            const name = team?.name || profile?.displayName || `Team ${pIdx + 1}`;
+                            const isWinner = p.isWinner || p.metrics?.placement === 1;
+
+                            return (
+                              <div
+                                key={p.id || pIdx}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 8px',
+                                  backgroundColor: isWinner ? '#182414' : 'var(--evoq-surface)',
+                                  borderRadius: 'var(--evoq-radius-sm)',
+                                  border: isWinner ? '1px solid var(--evoq-lime)' : '1px solid var(--evoq-border-subtle)',
+                                  fontSize: '0.8rem',
+                                }}
+                              >
+                                <span style={{ fontWeight: 600 }}>{name}</span>
+                                {p.score > 0 && (
+                                  <span style={{ fontWeight: 800, color: 'var(--evoq-lime)', fontFamily: 'var(--evoq-font-mono)' }}>
+                                    {p.score} PTS
+                                  </span>
+                                )}
+                                {isWinner && <Icon name="trophy" size={12} color="#C9FF52" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+                          {m.teamA?.name || 'TBD'}
+                        </span>
+                        <span style={{ fontFamily: 'var(--evoq-font-display)', color: 'var(--evoq-lime)' }}>
+                          {m.scoreA ?? '-'} : {m.scoreB ?? '-'}
+                        </span>
+                        <span style={{ fontWeight: 700, color: 'var(--evoq-text-primary)' }}>
+                          {m.teamB?.name || 'TBD'}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <StatusIndicator status={m.status} />
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -485,19 +574,57 @@ export default function GamerTournamentDetail() {
             <EmptyState
               icon="trophy"
               title="Standings Not Released"
-              description="Official standings will update as match results are verified."
+              description="Official standings will update as match results are verified and approved."
             />
           ) : (
             <DataTable
               columns={[
-                { key: 'rank', header: 'Rank', render: (val, _, idx) => `#${idx + 1}` },
+                {
+                  key: 'rank',
+                  header: 'Rank',
+                  render: (val, _, idx) => (
+                    <span style={{ fontWeight: 800, color: idx === 0 ? 'var(--evoq-lime)' : 'var(--evoq-text-primary)' }}>
+                      #{val || idx + 1}
+                    </span>
+                  ),
+                },
                 {
                   key: 'participant',
                   header: 'Competitor / Team',
-                  render: (_, row) => row.team?.name || row.user?.username || 'Team',
+                  render: (_, row) => {
+                    const team = row.registration?.team || row.team;
+                    const profile = row.registration?.gamerProfile || row.gamerProfile || row.user;
+                    const name = team?.name || profile?.displayName || profile?.username || 'Team';
+                    const avatar = team?.logoUrl || profile?.avatarUrl;
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Avatar src={avatar} name={name} size={20} />
+                        <span style={{ fontWeight: 700 }}>{name}</span>
+                      </div>
+                    );
+                  },
                 },
-                { key: 'points', header: 'Points / Score', render: (val) => val ?? '-' },
-                { key: 'status', header: 'Status', render: (val) => <StatusIndicator status={val || 'COMPLETED'} /> },
+                { key: 'played', header: 'Matches', render: (val) => val ?? 0 },
+                { key: 'wins', header: 'Wins', render: (val) => val ?? 0 },
+                {
+                  key: 'eliminations',
+                  header: 'Kills / Elims',
+                  render: (_, row) => row.metrics?.eliminations ?? '-',
+                },
+                {
+                  key: 'placementPoints',
+                  header: 'Place Pts',
+                  render: (_, row) => row.metrics?.placementPoints ?? '-',
+                },
+                {
+                  key: 'points',
+                  header: 'Total Points',
+                  render: (val) => (
+                    <span style={{ fontWeight: 800, color: 'var(--evoq-lime)', fontFamily: 'var(--evoq-font-mono)' }}>
+                      {val ?? 0}
+                    </span>
+                  ),
+                },
               ]}
               data={standings}
             />

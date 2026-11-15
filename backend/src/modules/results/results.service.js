@@ -296,6 +296,11 @@ export class ResultsService {
     // 4. Standings snapshot recalculation
     await this.recalculateStandings(tx, match.tournamentId, match.stageId);
 
+    // 4b. Group standings recalculation if match belongs to a group
+    if (match.groupId) {
+      await this.recalculateGroupStandings(tx, match.groupId, match.tournamentId);
+    }
+
     // 5. If this is a final round / championship match, award achievements
     const isFinals = match.round?.name?.toLowerCase().includes('final') ||
       match.round?.roundType === 'FINALS';
@@ -461,6 +466,231 @@ export class ResultsService {
         rejectionReason,
       },
     });
+  }
+
+  /**
+   * Recalculate standings snapshot for a specific competition group
+   */
+  async recalculateGroupStandings(tx, groupId, tournamentId) {
+    const group = await tx.competitionGroup.findUnique({
+      where: { id: groupId },
+      include: {
+        matches: {
+          where: { status: 'COMPLETED' },
+          include: { participants: true },
+        },
+        standingSnapshots: {
+          where: { isCurrent: true },
+          include: { rows: true },
+        },
+      },
+    });
+    if (!group) return;
+
+    const tournament = await tx.tournament.findUnique({
+      where: { id: tournamentId },
+      include: {
+        registrations: {
+          include: { team: true, gamerProfile: true },
+        },
+      },
+    });
+    if (!tournament) return;
+
+    // Identify all registrations belonging to this group
+    const groupRegIds = new Set();
+    if (group.standingSnapshots[0]?.rows) {
+      group.standingSnapshots[0].rows.forEach((r) => groupRegIds.add(r.registrationId));
+    }
+    for (const m of group.matches) {
+      for (const p of m.participants) {
+        groupRegIds.add(p.registrationId);
+      }
+    }
+
+    const groupRegistrations = tournament.registrations.filter((r) => groupRegIds.has(r.id));
+    const ruleset = tournament.formatConfig?.scoringRuleset || {};
+    const rows = BattleRoyaleEngine.computeCumulativeStandings(group.matches, groupRegistrations, ruleset);
+
+    // Deactivate previous group snapshots
+    await tx.standingSnapshot.updateMany({
+      where: { groupId, isCurrent: true },
+      data: { isCurrent: false },
+    });
+
+    const snapshotId = generateUuid();
+    await tx.standingSnapshot.create({
+      data: {
+        id: snapshotId,
+        tournamentId,
+        stageId: group.stageId,
+        groupId,
+        calcVersion: 1,
+        isCurrent: true,
+      },
+    });
+
+    if (rows.length > 0) {
+      await tx.standingRow.createMany({
+        data: rows.map((r) => ({
+          id: generateUuid(),
+          snapshotId,
+          registrationId: r.registrationId,
+          rank: r.rank,
+          played: r.played,
+          wins: r.wins,
+          losses: r.losses,
+          draws: r.draws,
+          points: r.points,
+          metrics: r.metrics || {},
+          tieBreakValues: r.tieBreakValues || {},
+        })),
+      });
+    }
+  }
+
+  /**
+   * Get standings for a single competition group
+   */
+  async getGroupStandings(groupId) {
+    const group = await prisma.competitionGroup.findUnique({
+      where: { id: groupId },
+      include: {
+        stage: { include: { tournament: true } },
+        matches: {
+          where: { status: 'COMPLETED' },
+          include: { participants: true },
+        },
+        standingSnapshots: {
+          where: { isCurrent: true },
+          include: {
+            rows: {
+              orderBy: { rank: 'asc' },
+              include: {
+                registration: {
+                  include: {
+                    team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+                    gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!group) throw new NotFoundError('Competition group not found');
+    const tournament = group.stage?.tournament;
+
+    // Check if there is an active snapshot with completed matches or computed points
+    const currentSnapshot = group.standingSnapshots[0];
+    if (currentSnapshot && currentSnapshot.rows && currentSnapshot.rows.length > 0 && currentSnapshot.sourceHash !== 'INITIAL_ALLOCATION') {
+      return {
+        groupId,
+        groupName: group.name,
+        snapshotId: currentSnapshot.id,
+        rows: currentSnapshot.rows,
+      };
+    }
+
+    // Dynamic computation fallback / initial view
+    const groupRegIds = new Set();
+    if (currentSnapshot?.rows) {
+      currentSnapshot.rows.forEach((r) => groupRegIds.add(r.registrationId));
+    }
+    for (const m of group.matches) {
+      for (const p of m.participants) {
+        groupRegIds.add(p.registrationId);
+      }
+    }
+
+    const groupRegistrations = await prisma.tournamentRegistration.findMany({
+      where: { id: { in: Array.from(groupRegIds) } },
+      include: {
+        team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
+      },
+    });
+
+    const ruleset = tournament?.formatConfig?.scoringRuleset || {};
+    const computedRows = BattleRoyaleEngine.computeCumulativeStandings(group.matches, groupRegistrations, ruleset);
+
+    return {
+      groupId,
+      groupName: group.name,
+      rows: computedRows.map((r) => {
+        const reg = groupRegistrations.find((reg) => reg.id === r.registrationId);
+        return {
+          ...r,
+          registration: reg,
+        };
+      }),
+    };
+  }
+
+  /**
+   * Get standings for an entire tournament round across all its groups
+   */
+  async getRoundStandings(roundId) {
+    const round = await prisma.tournamentRound.findUnique({
+      where: { id: roundId },
+      include: {
+        stage: { include: { tournament: true } },
+        groups: true,
+        matches: {
+          where: { status: 'COMPLETED' },
+          include: { participants: true },
+        },
+      },
+    });
+
+    if (!round) throw new NotFoundError('Tournament round not found');
+    const tournament = round.stage?.tournament;
+
+    const roundRegIds = new Set();
+    for (const m of round.matches) {
+      for (const p of m.participants) {
+        roundRegIds.add(p.registrationId);
+      }
+    }
+
+    const groupSnapshots = await prisma.standingSnapshot.findMany({
+      where: {
+        groupId: { in: round.groups.map((g) => g.id) },
+        isCurrent: true,
+      },
+      include: { rows: true },
+    });
+    for (const snap of groupSnapshots) {
+      for (const r of snap.rows) {
+        roundRegIds.add(r.registrationId);
+      }
+    }
+
+    const roundRegistrations = await prisma.tournamentRegistration.findMany({
+      where: { id: { in: Array.from(roundRegIds) } },
+      include: {
+        team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        gamerProfile: { select: { id: true, displayName: true, inGameName: true, avatarUrl: true, slug: true, evoqId: true } },
+      },
+    });
+
+    const ruleset = tournament?.formatConfig?.scoringRuleset || {};
+    const computedRows = BattleRoyaleEngine.computeCumulativeStandings(round.matches, roundRegistrations, ruleset);
+
+    return {
+      roundId,
+      roundName: round.name,
+      sequence: round.sequence,
+      rows: computedRows.map((r) => {
+        const reg = roundRegistrations.find((reg) => reg.id === r.registrationId);
+        return {
+          ...r,
+          registration: reg,
+        };
+      }),
+    };
   }
 
   /**

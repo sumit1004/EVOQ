@@ -60,6 +60,30 @@ export class ResultsController {
       next(err);
     }
   }
+
+  async getGroupStandings(req, res, next) {
+    try {
+      const standings = await resultsService.getGroupStandings(req.params.groupId);
+      res.status(200).json({
+        data: standings,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getRoundStandings(req, res, next) {
+    try {
+      const standings = await resultsService.getRoundStandings(req.params.roundId);
+      res.status(200).json({
+        data: standings,
+        meta: { requestId: req.requestId },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const resultsController = new ResultsController();

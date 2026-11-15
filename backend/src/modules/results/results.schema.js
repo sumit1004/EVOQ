@@ -4,12 +4,14 @@ export const submitResultSchema = z.object({
   participantResults: z.array(
     z.object({
       registrationId: z.string().uuid(),
-      score: z.number().int().min(0).default(0),
+      placement: z.number().int().min(1).optional(),
+      eliminations: z.number().int().min(0).optional(),
+      score: z.number().int().min(0).optional().default(0),
       metrics: z.record(z.any()).optional(),
-      isWinner: z.boolean().default(false),
+      isWinner: z.boolean().optional().default(false),
     })
   ).min(1, 'At least one participant result is required'),
-  evidenceUrls: z.array(z.string().url()).optional(),
+  evidenceUrls: z.array(z.string()).optional(),
   notes: z.string().max(1000).optional(),
 });
 
@@ -21,12 +23,14 @@ export const correctResultSchema = z.object({
   participantResults: z.array(
     z.object({
       registrationId: z.string().uuid(),
-      score: z.number().int().min(0).default(0),
+      placement: z.number().int().min(1).optional(),
+      eliminations: z.number().int().min(0).optional(),
+      score: z.number().int().min(0).optional().default(0),
       metrics: z.record(z.any()).optional(),
-      isWinner: z.boolean().default(false),
+      isWinner: z.boolean().optional().default(false),
     })
   ).min(1),
   reason: z.string().trim().min(5, 'Correction reason is required').max(1000),
-  evidenceUrls: z.array(z.string().url()).optional(),
+  evidenceUrls: z.array(z.string()).optional(),
 });
 
